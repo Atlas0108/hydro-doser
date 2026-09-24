@@ -27,16 +27,16 @@ PARTS_LIST = [
   *[(f'pump{k}_{sp}', m, (0, 0, 95), (0.75, 0.875)) for k in range(3) for sp, m in
     [('head', 'pump'), ('cover', 'clear'), ('rollers', 'grey'), ('flange', 'black'), ('motor', 'silver'), ('cap', 'black'), ('barbs', 'grey')]],
   *[(f'esp32_{sp}', m, (0, 0, 60), (0.625, 0.75)) for sp, m in [('pcb', 'pcb_dark'), ('can', 'silver'), ('usb', 'silver'), ('pins', 'black'), ('small', 'black')]],
-  *[(f'uln{j}_{sp}', m, (0, 0, 60), (0.625, 0.75)) for j in (1,) for sp, m in
+  *[(f'uln{j}_{sp}', m, (0, 0, 60), (0.625, 0.75)) for j in (1, 2) for sp, m in
     [('pcb', 'pcb_green'), ('chip', 'black'), ('hdr', 'white'), ('pins', 'black'), ('leds', 'red'), ('res', 'beige')]],
   ('buck_body', 'black', (0, 0, 60), (0.625, 0.75)), ('buck_wire0', 'red', (0, 0, 60), (0.625, 0.75)), ('buck_wire1', 'black', (0, 0, 60), (0.625, 0.75)),
   ('dose', 'black', (0, -60, 0), (0.625, 0.75)), ('led', 'led', (0, -60, 0), (0.625, 0.75)), ('stop', 'black', (0, -60, 0), (0.625, 0.75)),
   ('dcjack', 'black', (0, 60, 0), (0.625, 0.75)), ('gx12', 'metal', (0, 60, 0), (0.625, 0.75)), ('grommet', 'rubber', (0, 60, 0), (0.625, 0.75)), ('bundle', 'braid', (0, 60, 0), (0.625, 0.75)),
-  ('plate', 'green', (0, 0, 120), (0.5, 0.625)), ('column', 'green', (0, 0, 150), (0.5, 0.625)),
+  ('plate', 'green', (0, 0, 120), (0.5, 0.625)), ('column_base', 'green', (0, 0, 150), (0.5, 0.625)), ('column_towers', 'white_petg', (0, 0, 150), (0.5, 0.625)),
   ('bin0', 'pp', (0, 0, 300), (0.375, 0.5)), ('water0', 'water', (0, 0, 300), (0.375, 0.5)), ('lid0', 'lid', (0, 0, 380), (0.375, 0.5)),
-  ('sleeve0', 'green', (0, 0, 350), (0.25, 0.375)), ('sleeve1', 'green', (0, 0, 350), (0.25, 0.375)),
+  ('sleeve0', 'matte_black', (0, 0, 350), (0.25, 0.375)), ('sleeve1', 'matte_black', (0, 0, 350), (0.25, 0.375)),
   ('bottle0', 'amber', (0, 0, 480), (0.25, 0.375)), ('bottle1', 'white_pp', (0, 0, 480), (0.25, 0.375)),
-  ('spout_at', 'green', (0, 80, 0), (0.125, 0.25)),
+  ('spout_at', 'white_petg', (0, 80, 0), (0.125, 0.25)),
   ('cover0', 'matte_black', (0, -70, 0), (0, 0.125)), ('cover1', 'matte_black', (0, -70, 0), (0, 0.125)), ('cover2', 'matte_black', (0, -70, 0), (0, 0.125)),
 ]
 TUBE_WIN = (0.125, 0.25)
@@ -104,6 +104,7 @@ nt.links.new(noise.outputs['Fac'], bump.inputs['Height']); nt.links.new(bump.out
 
 MAT = {
   'green': green,
+  'white_petg': principled('white_petg', (0.80, 0.80, 0.76), rough=0.76, sheen=0.2),   # the column's towers and the spout, matte white
   'pump': principled('pump', (0.88, 0.88, 0.86), rough=0.35, coat=0.3),
   'pcb': principled('pcb', (0.05, 0.08, 0.16), rough=0.4),
   'pcb_green': principled('pcb_green', (0.04, 0.22, 0.09), rough=0.35, coat=0.5),
@@ -125,7 +126,7 @@ MAT = {
   'red': principled('red', (0.6, 0.05, 0.05), rough=0.6),
   'beige': principled('beige', (0.7, 0.62, 0.45), rough=0.6),
   'braid': principled('braid', (0.05, 0.05, 0.05), rough=0.85, sheen=0.5),
-  'matte_black': principled('matte_black', (0.025, 0.025, 0.025), rough=0.8, sheen=0.15),   # the pump covers, printed in matte black
+  'matte_black': principled('matte_black', (0.025, 0.025, 0.025), rough=0.8, sheen=0.15),   # the pump covers and sleeves, printed in matte black
 }
 
 def ease(x):

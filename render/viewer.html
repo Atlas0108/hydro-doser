@@ -124,12 +124,12 @@ import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer
 
 // Colours by material. 'shell' is the printed PETG; the rest are bought parts.
 const COL = {
-  shell:{c:0x577544}, pump:{c:0xE2E2E2}, fitting:{c:0x6A6A6A}, pin:{c:0x505050},
+  shell:{c:0x577544}, col:{c:0xE8E7E1}, pump:{c:0xE2E2E2}, fitting:{c:0x6A6A6A}, pin:{c:0x505050},
   esp:{c:0x1F3A5F}, uln:{c:0x1E6B35}, buck:{c:0x1A1A1A},
   bin:{c:0xB8CFE0,o:0.35}, water:{c:0x4A8CC8,o:0.55}, lid:{c:0xF4F4F1,o:0.85},
   sprout:{c:0xB3662A}, thrive:{c:0xECEBE3}, led:{c:0xBFF2BF,o:0.9}, cover:{c:0x1E1E1E},
 };
-const LEGEND = [['shell','Printed, matte olive PETG'],['cover','Pump covers, matte black PETG'],['pump','Peristaltic pump'],['fitting','Grommet, barb'],['pin','GX12'],
+const LEGEND = [['shell','Trays and plate, matte olive PETG'],['col','Column towers and spout, matte white PETG'],['cover','Sleeves and pump covers, matte black PETG'],['pump','Peristaltic pump'],['fitting','Grommet, barb'],['pin','GX12'],
   ['esp','ESP32 DevKit'],['uln','ULN2003'],['buck','12 → 5 V buck, jack, buttons'],['bin','Cambro 6 qt bin'],['sprout','Nutrient A'],['thrive','Nutrient B']];
 
 // Steps in assembly order. win = the slice of the slider during which the
@@ -153,18 +153,18 @@ const S = [
     ['dcjack','12 V jack','buck',[0,60,0]],['gx12','GX12 socket','pin',[0,60,0]],['grommet','Grommet + bundle','fitting',[0,60,0]]],
    feats:[['esp32',[245,205,14],'Micro-USB through the back wall']]},
   {t:'Dock plate and the column', d:'The plate screws to four posts, countersunk. Its 3 mm curb locates the tank; a 1.5 mm rim keeps spills on top, and a notch at the back drains them off the outside of the case. The column screws down at three exposed corners; its cans are the pockets, and three chases carry the lines.', hw:'7 × M3×8', win:[0.5,0.625], parts:[
-    ['plate','Dock plate','shell',[0,0,120]],['column','Column','shell',[0,0,150]]],
+    ['plate','Dock plate','shell',[0,0,120]],['column_base','Column floor','shell',[0,0,150]],['column_towers','Column towers','col',[0,0,150]]],
    feats:[['plate',[112,17,73],'Curb 3 mm: locates the tank'],['plate',[112,3,71],'Drip rim 1.5 mm; the notch at the back drains outside'],['plate',[8,8,70],'Plate screws ×4, countersunk'],
-     ['column',[244,13,303],'Nutrient A chase: cap tube in at the top, out through the floor'],['column',[326,212,303],'Nutrient B chase'],['column',[235,112,303],'Tank chase: the line comes out of the top, 40 mm above the lid'],
-     ['column',[285,0,190],'Window: bottle level'],['column',[337,8,70],'Column screws ×3, countersunk, where the plate is exposed'],['column',[243,110,150],'Web walls, can to can: one box section']]},
+     ['column_towers',[244,13,303],'Nutrient A chase: cap tube in at the top, out through the floor'],['column_towers',[326,212,303],'Nutrient B chase'],['column_towers',[235,112,303],'Tank chase: the line comes out of the top, 40 mm above the lid'],
+     ['column_towers',[285,0,190],'Window: bottle level'],['column_base',[337,8,70],'Column screws ×3, countersunk, where the plate is exposed'],['column_towers',[243,110,150],'Web walls, can to can: one box section']]},
   {t:'Tank onto the dock', d:'A stock Cambro 6 qt bin, nothing fitted to it. Drop it on; the curb locates it. Lift straight up to fill, or lift the lid.', hw:'Cambro 6SFSPP190 + lid', win:[0.375,0.5], parts:[
     ['bin0','Water tank','bin',[0,0,300]],['water0','','water',[0,0,300]],['lid0','Lid','lid',[0,0,380]]],
    feats:[['lid0',[195,112,263],'Lid drilled Ø10: the tank line']]},
   {t:'Sleeves and bottles', d:'A sleeve holds each 125 mL bottle at the rim: a cup on three fins, a window, a notch to lift it. 1 L bottles go straight in. Nutrient A front, Nutrient B back.', hw:'2 × sleeve', win:[0.25,0.375], parts:[
-    ['sleeve0','Sleeve','shell',[0,0,350]],['sleeve1','','shell',[0,0,350]],['bottle0','Nutrient A','sprout',[0,0,480]],['bottle1','Nutrient B','thrive',[0,0,480]]],
+    ['sleeve0','Sleeve','cover',[0,0,350]],['sleeve1','','cover',[0,0,350]],['bottle0','Nutrient A','sprout',[0,0,480]],['bottle1','Nutrient B','thrive',[0,0,480]]],
    feats:[['sleeve0',[285,6,250],'Cup on fins, cap at the rim']]},
   {t:'Run the tubes', d:'Silicone 1/4". Pickups sit on the bottom of the tank and the bottles; every outlet ends in air at the reservoir, in the spout, so nothing can siphon. The three outlets and the float lead leave the back as one sleeved bundle.', hw:'~3 m tube, sleeve, spout', win:[0.125,0.25], parts:[
-    ['spout_at','Spout, at the reservoir','shell',[0,80,0]]], feats:[['spout_at',[323,320,42],'Hangs on the reservoir’s rim; holds the ends above the water']]},
+    ['spout_at','Spout, at the reservoir','col',[0,80,0]]], feats:[['spout_at',[323,320,42],'Hangs on the reservoir’s rim; holds the ends above the water']]},
   {t:'Covers on', d:'Each pump’s opening closes with a cover and two countersunk screws. Take a cover off to change that pump’s tube; nothing else moves.', hw:'6 × M3×8 countersunk', win:[0,0.125], parts:[
     ['cover0','Pump cover','cover',[0,-70,0]],['cover1','','cover',[0,-70,0]],['cover2','','cover',[0,-70,0]]], feats:[]},
 ];

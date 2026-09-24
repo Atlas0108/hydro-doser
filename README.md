@@ -76,7 +76,10 @@ printing*. This version follows an independent review, kept in
 
 `./export.sh` writes each one into `stl/`, as it prints: standing, no
 supports. Masses are solid PETG; the slicer's infill brings the plate and
-floors down.
+floors down. Three colours: the trays, plate and the column's floor in matte olive, the
+column's towers and the spout in matte white, the sleeves and pump covers in
+matte black. The column is one print with a filament change at 4 mm, the top
+of its floor.
 
 | Piece | Print | Size (mm) | ~g | |
 |---|---|---|---|---|
@@ -126,7 +129,9 @@ $230 for the parts and $75 for the filament.
 | M3 × 12 socket-head screws, stainless (3 used, the seam) | 1 pack | [Bolt Depot](https://boltdepot.com/Product-Details?product=6381) | [Amazon](https://www.amazon.com/dp/B01MYX1XBO) |
 | M3 hex nuts, stainless (3 used) | 1 pack | [Bolt Depot](https://boltdepot.com/Product-Details?product=4773) | [Amazon](https://www.amazon.com/dp/B01MYX1XBO) |
 | M3 × 10 thread-forming screws for plastic (6 used, the pump flanges) | 1 pack | [McMaster-Carr](https://www.mcmaster.com/95893A191/) | [Amazon](https://www.amazon.com/dp/B0779QYZXH) |
-| Matte olive green filament, 1 kg (PETG; Amazon's is Sunlu's matte PLA) | 3 | [California Filament](https://californiafilament.com/products/matte-olive-green-petg-filament-1-75mm-1kg) | [Amazon](https://www.amazon.com/dp/B0C99425F1) |
+| Matte olive green PETG, 1 kg: the trays, plate and column floor | 2 | [California Filament](https://californiafilament.com/products/matte-olive-green-petg-filament-1-75mm-1kg) | [Amazon](https://www.amazon.com/dp/B0GGB1TS3Z) |
+| Matte white PETG, 1 kg: the column's towers and the spout | 1 | [eSUN](https://esun3dstore.com/products/petg-matte) | [Amazon](https://www.amazon.com/dp/B0GGBCGJBC) |
+| Matte black PETG, 1 kg: the sleeves and pump covers | 1 | [California Filament](https://californiafilament.com/products/matte-black-petg-filament-1-75mm) | [Amazon](https://www.amazon.com/dp/B0GGBMB1HJ) |
 
 ## Before printing
 
@@ -148,9 +153,13 @@ two holes, and drill Ø2.5. That clears the plate by 2.8 mm.
 
 ## Files
 
+Published on its own at <https://github.com/Atlas0108/hydro-doser> (this
+folder at the root, `firmware/` as `firmware/`); this copy is
+the working one.
+
 ```sh
 ./export.sh                                   # every piece into stl/, plus mockup.stl
-./verify.sh                                   # 58 checks (export first)
+./verify.sh                                   # 57 checks (export first)
 openscad -D 'bottles="1L"' hydro-doser.scad    # the scaled-up bottles
 ```
 

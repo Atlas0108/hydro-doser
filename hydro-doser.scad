@@ -158,7 +158,11 @@ boards = [   // [local position, size, colour, what]
   [[40, 178, floor_t + 6], [45, 20, 12], "#111",    "12 -> 5 V buck"],
 ];
 
-c_shell = "#EDEBE4";
+// Print colours: trays and plate green, column and spout white, sleeves and
+// covers black (the P1S does it in one job with the AMS).
+c_shell  = "#577544";
+c_col    = "#EDEBE4";
+c_black  = "#222222";
 
 // --------------------------------------------------------------- the rules
 assert(b1L[0] + 2 <= pocket_d, "1 L bottle doesn't fit its pocket");
@@ -422,9 +426,9 @@ module grommet() translate([x_cen + jacks[2][0], D, jacks[2][1]]) color("#222")
 module bundle() translate([x_cen + jacks[2][0], D, jacks[2][1]]) color("#1a1a1a") translate([0, 2, 0]) rotate([-90, 0, 0]) cylinder(d = 12, h = 45);   // the sleeved bundle, to the reservoir
 module panel_hw() { button(panel[0][0], panel[0][1], panel[0][2]); light_pipe(panel[1][0], panel[1][1]); button(panel[2][0], panel[2][1], panel[2][2]); dc_jack(); gx12(); grommet(); bundle(); }
 module pumps() for (k = [0:2]) pump(k);
-module covers() for (k = [0:2]) color(c_shell) cover(k);
+module covers() for (k = [0:2]) color(c_black) cover(k);
 module electronics() { esp32(); uln(1); buck(); }
-module sleeve_at(i) at(can_c[i], z_pocket) color(c_shell) sleeve();
+module sleeve_at(i) at(can_c[i], z_pocket) color(c_black) sleeve();
 module bottle_at(i) at(can_c[i], z_pocket) let (c = i == 0 ? [0.7, 0.4, 0.15, 0.8] : [0.93, 0.93, 0.9, 0.8]) {
   if (bottles == "1L") bottle(b1L[0], b1L[1], c);
   else translate([0, 0, sleeve_h - b125[1]]) bottle(b125[0], b125[1], c);
@@ -438,7 +442,12 @@ module piece(n) {
   if (n == 2) plate();
   if (n == 3) column();
 }
-module printed() color(c_shell) for (n = [0:3]) piece(n);
+// The column prints as one piece with a filament change at the top of its
+// floor plate (z = floor_t): the floor green like the trays, the towers white.
+module col_slab() translate([x_cen - 1, -1, z_floor - 1]) cube([cen_w + 2, D + 2, floor_t + 1]);
+module column_base()   intersection() { column(); col_slab(); }
+module column_towers() difference()   { column(); col_slab(); }
+module printed() { for (n = [0:2]) color(c_shell) piece(n); color(c_shell) column_base(); color(c_col) column_towers(); }
 module assembly() {
   printed(); covers();
   bin(); bin_lid();
@@ -451,10 +460,12 @@ else if (part == "tray_dock") tray(0);
 else if (part == "tray_col")  translate([-x_cen, 0, 0]) tray(1);
 else if (part == "plate")     translate([0, 0, -tray_h]) plate();
 else if (part == "column")    translate([-x_cen, 0, -z_floor]) column();
+else if (part == "column_base")   column_base();      // the two colours, in place, for the renders
+else if (part == "column_towers") column_towers();
 else if (part == "sleeve")    sleeve();
 else if (part == "cover")     cover_flat();
 else if (part == "spout")     spout();
-else if (part == "spout_at")  translate([303, 300, 0]) spout();
+else if (part == "spout_at")  translate([303, 300, 0]) color(c_col) spout();
 else if (part == "piece")     piece(idx);
 else if (part == "bin")       bin(false);
 else if (part == "water")     at(tank_c, base_h + 2.01) bin_shape(2.5, (bin_h - 25) * fill);
