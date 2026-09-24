@@ -1,0 +1,364 @@
+<title>Hydro Doser Exploded</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F1EC; --panel:#FBFAF7; --ink:#1E2022; --ink-2:#5B5E63; --line:#DAD6CC;
+  --accent:#5F7F5B; --accent-ink:#3E5A3B; --accent-soft:#E3EBE1; --grid:#DDD9CF;
+  --shell:#EDEBE4; --label-bg:#FBFAF7; --feat:#8A5A2B; --feat-bg:#FBF3EA;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#1B1C1F; --panel:#232428; --ink:#ECEAE4; --ink-2:#A2A39E; --line:#3A3B40;
+    --accent:#8FB08A; --accent-ink:#BFD8BA; --accent-soft:#2C3A2B; --grid:#2A2B30;
+    --shell:#D8D5CC; --label-bg:#232428; --feat:#E0B285; --feat-bg:#2E2621;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#1B1C1F; --panel:#232428; --ink:#ECEAE4; --ink-2:#A2A39E; --line:#3A3B40;
+  --accent:#8FB08A; --accent-ink:#BFD8BA; --accent-soft:#2C3A2B; --grid:#2A2B30;
+  --shell:#D8D5CC; --label-bg:#232428; --feat:#E0B285; --feat-bg:#2E2621;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.45;overflow:hidden}
+*{box-sizing:border-box}
+.app{display:grid;grid-template-columns:1fr 340px;height:100%}
+.stage{position:relative;min-width:0;min-height:0}
+canvas{display:block}
+#gl{position:absolute;inset:0}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.tag{font:500 11px/1.25 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.03em;color:var(--ink);background:var(--label-bg);border:1px solid var(--line);padding:4px 7px;border-radius:2px;white-space:nowrap;transform:translate(12px,-50%);position:relative;max-width:260px}
+.tag::before{content:"";position:absolute;left:-12px;top:50%;width:12px;height:1px;background:var(--ink-2)}
+.tag::after{content:"";position:absolute;left:-15px;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:var(--accent)}
+.tag.part{text-transform:uppercase}
+.tag.feat{color:var(--feat);background:var(--feat-bg);border-color:transparent;white-space:normal;width:max-content}
+.tag.feat::after{background:var(--feat)}
+.tag.route{border-style:dashed}
+.hud{position:absolute;left:16px;top:16px;right:16px;display:flex;justify-content:space-between;gap:12px;pointer-events:none}
+.hud h1{font:600 22px/1.1 "IBM Plex Sans Condensed",system-ui,sans-serif;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.hud .dims{font:400 12px/1.5 "IBM Plex Mono",ui-monospace,monospace;color:var(--ink-2);font-variant-numeric:tabular-nums;margin-top:4px}
+.hud .status{font:400 12px "IBM Plex Mono",ui-monospace,monospace;color:var(--ink-2);text-align:right}
+.bar{position:absolute;left:16px;right:16px;bottom:16px;display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px 12px;flex-wrap:wrap}
+.bar button{font:500 12px "IBM Plex Sans",system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:7px 10px;cursor:pointer;min-width:74px}
+.bar button:hover{border-color:var(--accent)}
+.bar button:focus-visible,.step:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar input[type=range]{width:100%;accent-color:var(--accent)}
+.bar .ends{display:flex;justify-content:space-between;font:400 11px "IBM Plex Mono",ui-monospace,monospace;color:var(--ink-2);letter-spacing:.04em;text-transform:uppercase}
+.bar .track{flex:1 1 200px;display:flex;flex-direction:column;gap:2px}
+.bar label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.seg{display:flex;align-items:center;gap:0;font-size:12px;color:var(--ink-2)}
+.seg span{margin-right:6px}
+.seg button{min-width:0;padding:6px 9px;border-radius:0;margin-left:-1px}
+.seg button:first-of-type{border-radius:3px 0 0 3px;margin-left:0}
+.seg button:last-of-type{border-radius:0 3px 3px 0}
+.seg button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);position:relative;z-index:1}
+.side{background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding-block:20px;padding-inline:20px;display:flex;flex-direction:column;gap:14px}
+.side h2{font:600 12px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0}
+.steps{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.step{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:10px 10px 10px 8px;border:1px solid transparent;border-radius:4px;cursor:pointer;text-align:left;background:none;color:inherit;font:inherit;width:100%}
+.step:hover{border-color:var(--line)}
+.step.active{background:var(--accent-soft);border-color:var(--accent)}
+.step .n{font:500 18px/1 "IBM Plex Sans Condensed",system-ui,sans-serif;color:var(--accent-ink);padding-top:1px;font-variant-numeric:tabular-nums}
+.step .t{font:600 14px/1.25 "IBM Plex Sans Condensed",system-ui,sans-serif;margin:0 0 3px}
+.step .d{color:var(--ink-2);font-size:12.5px;margin:0}
+.step .hw{font:400 11px "IBM Plex Mono",ui-monospace,monospace;color:var(--accent-ink);margin-top:5px}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;color:var(--ink-2);margin:0;padding:0;list-style:none}
+.legend li{display:flex;align-items:center;gap:7px}
+.legend i{width:11px;height:11px;border-radius:2px;border:1px solid var(--line);flex:none}
+.legend i.r{height:4px;border-radius:2px}
+.note{font-size:12px;color:var(--ink-2);margin:0;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr;grid-template-rows:58vh 1fr}
+  .side{border-left:0;border-top:1px solid var(--line);padding-block:14px;padding-inline:16px}
+  .hud h1{font-size:18px}
+  .hud .status{display:none}
+  .bar{left:12px;right:12px;bottom:12px;padding:8px}
+}
+</style>
+
+<div class="app">
+  <div class="stage">
+    <div id="gl"></div>
+    <div id="labels"></div>
+    <div class="hud">
+      <div>
+        <h1>Hydro Doser, exploded</h1>
+        <div class="dims">345 × 225 × 315 mm · 1 tank, 3 pumps · doses straight into the reservoir</div>
+      </div>
+      <div class="status" id="status">loading parts…</div>
+    </div>
+    <div class="bar">
+      <button id="play" type="button">Play</button>
+      <div class="track">
+        <input id="t" type="range" min="0" max="1000" value="0" aria-label="Assemble">
+        <div class="ends"><span>exploded</span><span>assembled</span></div>
+      </div>
+
+      <div class="seg" role="group" aria-label="View"><span>view</span><button id="view-normal" type="button" class="on">normal</button><button id="view-xray" type="button">x-ray</button></div>
+      <button id="view" type="button">Reset view</button>
+    </div>
+  </div>
+  <aside class="side">
+    <h2>Assembly order</h2>
+    <ol class="steps" id="steps"></ol>
+    <h2>Parts</h2>
+    <ul class="legend" id="legend"></ul>
+    <h2>Tube routes</h2>
+    <ul class="legend" id="routes"></ul>
+    <p class="note">Drag to orbit, scroll to zoom. Clicking a step moves the model to the moment before that step is done. Hover any part or tube to see what it is and what its holes and features are for. The x-ray view makes every solid semi-opaque so the tubing and the insides show, at any point on the slider. Bought parts are drawn to catalogue sizes, not measured ones.</p>
+  </aside>
+</div>
+
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// Colours by material. 'shell' is the printed PETG; the rest are bought parts.
+const COL = {
+  shell:{c:0x577544}, pump:{c:0xE2E2E2}, fitting:{c:0x6A6A6A}, pin:{c:0x505050},
+  esp:{c:0x1F3A5F}, uln:{c:0x1E6B35}, buck:{c:0x1A1A1A},
+  bin:{c:0xB8CFE0,o:0.35}, water:{c:0x4A8CC8,o:0.55}, lid:{c:0xF4F4F1,o:0.85},
+  sprout:{c:0xB3662A}, thrive:{c:0xECEBE3}, led:{c:0xBFF2BF,o:0.9}, cover:{c:0x1E1E1E},
+};
+const LEGEND = [['shell','Printed, matte olive PETG'],['cover','Pump covers, matte black PETG'],['pump','Peristaltic pump'],['fitting','Grommet, barb'],['pin','GX12'],
+  ['esp','ESP32 DevKit'],['uln','ULN2003'],['buck','12 → 5 V buck, jack, buttons'],['bin','Cambro 6 qt bin'],['sprout','Nutrient A'],['thrive','Nutrient B']];
+
+// Steps in assembly order. win = the slice of the slider during which the
+// step's parts travel; off = where each part sits at full explode, mm.
+// feats = labels for holes and features, on the part they belong to.
+const S = [
+  {t:'Bolt the trays together', d:'The dock and the column tray, side by side. Three M3×12 through the seam (one high, at the middle), three 14 mm tube holes and a wire hole. Posts in every corner, a full-height bulkhead and a crossbar under the plate.', hw:'3 × M3×12, nuts', win:[0.875,1], parts:[
+    ['tray_dock','Dock tray','shell',[-60,0,0]],['tray_col','Column tray','shell',[60,0,0]]],
+   feats:[['tray_dock',[225,16,30],'Seam bolts M3 ×3'],['tray_dock',[225,20,14],'Tube hole Ø14, front bay: Nutrient A’s feed'],['tray_dock',[225,110,16],'Tube holes Ø14 ×2: water feed, both outlets'],['tray_dock',[225,150,16],'Wire hole Ø10: motor and panel leads'],
+     ['tray_dock',[8,8,66],'Plate posts ×4, 10 mm, heat-set M3, each in a corner'],['tray_dock',[112,32,60],'Bulkhead, full height: carries the plate'],['tray_dock',[112,165,60],'Crossbar: second support for the plate'],['tray_dock',[17,3,40],'Cover-screw ribs, floor to plate'],
+     ['tray_dock',[200,0,22],'Dose button'],['tray_dock',[186,0,34],'Status light'],['tray_dock',[200,0,46],'Stop button'],
+     ['tray_col',[337,8,66],'Column posts ×3, at the corners the cans leave exposed'],['tray_col',[248,165,10],'Standoffs, 4 per board: ESP32, ULN2003, buck'],['tray_col',[245,225,12],'USB slot: flashing the ESP32'],
+     ['tray_col',[275,225,30],'12 V jack'],['tray_col',[297,225,30],'GX12: the float lead from the reservoir'],['tray_col',[323,225,30],'Grommet Ø16: the sleeved bundle to the reservoir, the only thing that leaves']]},
+  {t:'Pumps drop into the trays', d:'Water and Nutrient A in the dock, Nutrient B in the column tray. Each drops in from above: motor into the U-slot in the bulkhead, head in the front bay, rolled so its barbs point sideways into the room beside it. The flange’s lower screws are driven from the front, through the opening.', hw:'6 × M3 self-tapping', win:[0.75,0.875], parts:[
+    ['pump0','Water pump','pump',[0,0,95]],['pump1','Nutrient A pump','pump',[0,0,95]],['pump2','Nutrient B pump','pump',[0,0,95]]],
+   feats:[['tray_dock',[46,32,48],'U-slot, open at the top'],['tray_dock',[86,32,32],'Tube slot 12 × 28, beside the head'],['tray_dock',[64,0,16],'Flange screws, 48.5 mm apart on the rolled flange, driven from the front through the opening'],
+     ['pump0',[71,13,49],'Nozzles off the top of the head; the pump is rolled 42° so they clear the plate. Inlet outer, outlet inner']]},
+  {t:'Electronics and panel hardware', d:'ESP32, the ULN2003 and the buck on standoffs in the column tray, behind the Nutrient B motor, nowhere near the tank. Buttons and light in the dock’s front; jack, GX12 and grommet in the back.', hw:'panel nuts', win:[0.625,0.75], parts:[
+    ['esp32','ESP32 DevKit','esp',[0,0,60]],['uln1','ULN2003','uln',[0,0,60]],['buck','12 → 5 V buck','buck',[0,0,60]],
+    ['dose','Dose button','buck',[0,-60,0]],['led','Status light','led',[0,-60,0]],['stop','Stop button','buck',[0,-60,0]],
+    ['dcjack','12 V jack','buck',[0,60,0]],['gx12','GX12 socket','pin',[0,60,0]],['grommet','Grommet + bundle','fitting',[0,60,0]]],
+   feats:[['esp32',[245,205,14],'Micro-USB through the back wall']]},
+  {t:'Dock plate and the column', d:'The plate screws to four posts, countersunk. Its 3 mm curb locates the tank; a 1.5 mm rim keeps spills on top, and a notch at the back drains them off the outside of the case. The column screws down at three exposed corners; its cans are the pockets, and three chases carry the lines.', hw:'7 × M3×8', win:[0.5,0.625], parts:[
+    ['plate','Dock plate','shell',[0,0,120]],['column','Column','shell',[0,0,150]]],
+   feats:[['plate',[112,17,73],'Curb 3 mm: locates the tank'],['plate',[112,3,71],'Drip rim 1.5 mm; the notch at the back drains outside'],['plate',[8,8,70],'Plate screws ×4, countersunk'],
+     ['column',[244,13,303],'Nutrient A chase: cap tube in at the top, out through the floor'],['column',[326,212,303],'Nutrient B chase'],['column',[235,112,303],'Tank chase: the line comes out of the top, 40 mm above the lid'],
+     ['column',[285,0,190],'Window: bottle level'],['column',[337,8,70],'Column screws ×3, countersunk, where the plate is exposed'],['column',[243,110,150],'Web walls, can to can: one box section']]},
+  {t:'Tank onto the dock', d:'A stock Cambro 6 qt bin, nothing fitted to it. Drop it on; the curb locates it. Lift straight up to fill, or lift the lid.', hw:'Cambro 6SFSPP190 + lid', win:[0.375,0.5], parts:[
+    ['bin0','Water tank','bin',[0,0,300]],['water0','','water',[0,0,300]],['lid0','Lid','lid',[0,0,380]]],
+   feats:[['lid0',[195,112,263],'Lid drilled Ø10: the tank line']]},
+  {t:'Sleeves and bottles', d:'A sleeve holds each 125 mL bottle at the rim: a cup on three fins, a window, a notch to lift it. 1 L bottles go straight in. Nutrient A front, Nutrient B back.', hw:'2 × sleeve', win:[0.25,0.375], parts:[
+    ['sleeve0','Sleeve','shell',[0,0,350]],['sleeve1','','shell',[0,0,350]],['bottle0','Nutrient A','sprout',[0,0,480]],['bottle1','Nutrient B','thrive',[0,0,480]]],
+   feats:[['sleeve0',[285,6,250],'Cup on fins, cap at the rim']]},
+  {t:'Run the tubes', d:'Silicone 1/4". Pickups sit on the bottom of the tank and the bottles; every outlet ends in air at the reservoir, in the spout, so nothing can siphon. The three outlets and the float lead leave the back as one sleeved bundle.', hw:'~3 m tube, sleeve, spout', win:[0.125,0.25], parts:[
+    ['spout_at','Spout, at the reservoir','shell',[0,80,0]]], feats:[['spout_at',[323,320,42],'Hangs on the reservoir’s rim; holds the ends above the water']]},
+  {t:'Covers on', d:'Each pump’s opening closes with a cover and two countersunk screws. Take a cover off to change that pump’s tube; nothing else moves.', hw:'6 × M3×8 countersunk', win:[0,0.125], parts:[
+    ['cover0','Pump cover','cover',[0,-70,0]],['cover1','','cover',[0,-70,0]],['cover2','','cover',[0,-70,0]]], feats:[]},
+];
+const TUBE_STEP = 6;
+
+// Tube routes, model mm, assembled. Drawn as tubes; they don't explode.
+const ROUTES = [
+  {n:'Tank → Water pump', c:0x4A8CC8, p:[[195,112,74],[195,112,262],[195,112,288],[212,112,322],[235,112,322],[235,112,303],[235,112,280],[235,112,66],[232,116,30],[225,110,19],[180,100,30],[100,60,46],[86,32,44],[84,22,54],[78,13,56],[71,13,49]]},
+  {n:'Water pump → reservoir', c:0x4A8CC8, p:[[60,13,59],[63,14,62],[72,22,60],[86,32,42],[110,60,26],[180,118,18],[225,110,13],[262,125,34],[310,195,34],[323,222,30],[323,290,30]]},
+  {n:'Nutrient A bottle → Nutrient A pump', c:0xB3662A, p:[[285,54,313],[262,30,326],[244,13,324],[244,13,306],[244,13,66],[238,18,30],[225,20,14],[200,18,30],[175,16,44],[162,13,56],[155,13,49]]},
+  {n:'Nutrient A pump → reservoir', c:0xB3662A, p:[[144,13,59],[147,14,62],[156,22,60],[170,32,42],[190,60,22],[215,125,18],[225,130,16],[262,140,34],[310,200,34],[323,222,32],[323,290,32]]},
+  {n:'Nutrient B bottle → Nutrient B pump', c:0xC9B98A, p:[[285,171,313],[308,192,326],[326,212,324],[326,212,306],[326,212,66],[326,150,44],[314,32,44],[312,22,54],[306,13,56],[299,13,49]]},
+  {n:'Nutrient B pump → reservoir', c:0xC9B98A, p:[[288,13,59],[291,14,62],[300,22,60],[314,32,42],[326,100,30],[324,200,30],[323,222,28],[323,290,28]]},
+];
+
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const stage = document.querySelector('.stage');
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.getElementById('gl').appendChild(renderer.domElement);
+const labels = new CSS2DRenderer({element: document.getElementById('labels')});
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 10, 6000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.52;
+const HOME = {pos:[820, 700, 900], tgt:[172, 230, -112]};
+function home(){ camera.position.set(...HOME.pos); controls.target.set(...HOME.tgt); controls.update(); }
+home();
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a80, 1.1));
+const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(500, 900, 600); scene.add(key);
+const fill = new THREE.DirectionalLight(0xffffff, 0.5); fill.position.set(-600, 300, -400); scene.add(fill);
+
+// The model is z-up; three.js is y-up. Everything lives inside root.
+const root = new THREE.Group(); root.rotation.x = -Math.PI/2; scene.add(root);
+const grid = new THREE.GridHelper(1400, 28); grid.position.set(172, -1, -112); scene.add(grid);
+
+const parts = [], feats = [], routeMeshes = [];
+function theme(){
+  scene.background = new THREE.Color(css('--bg'));
+  grid.material.color = new THREE.Color(css('--grid'));
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', theme);
+new MutationObserver(theme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+const stepsEl = document.getElementById('steps');
+S.forEach((s, i) => {
+  const li = document.createElement('li');
+  li.innerHTML = `<button class="step" type="button" data-i="${i}"><span class="n">${i+1}</span><span><p class="t">${s.t}</p><p class="d">${s.d}</p><div class="hw">${s.hw}</div></span></button>`;
+  stepsEl.appendChild(li);
+  s.parts.forEach(([f, name, mat, off]) => parts.push({f, name, mat, off, step:i, mesh:null, label:null}));
+});
+const hex = c => '#' + c.toString(16).padStart(6, '0');
+document.getElementById('legend').innerHTML = LEGEND.map(([k, n]) => `<li><i style="background:${hex(COL[k].c)}"></i>${n}</li>`).join('');
+document.getElementById('routes').innerHTML = ROUTES.map(r => `<li><i class="r" style="background:${hex(r.c)}"></i>${r.n}</li>`).join('');
+
+function tag(text, cls){ const el = document.createElement('div'); el.className = 'tag ' + cls; el.textContent = text; return new CSS2DObject(el); }
+
+// Each part is a binary STL, shipped base64-encoded as text.
+const loader = new STLLoader();
+async function fetchSTL(name){
+  const b64 = (await (await fetch(`parts/${name}.txt`)).text()).replace(/\s/g, '');
+  const bin = atob(b64), buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return loader.parse(buf.buffer);
+}
+let loaded = 0;
+const status = document.getElementById('status');
+await Promise.all(parts.map(p => fetchSTL(p.f).then(geo => {
+  geo.computeVertexNormals();
+  const m = COL[p.mat];
+  p.mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:m.c, roughness:0.55, metalness:0.05, transparent:!!m.o, opacity:m.o ?? 1, depthWrite:!m.o}));
+  p.mesh.renderOrder = m.o ? 2 : 0;
+  geo.computeBoundingBox();
+  const c = geo.boundingBox.getCenter(new THREE.Vector3()), sz = geo.boundingBox.getSize(new THREE.Vector3());
+  root.add(p.mesh);
+  if (p.name) { p.label = tag(p.name, 'part'); p.label.position.set(c.x + sz.x/2, c.y, c.z); p.mesh.add(p.label); }
+  loaded++; status.textContent = `loading parts… ${loaded}/${parts.length}`;
+}).catch(() => { status.textContent = `could not load ${p.f}`; })));
+status.textContent = `${parts.length} parts, ${ROUTES.length} tube runs`;
+
+// Feature labels ride on the part they belong to.
+S.forEach((s, i) => s.feats.forEach(([f, at, text]) => {
+  const p = parts.find(q => q.f === f); if (!p || !p.mesh) return;
+  const l = tag(text, 'feat'); l.position.set(...at); p.mesh.add(l); feats.push({label:l, step:i, mesh:p.mesh});
+}));
+
+// Tubes: smooth curves through their waypoints, one label each at the midpoint.
+const tubeGroup = new THREE.Group(); root.add(tubeGroup);
+ROUTES.forEach(r => {
+  const curve = new THREE.CatmullRomCurve3(r.p.map(v => new THREE.Vector3(...v)), false, 'catmullrom', 0.3);
+  const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 96, 3.2, 12, false), new THREE.MeshStandardMaterial({color:r.c, roughness:0.4, transparent:true, opacity:1}));
+  const l = tag(r.n, 'route'); l.position.copy(curve.getPoint(0.5)); mesh.add(l);
+  tubeGroup.add(mesh); routeMeshes.push({mesh, label:l});
+});
+theme();
+
+// ---------------------------------------------------------------- explode
+const slider = document.getElementById('t');
+// Labels stay hidden. Hovering a part shows its name and the labels of its
+// features; hovering a tube shows its route.
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let hovered = null;
+renderer.domElement.addEventListener('pointermove', e => {
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.x = ((e.clientX - r.left) / r.width) * 2 - 1; ptr.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+  ray.setFromCamera(ptr, camera);
+  const targets = [...parts.filter(p => p.mesh).map(p => p.mesh), ...routeMeshes.filter(r => r.mesh.visible && r.mesh.material.opacity > 0.05).map(r => r.mesh)];
+  const hit = ray.intersectObjects(targets, false)[0];
+  const h = hit ? hit.object : null;
+  if (h !== hovered) { hovered = h; apply(); }
+});
+renderer.domElement.addEventListener('pointerleave', () => { if (hovered) { hovered = null; apply(); } });
+// View: 'normal' draws every solid as it is; 'x-ray' makes all solids
+// semi-opaque so the tubing and the insides show, at any explode level.
+let viewMode = 'normal';
+for (const m of ['normal', 'xray']) document.getElementById('view-' + m).addEventListener('click', () => {
+  viewMode = m;
+  for (const n of ['normal', 'xray']) document.getElementById('view-' + n).classList.toggle('on', n === m);
+  apply();
+});
+const playBtn = document.getElementById('play');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Opens fully exploded and stays there until Play or the slider is used.
+let t = 1, playing = false, dir = -1, hold = 0, pinnedStep = -1;
+const ease = x => x <= 0 ? 0 : x >= 1 ? 1 : x*x*(3 - 2*x);
+
+function activeStep(){
+  if (pinnedStep >= 0) return pinnedStep;
+  for (let i = 0; i < S.length; i++) { const [a, b] = S[i].win; if (t > a + 0.001 && t <= b + 0.001) return i; }
+  return t <= 0.001 ? -1 : 0;
+}
+function apply(){
+  const act = activeStep();
+  for (const p of parts) {
+    if (!p.mesh) continue;
+    const [a, b] = S[p.step].win;
+    const k = ease((t - a) / (b - a));
+    p.mesh.position.set(p.off[0]*k, p.off[1]*k, p.off[2]*k);
+    if (p.label) p.label.visible = p.mesh === hovered;
+    const em = p.mesh.material.emissive; if (em) em.setHex(p.mesh === hovered ? 0x2a2a22 : 0x000000);
+  }
+  for (const f of feats) f.label.visible = f.mesh === hovered;
+  // Tubes are always drawn; in the normal view they are simply inside the
+  // case. X-ray makes every solid semi-opaque so they show through.
+  const xray = viewMode === 'xray';
+  const [ta, tb] = S[TUBE_STEP].win;
+  const tubeK = 1 - ease((t - ta) / (tb - ta));            // tubes fade in as they're run
+  tubeGroup.visible = tubeK > 0.01;
+  for (const r of routeMeshes) { r.mesh.material.opacity = tubeK; r.label.visible = r.mesh === hovered; }
+  for (const p of parts) if (p.mesh) {
+    const base = COL[p.mat].o ?? 1;
+    const o = xray ? Math.min(base, 0.3) : base;
+    const m = p.mesh.material;
+    if (m.opacity !== o) { m.opacity = o; m.transparent = o < 0.999; m.depthWrite = o >= 0.999; p.mesh.renderOrder = o < 0.999 ? 2 : 0; }
+  }
+  document.querySelectorAll('.step').forEach((el, i) => el.classList.toggle('active', i === act));
+  slider.value = Math.round((1 - t) * 1000);   // left = exploded, right = assembled
+}
+slider.addEventListener('input', () => { t = 1 - slider.value / 1000; pinnedStep = -1; playing = false; playBtn.textContent = 'Play'; apply(); });
+playBtn.addEventListener('click', () => { playing = !playing; pinnedStep = -1; playBtn.textContent = playing ? 'Pause' : 'Play'; if (playing) { dir = t <= 0.001 ? 1 : t >= 0.999 ? -1 : dir; hold = 0; } });
+document.getElementById('view').addEventListener('click', home);
+let goal = null, goalFrom = 0, goalStart = 0;
+stepsEl.addEventListener('click', e => {
+  const b = e.target.closest('.step'); if (!b) return;
+  const i = +b.dataset.i; playing = false; playBtn.textContent = 'Play'; pinnedStep = i;
+  goal = S[i].win[1]; goalFrom = t; goalStart = performance.now();
+});
+if (!playing) playBtn.textContent = 'Play';
+
+window.claude?.hot?.snapshot?.(() => ({t}));
+const boot = window.claude?.hot?.data; if (boot && typeof boot.t === 'number') { t = boot.t; playing = false; playBtn.textContent = 'Play'; }
+
+function resize(){
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labels.setSize(w, h);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage); resize();
+
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (goal !== null) {
+    const k = ease(Math.min(1, (now - goalStart) / 900));
+    t = goalFrom + (goal - goalFrom) * k;
+    if (k >= 1) goal = null;
+  } else if (playing) {
+    if (hold > 0) hold -= dt;
+    else { t += dir * dt / 10; if (t <= 0) { t = 0; dir = 1; hold = 1.6; } if (t >= 1) { t = 1; dir = -1; hold = 1.6; } }
+  }
+  apply();
+  controls.update();
+  renderer.render(scene, camera); labels.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>

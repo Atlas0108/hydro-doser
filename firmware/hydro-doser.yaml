@@ -1,0 +1,423 @@
+# Hydro Doser -- four 12 V peristaltic pumps on an ESP32, via two ULN2003
+# boards. Nutrient A and Nutrient B dose into a mix tank, a water pump fills it, and a
+# transfer pump moves the mix into the reservoir. Wiring,
+# calibration and use: README.md.
+#
+#   esphome run hydro-doser.yaml                                  # first flash, over USB
+#   esphome run hydro-doser.yaml --device hydro-doser.local        # OTA after that
+#
+# All pumping goes through one queued script (run_pump), so only one pump
+# ever runs at a time, and every run has a time limit. The firmware tracks how
+# much is in the mix tank by counting (flow rate x run time). Nothing measures
+# it, so keep the flow rates calibrated.
+
+esphome:
+  name: hydro-doser
+  friendly_name: Hydro Doser
+  includes:
+    - doser.h        # pump indexes and names, the run-time limit
+
+esp32:
+  board: esp32dev
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_key
+  # For HA automations, e.g. a batch sized to what the garden used this week.
+  actions:
+    - action: dose
+      variables: { pump: string, ml: float }
+      then:
+        - script.execute:
+            id: run_pump
+            p: !lambda return pump_index(pump);
+            ml: !lambda return ml;
+            seconds: 0
+            account: true
+    - action: make_batch
+      variables: { liters: float, nutrients: bool }
+      then:
+        - script.execute:
+            id: make_batch
+            liters: !lambda return liters;
+            nutrients: !lambda return nutrients;
+    - action: transfer
+      variables: { liters: float }
+      then:
+        - script.execute:
+            id: run_pump
+            p: 3
+            ml: !lambda "return liters > 0 ? liters * 1000.0f : 1e9f;"
+            seconds: 0
+            account: true
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_password
+    - ssid: !secret wifi_ssid_main
+      password: !secret wifi_password
+  ap:
+    ssid: "Hydro Doser Setup"
+    password: !secret ap_password
+
+captive_portal:
+
+# --------------------------------------------------------------------- pumps
+# Each pump hangs off two ULN2003 channels in parallel: one GPIO drives both
+# INs, and the pump's - lead goes to both OUTs. That's 1 A of sink for a pump
+# that draws a few hundred mA. Pump + goes to the board's + pin (12 V). The
+# ULN2003's own diodes catch the motor's flyback.
+#   board A: IN1+IN2 Nutrient A, IN3+IN4 Nutrient B
+#   board B: IN1+IN2 Water,  IN3+IN4 Transfer
+output:
+  - { platform: gpio, id: out_sprout,   pin: GPIO25 }
+  - { platform: gpio, id: out_thrive,   pin: GPIO26 }
+  - { platform: gpio, id: out_water,    pin: GPIO27 }
+  - { platform: gpio, id: out_transfer, pin: GPIO32 }
+
+globals:
+  # Tracked across reboots: what's in the mix tank, and what's left the
+  # nutrient bottles since each was last refilled.
+  - { id: mix_ml,      type: float, restore_value: true, initial_value: '0' }
+  - { id: sprout_used, type: float, restore_value: true, initial_value: '0' }
+  - { id: thrive_used, type: float, restore_value: true, initial_value: '0' }
+  # The run in progress. run_pump_idx is -1 when no pump is on.
+  - { id: run_pump_idx, type: int,      initial_value: '-1' }
+  - { id: run_start,    type: uint32_t, initial_value: '0' }
+  - { id: run_ms,       type: uint32_t, initial_value: '0' }
+  - { id: run_account,  type: bool,     initial_value: 'true' }
+  - { id: batch_ok,     type: bool,     initial_value: 'false' }
+
+script:
+  # Run one pump. ml is converted to run time with that pump's flow rate;
+  # seconds > 0 runs for a fixed time instead (calibrating, priming). With
+  # account false, the run skips every mix-tank check and doesn't count toward
+  # the tank, for pumping into a measuring cup.
+  #
+  # Queued, so a dose sent while another runs waits its turn.
+  - id: run_pump
+    mode: queued
+    max_runs: 8
+    parameters: { p: int, ml: float, seconds: float, account: bool }
+    then:
+      - lambda: |-
+          id(run_pump_idx) = -1;
+          if (p < 0 || p > 3) { id(status).publish_state("Unknown pump"); return; }
+          const char *name = PUMP_NAMES[p];
+          float rates[4] = {id(flow_sprout).state, id(flow_thrive).state,
+                            id(flow_water).state, id(flow_transfer).state};
+          float rate = rates[p];   // mL/min
+          char msg[96];
+
+          uint32_t ms;
+          if (seconds > 0) {
+            ms = (uint32_t) (seconds * 1000.0f);
+          } else {
+            float want = ml;
+            if (account && p == PUMP_TRANSFER) {
+              // Fail-safe: an unplugged float switch reads "full".
+              if (id(rise_full).state) { id(status).publish_state("reservoir full: transfer skipped"); return; }
+              want = std::min(want, id(mix_ml));
+              if (want <= 0) { id(status).publish_state("Mix tank empty: transfer skipped"); return; }
+            }
+            if (want <= 0) return;
+            if (account && p != PUMP_TRANSFER && id(mix_ml) + want > id(mix_capacity).state * 1000.0f) {
+              snprintf(msg, sizeof msg, "%s: %.0f mL would overfill the mix tank (%.0f mL in it)", name, want, id(mix_ml));
+              id(status).publish_state(msg);
+              return;
+            }
+            ms = (uint32_t) (want / rate * 60000.0f);
+            snprintf(msg, sizeof msg, "%s: pumping %.1f mL", name, want);
+          }
+          if (ms > MAX_RUN_MS) {
+            if (p != PUMP_TRANSFER) {
+              snprintf(msg, sizeof msg, "%s: run of %u min is over the %u min limit", name,
+                       (unsigned) (ms / 60000), (unsigned) (MAX_RUN_MS / 60000));
+              id(status).publish_state(msg);
+              return;
+            }
+            ms = MAX_RUN_MS;   // a transfer can stop short; the rest stays in the tank
+          }
+          if (seconds > 0) snprintf(msg, sizeof msg, "%s: running %.0f s", name, seconds);
+
+          output::BinaryOutput *outs[4] = {id(out_sprout), id(out_thrive), id(out_water), id(out_transfer)};
+          id(run_pump_idx) = p;
+          id(run_ms) = ms;
+          id(run_account) = account;
+          id(run_start) = millis();
+          outs[p]->turn_on();
+          id(status).publish_state(msg);
+          ESP_LOGI("doser", "%s", msg);
+      - wait_until:
+          condition:
+            lambda: |-
+              int running = id(run_pump_idx);
+              return running < 0
+                  || millis() - id(run_start) >= id(run_ms)
+                  || (running == PUMP_TRANSFER && id(run_account) && id(rise_full).state);
+      - script.execute: pump_finish
+
+  # Turn the running pump off and count what it moved. Also called by Stop,
+  # so an interrupted run still counts.
+  - id: pump_finish
+    then:
+      - lambda: |-
+          int p = id(run_pump_idx);
+          if (p < 0) return;
+          output::BinaryOutput *outs[4] = {id(out_sprout), id(out_thrive), id(out_water), id(out_transfer)};
+          outs[p]->turn_off();
+          id(run_pump_idx) = -1;
+
+          float rates[4] = {id(flow_sprout).state, id(flow_thrive).state,
+                            id(flow_water).state, id(flow_transfer).state};
+          uint32_t el = millis() - id(run_start);
+          float moved = rates[p] * el / 60000.0f;
+
+          if (p == PUMP_SPROUT) id(sprout_used) += moved;
+          if (p == PUMP_THRIVE) id(thrive_used) += moved;
+          if (id(run_account)) {
+            if (p == PUMP_TRANSFER) id(mix_ml) = std::max(0.0f, id(mix_ml) - moved);
+            else id(mix_ml) += moved;
+          }
+
+          char msg[96];
+          bool full = p == PUMP_TRANSFER && id(run_account) && id(rise_full).state;
+          snprintf(msg, sizeof msg, "%s: done, %.1f mL in %.1f s%s", PUMP_NAMES[p], moved, el / 1000.0f,
+                   full ? " (reservoir full)" : "");
+          id(status).publish_state(msg);
+          ESP_LOGI("doser", "%s", msg);
+
+  # Fill the mix tank: 80% of the water, then Nutrient A, then Nutrient B, then the
+  # last 20% of the water. Each concentrate lands in water, never in the other
+  # concentrate, and the last water rinses the nutrient out of the inlet and
+  # stirs the tank. Checks the whole batch up front, so it either runs
+  # completely or not at all.
+  - id: make_batch
+    mode: single
+    parameters: { liters: float, nutrients: bool }
+    then:
+      - script.wait: run_pump       # let anything already queued finish first
+      - lambda: |-
+          id(batch_ok) = false;
+          char msg[112];
+          if (liters <= 0) { id(status).publish_state("Batch size is 0"); return; }
+          float water = liters * 1000.0f;
+          float s = nutrients ? liters * id(sprout_dose).state : 0;
+          float t = nutrients ? liters * id(thrive_dose).state : 0;
+          float cap = id(mix_capacity).state * 1000.0f;
+          if (id(mix_ml) + water + s + t > cap) {
+            snprintf(msg, sizeof msg, "Batch of %.1f L won't fit: %.0f mL already in a %.1f L tank",
+                     liters, id(mix_ml), id(mix_capacity).state);
+            id(status).publish_state(msg);
+            return;
+          }
+          if (water * 0.8f / id(flow_water).state * 60000.0f > MAX_RUN_MS) {
+            id(status).publish_state("Batch too big for one water run: make two smaller batches");
+            return;
+          }
+          if (nutrients && s + t <= 0)
+            ESP_LOGW("doser", "Nutrient A and Nutrient B doses are both 0 mL/L: this batch is plain water");
+          snprintf(msg, sizeof msg, "Batch: %.1f L water, %.1f mL Nutrient A, %.1f mL Nutrient B", liters, s, t);
+          id(status).publish_state(msg);
+          ESP_LOGI("doser", "%s", msg);
+          id(batch_ok) = true;
+      - if:
+          condition:
+            lambda: return id(batch_ok);
+          then:
+            - script.execute:
+                id: run_pump
+                p: 2
+                ml: !lambda return liters * 800.0f;
+                seconds: 0
+                account: true
+            - script.wait: run_pump
+            - script.execute:
+                id: run_pump
+                p: 0
+                ml: !lambda "return nutrients ? liters * id(sprout_dose).state : 0.0f;"
+                seconds: 0
+                account: true
+            - script.wait: run_pump
+            - script.execute:
+                id: run_pump
+                p: 1
+                ml: !lambda "return nutrients ? liters * id(thrive_dose).state : 0.0f;"
+                seconds: 0
+                account: true
+            - script.wait: run_pump
+            - script.execute:
+                id: run_pump
+                p: 2
+                ml: !lambda return liters * 200.0f;
+                seconds: 0
+                account: true
+            - script.wait: run_pump
+            - lambda: |-
+                char msg[64];
+                snprintf(msg, sizeof msg, "Batch ready: %.2f L in the mix tank", id(mix_ml) / 1000.0f);
+                id(status).publish_state(msg);
+
+# ----------------------------------------------------------------- the float
+# A float switch in the reservoir, at the highest level you want it
+# filled to, wired between GPIO33 and GND. Mount it so the contact is CLOSED
+# while the water is below it. Open reads "full", so a snapped wire or an
+# unplugged switch stops transfers instead of flooding the garden.
+binary_sensor:
+  - platform: gpio
+    id: rise_full
+    name: Reservoir Full
+    icon: mdi:waves-arrow-up
+    pin: { number: GPIO33, mode: { input: true, pullup: true } }
+    filters: [ delayed_on_off: 500ms ]   # ride out ripples from the inflow
+
+# ------------------------------------------------------------------ settings
+number:
+  # Flow rates. Calibrate each with "Run Pump 60 s": the mL it moved is the
+  # number to enter here. 100 is the listing's figure, not a measured one.
+  - { platform: template, id: flow_sprout,   name: Nutrient A Flow,   icon: mdi:speedometer, min_value: 1, max_value: 500, step: 0.1, initial_value: 100, unit_of_measurement: mL/min, optimistic: true, restore_value: true, entity_category: config }
+  - { platform: template, id: flow_thrive,   name: Nutrient B Flow,   icon: mdi:speedometer, min_value: 1, max_value: 500, step: 0.1, initial_value: 100, unit_of_measurement: mL/min, optimistic: true, restore_value: true, entity_category: config }
+  - { platform: template, id: flow_water,    name: Water Flow,    icon: mdi:speedometer, min_value: 1, max_value: 500, step: 0.1, initial_value: 100, unit_of_measurement: mL/min, optimistic: true, restore_value: true, entity_category: config }
+  - { platform: template, id: flow_transfer, name: Transfer Flow, icon: mdi:speedometer, min_value: 1, max_value: 500, step: 0.1, initial_value: 100, unit_of_measurement: mL/min, optimistic: true, restore_value: true, entity_category: config }
+
+  # Nutrient per liter of batch water. Zero until set from the nutrient maker's feeding
+  # directions. Set Nutrient A back to 0 once the plants are past it.
+  - { platform: template, id: sprout_dose, name: Nutrient A Dose, icon: mdi:sprout, min_value: 0, max_value: 20, step: 0.1, initial_value: 0, unit_of_measurement: mL/L, optimistic: true, restore_value: true, mode: box }
+  - { platform: template, id: thrive_dose, name: Nutrient B Dose, icon: mdi:leaf,   min_value: 0, max_value: 20, step: 0.1, initial_value: 0, unit_of_measurement: mL/L, optimistic: true, restore_value: true, mode: box }
+
+  - { platform: template, id: batch_size,      name: Batch Size,         icon: mdi:beaker,        min_value: 0.5, max_value: 10, step: 0.5, initial_value: 2, unit_of_measurement: L, optimistic: true, restore_value: true, mode: box }
+  - { platform: template, id: mix_capacity,    name: Mix Tank Capacity,  icon: mdi:cup-water,     min_value: 0.5, max_value: 20, step: 0.1, initial_value: 4, unit_of_measurement: L, optimistic: true, restore_value: true, mode: box, entity_category: config }
+  # 0 = everything in the mix tank (still stops at the float).
+  - { platform: template, id: transfer_amount, name: Transfer Amount,    icon: mdi:transfer-right, min_value: 0,  max_value: 10, step: 0.1, initial_value: 0, unit_of_measurement: L, optimistic: true, restore_value: true, mode: box }
+
+select:
+  - platform: template
+    id: calibrate_pump
+    name: Calibrate Pump
+    icon: mdi:tune-vertical
+    options: [Nutrient A, Nutrient B, Water, Transfer]
+    initial_option: Nutrient A
+    optimistic: true
+    entity_category: config
+
+button:
+  - platform: template
+    name: Mix Nutrient Batch
+    icon: mdi:flask-plus
+    on_press:
+      - script.execute:
+          id: make_batch
+          liters: !lambda return id(batch_size).state;
+          nutrients: true
+  - platform: template
+    name: Mix Water Batch
+    icon: mdi:water-plus
+    on_press:
+      - script.execute:
+          id: make_batch
+          liters: !lambda return id(batch_size).state;
+          nutrients: false
+  - platform: template
+    name: Transfer to Reservoir
+    icon: mdi:transfer-right
+    on_press:
+      - script.execute:
+          id: run_pump
+          p: 3
+          ml: !lambda |-
+            float l = id(transfer_amount).state;
+            return l > 0 ? l * 1000.0f : 1e9f;
+          seconds: 0
+          account: true
+  - platform: template
+    name: Stop
+    icon: mdi:stop-circle
+    on_press:
+      - script.stop: make_batch
+      - script.stop: run_pump
+      - script.execute: pump_finish
+      - lambda: id(status).publish_state("Stopped");
+
+  # Calibrate or prime: runs the selected pump for 60 s, not counted toward
+  # the mix tank. Put its outlet in a measuring cup.
+  - platform: template
+    name: Run Pump 60 s
+    icon: mdi:timer-play
+    entity_category: config
+    on_press:
+      - script.execute:
+          id: run_pump
+          p: !lambda return pump_index(id(calibrate_pump).current_option());
+          ml: 0
+          seconds: 60
+          account: false
+
+  # Bookkeeping, for when the counting drifts from reality.
+  - platform: template
+    name: Mix Tank Emptied
+    icon: mdi:delete-empty
+    entity_category: config
+    on_press:
+      - lambda: id(mix_ml) = 0;
+  - platform: template
+    name: Nutrient A Bottle Refilled
+    icon: mdi:bottle-tonic-plus
+    entity_category: config
+    on_press:
+      - lambda: id(sprout_used) = 0;
+  - platform: template
+    name: Nutrient B Bottle Refilled
+    icon: mdi:bottle-tonic-plus
+    entity_category: config
+    on_press:
+      - lambda: id(thrive_used) = 0;
+
+  - { platform: restart, name: Restart }
+
+# ------------------------------------------------------------------- sensors
+sensor:
+  - platform: template
+    name: Mix Tank Volume
+    icon: mdi:cup-water
+    unit_of_measurement: L
+    device_class: volume_storage
+    accuracy_decimals: 2
+    update_interval: 5s
+    lambda: return id(mix_ml) / 1000.0f;
+  - platform: template
+    name: Nutrient A Used
+    icon: mdi:sprout
+    unit_of_measurement: mL
+    accuracy_decimals: 1
+    update_interval: 30s
+    lambda: return id(sprout_used);
+  - platform: template
+    name: Nutrient B Used
+    icon: mdi:leaf
+    unit_of_measurement: mL
+    accuracy_decimals: 1
+    update_interval: 30s
+    lambda: return id(thrive_used);
+  - { platform: wifi_signal, name: WiFi Signal, update_interval: 60s }
+  - { platform: uptime, name: Uptime }
+
+text_sensor:
+  - platform: template
+    id: status
+    name: Status
+    icon: mdi:information-outline
+    update_interval: never
+  - platform: template
+    name: Running Pump
+    icon: mdi:pump
+    update_interval: 1s
+    lambda: |-
+      int p = id(run_pump_idx);
+      return {p < 0 ? "none" : PUMP_NAMES[p]};
