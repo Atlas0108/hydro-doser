@@ -52,12 +52,8 @@ p{margin:0}
 .hero h1 em{font-style:normal;color:var(--o-green)}
 .hero p{font-size:clamp(16px,1.5vw,19px);color:var(--o-ink-2);max-width:42ch;margin-top:16px}
 .hero .mono{margin-top:22px;display:block}
-.c1{left:clamp(16px,5vw,64px);bottom:16vh}
-.c2{right:clamp(16px,5vw,64px);top:16vh}
-.c3{left:clamp(16px,5vw,64px);top:16vh}
-.c4{right:clamp(16px,5vw,64px);bottom:16vh}
-.c5{left:50%;transform:translate(-50%,12px);bottom:18vh;text-align:center}
-.c5.on{transform:translate(-50%,0)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px 40px;margin-top:20px}
+.pgrid h3{font-size:19px;font-weight:600;margin-bottom:8px}
 
 /* below the sequence */
 section.plain{padding-block:clamp(56px,9vw,120px)}
@@ -85,7 +81,6 @@ footer{padding-block:32px;border-top:1px solid var(--line);color:var(--ink-2);fo
 @media (max-width:760px){
   .split{grid-template-columns:1fr}
   .card{max-width:calc(100vw - 32px)}
-  .c2,.c4{right:16px}
   .hero h1{font-size:44px}
 }
 </style>
@@ -99,31 +94,6 @@ footer{padding-block:32px;border-top:1px solid var(--line);color:var(--ink-2);fo
         <h1>A nutrient doser for <em>small hydroponic gardens</em></h1>
         <p>It holds a tank of water and the two nutrient bottles, and on a schedule it pumps water and the right amount of each nutrient into the garden's reservoir. There are three pumps inside and one bundle of tubes coming out of the back.</p>
         <span class="mono">Scroll</span>
-      </div>
-      <div class="card c1" data-band="0.14,0.30">
-        <span class="mono">01 · The tank</span>
-        <h2>The water tank</h2>
-        <p>The tank is a 5.7 litre Cambro food container, which is dishwasher-safe and costs a few dollars to replace. You lift it off to fill it. The pickup tube goes in through a hole drilled in the lid and rests on the bottom.</p>
-      </div>
-      <div class="card c2" data-band="0.28,0.46">
-        <span class="mono">02 · The bottles</span>
-        <h2>The nutrient bottles</h2>
-        <p>The two pockets hold a 125 mL bottle in a printed sleeve, or a 1 L bottle without one. There is a slot in the front so you can see how much is left. Each nutrient has its own pump and its own tube all the way to the reservoir, because two-part concentrates form a precipitate if they meet before they are diluted.</p>
-      </div>
-      <div class="card c3" data-band="0.46,0.64">
-        <span class="mono">03 · The column</span>
-        <h2>The column</h2>
-        <p>The tubes run through three channels in the column and down into the base, so none of them are loose. The three outlet tubes and the float switch lead leave the back of the unit in one sleeve and clip onto the rim of the reservoir, above the water line, so a line can't siphon on its own.</p>
-      </div>
-      <div class="card c4" data-band="0.62,0.82">
-        <span class="mono">04 · The pumps</span>
-        <h2>The pumps</h2>
-        <p>There are three peristaltic pumps: one for water and one for each nutrient. They sit behind covers on the front of the base. The only part of a peristaltic pump that wears out is its tube, and you can change it by taking the cover off, without moving the tank or opening the rest of the unit.</p>
-      </div>
-      <div class="card c5" data-band="0.84,1">
-        <span class="mono">05 · The base</span>
-        <h2>The base</h2>
-        <p>The base is two printed trays bolted together. The ESP32 and the pump driver boards are in the tray under the column, so they are not under the tank if it ever leaks. There are two buttons and a status light on the front, and the power jack and the tube bundle are on the back.</p>
       </div>
     </div>
     <div class="load" id="load">loading frames…</div>
@@ -139,6 +109,17 @@ footer{padding-block:32px;border-top:1px solid var(--line);color:var(--ink-2);fo
       <p class="body">Most hydroponic gardens want a bit of concentrate added each time you top up the reservoir, so that's what the doser does: it pumps in the water, then nutrient A, then nutrient B, each through its own tube. A float switch sitting in the reservoir stops any run when the water reaches it, and if the float isn't plugged in nothing will run at all. The doser keeps a log of what it has pumped and counts down how much is left in the tank until you refill it.</p>
     </div>
     <img class="hero-still" src="frames/hero.webp" alt="The assembled Hydro Doser: a matte-green base, white towers with black bottle sleeves, and a translucent water tank." width="2400" height="1200">
+  </div>
+</section>
+
+<section class="plain wrap pieces">
+  <span class="mono">The pieces</span>
+  <div class="pgrid">
+      <div><h3>The water tank</h3><p class="body">The tank is a 5.7 litre Cambro food container, which is dishwasher-safe and costs a few dollars to replace. You lift it off to fill it. The pickup tube goes in through a hole drilled in the lid and rests on the bottom.</p></div>
+      <div><h3>The nutrient bottles</h3><p class="body">The two pockets hold a 125 mL bottle in a printed sleeve, or a 1 L bottle without one. There is a slot in the front so you can see how much is left. Each nutrient has its own pump and its own tube all the way to the reservoir, because two-part concentrates form a precipitate if they meet before they are diluted.</p></div>
+      <div><h3>The column</h3><p class="body">The tubes run through three channels in the column and down into the base, so none of them are loose. The three outlet tubes and the float switch lead leave the back of the unit in one sleeve and clip onto the rim of the reservoir, above the water line, so a line can't siphon on its own.</p></div>
+      <div><h3>The pumps</h3><p class="body">There are three peristaltic pumps: one for water and one for each nutrient. They sit behind covers on the front of the base. The only part of a peristaltic pump that wears out is its tube, and you can change it by taking the cover off, without moving the tank or opening the rest of the unit.</p></div>
+      <div><h3>The base</h3><p class="body">The base is two printed trays bolted together. The ESP32 and the pump driver boards are in the tray under the column, so they are not under the tank if it ever leaks. There are two buttons and a status light on the front, and the power jack and the tube bundle are on the back.</p></div>
   </div>
 </section>
 
@@ -158,14 +139,13 @@ footer{padding-block:32px;border-top:1px solid var(--line);color:var(--ink-2);fo
       <tr><th>Panel-mount DC jack, 5.5 × 2.1 mm, threaded</th><td>1</td><td><a href="https://www.adafruit.com/product/610">Adafruit</a></td><td><a href="https://www.amazon.com/dp/B07C46XMPT">Amazon</a></td></tr>
       <tr><th>Resettable fuse, 1.6 A hold, radial (Bourns MF-R160)</th><td>1</td><td><a href="https://www.digikey.com/en/products/detail/bourns-inc/MF-R160/259972">DigiKey</a></td><td><a href="https://www.amazon.com/dp/B0DHSW186L">Amazon</a></td></tr>
       <tr><th>Vertical float switch, polypropylene, with cable (Cynergy3 RSF54Y100RC)</th><td>1</td><td><a href="https://www.digikey.com/en/products/detail/sensata-cynergy3/RSF54Y100RC/753328">DigiKey</a></td><td><a href="https://www.amazon.com/dp/B07DYW1C7P">Amazon</a></td></tr>
-      <tr><th>GX12 2-pin panel connector, socket and plug</th><td>1</td><td><a href="https://vxb.com/products/gx12-2-pin-panel-mount-circular-metal-aviation-con">VXB</a></td><td><a href="https://www.amazon.com/dp/B01MPXOOI3">Amazon</a></td></tr>
-      <tr><th>12 mm momentary push button, black</th><td>2</td><td><a href="https://www.taydaelectronics.com/electromechanical/switches-key-pad/push-button/push-button-switch-momentary-spst-3a-250vac-12mm-black.html">Tayda</a></td><td><a href="https://www.amazon.com/dp/B0GS8WXKG4">Amazon</a></td></tr>
-      <tr><th>5 mm chromed LED holder (fits the 8 mm hole)</th><td>1</td><td><a href="https://www.adafruit.com/product/2178">Adafruit</a></td><td><a href="https://www.amazon.com/dp/B00SFB6438">Amazon</a></td></tr>
+      <tr><th>GX12 6-pin panel connector, socket and plug (float switch, TDS probe, temperature probe)</th><td>1</td><td><a href="https://www.zyltech.com/new-zyltech-aviation-plug-6-pin-12mm/">ZYLtech</a></td><td><a href="https://www.amazon.com/dp/B089YT21LY">Amazon</a></td></tr>
+      <tr><th>6 × 6 × 5 mm tactile switch, 4 pin</th><td>2</td><td><a href="https://www.adafruit.com/product/367">Adafruit</a></td><td><a href="https://www.amazon.com/dp/B0796QHL5Z">Amazon</a></td></tr>
       <tr><th>5 mm green LED</th><td>1</td><td><a href="https://www.adafruit.com/product/298">Adafruit</a></td><td><a href="https://www.amazon.com/dp/B01C3ZZTB4">Amazon</a></td></tr>
       <tr><th>Push-in grommet for a 5/8" hole, 1/2" ID</th><td>1</td><td><a href="https://www.grainger.com/product/GRAINGER-APPROVED-Grommet-3MPL5">Grainger</a></td><td><a href="https://www.amazon.com/dp/B0FH2DNHN6">Amazon</a></td></tr>
       <tr><th>Expandable braided sleeving, 1/2", 10 ft</th><td>1</td><td><a href="https://www.mcmaster.com/9284K614/">McMaster-Carr</a></td><td><a href="https://www.amazon.com/dp/B071ZV6MZ2">Amazon</a></td></tr>
-      <tr><th>M3 brass heat-set inserts (7 used)</th><td>1 pack</td><td><a href="https://www.mcmaster.com/94459A130/">McMaster-Carr</a></td><td><a href="https://www.amazon.com/dp/B0BVMMBG2N">Amazon</a></td></tr>
-      <tr><th>M3 × 8 flat-head socket screws, stainless (13 used)</th><td>1 pack</td><td><a href="https://boltdepot.com/Product-Details?product=7213">Bolt Depot</a></td><td><a href="https://www.amazon.com/dp/B01HBN0UU8">Amazon</a></td></tr>
+      <tr><th>M3 brass heat-set inserts (9 used)</th><td>1 pack</td><td><a href="https://www.mcmaster.com/94459A130/">McMaster-Carr</a></td><td><a href="https://www.amazon.com/dp/B0BVMMBG2N">Amazon</a></td></tr>
+      <tr><th>M3 × 8 flat-head socket screws, stainless (15 used)</th><td>1 pack</td><td><a href="https://boltdepot.com/Product-Details?product=7213">Bolt Depot</a></td><td><a href="https://www.amazon.com/dp/B01HBN0UU8">Amazon</a></td></tr>
       <tr><th>M3 × 12 socket-head screws, stainless (3 used, the seam)</th><td>1 pack</td><td><a href="https://boltdepot.com/Product-Details?product=6381">Bolt Depot</a></td><td><a href="https://www.amazon.com/dp/B01MYX1XBO">Amazon</a></td></tr>
       <tr><th>M3 hex nuts, stainless (3 used)</th><td>1 pack</td><td><a href="https://boltdepot.com/Product-Details?product=4773">Bolt Depot</a></td><td><a href="https://www.amazon.com/dp/B01MYX1XBO">Amazon</a></td></tr>
       <tr><th>M3 × 10 thread-forming screws for plastic (6 used, the pump flanges)</th><td>1 pack</td><td><a href="https://www.mcmaster.com/95893A191/">McMaster-Carr</a></td><td><a href="https://www.amazon.com/dp/B0779QYZXH">Amazon</a></td></tr>

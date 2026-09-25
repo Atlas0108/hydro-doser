@@ -78,27 +78,38 @@ printing*. This version follows an independent review, kept in
 supports. Masses are solid PETG; the slicer's infill brings the plate and
 floors down. Three colours: the trays, plate and the column's floor in matte olive, the
 column's towers and the spout in matte white, the sleeves and pump covers in
-matte black. The column is one print with a filament change at 4 mm, the top
-of its floor.
+matte black. For the column, load `stl/two-colour/column_floor.stl` and
+`column_towers.stl` together as one object with several parts (Bambu Studio
+asks) and give each its filament; they are already in position.
 
 | Piece | Print | Size (mm) | ~g | |
 |---|---|---|---|---|
 | `tray_dock` | 1 | 225 × 225 × 66 | 580 | tank dock, Water + Nutrient A pumps, panel |
 | `tray_col` | 1 | 120 × 225 × 66 | 335 | Nutrient B pump, electronics, jacks |
 | `plate` | 1 | 225 × 225 × 7 | 270 | dock plate: curb, drip rim |
-| `column` | 1 | 120 × 225 × 249 | 870 | two cans, web walls, three chases |
+| `column` | 1 | 120 × 225 × 249 | 870 | two cans, web walls, three chases; in two colours as `stl/two-colour/column_floor.stl` (green) + `column_towers.stl` (white) |
 | `sleeve` | 2 | 95 × 95 × 243 | 180 | for the 125 mL bottles; skip for 1 L |
-| `cover` | 3 | 66 × 66 × 2 | 11 | pump covers |
+| `cover` | 3 | 68 × 62 × 2 | 11 | pump covers, 5 mm around each screw |
 | `spout` | 1 | 40 × 20 × 42 | 19 | hangs on the reservoir's rim |
+| `panel_plate` | 1 | 36 × 48 × 12 | 17 | behind the front wall: two 6 × 6 tactile switches, the LED in its bezel tube |
+| `button_cap` | 2 | 14 × 14 × 6 | 1 | through the 12.5 holes, flange behind |
 
 **PETG**, 3 walls, 15 % infill, brim on the big flat pieces. Every piece's
 bed contact and unsupported area are measured by `verify.sh` (45° cones
 pass, flatter overhangs don't).
 
-Hardware: 7 × M3 heat-set inserts (4 dock posts, 3 column posts), 7 ×
-M3×8 countersunk (plate, column), 6 × M3×8 countersunk (covers), 6 × M3
+Hardware: 9 × M3 heat-set inserts (4 dock posts, 3 column posts, 2 in the
+panel plate), 7 × M3×8 countersunk (plate, column), 6 × M3×8 countersunk
+(covers), 2 × M3×8 countersunk (panel plate, from the front), 6 × M3
 self-tapping (pump flanges), 3 × M3×12 with nuts (seam), M2.5 for the
 boards.
+
+**The panel.** Drop the two switches into the plate's pockets (pins out the
+back), push the LED in from the back until its flange meets the shoulder,
+set the caps in their recesses, offer the plate up behind the wall so the
+caps and the LED tube come through, and put in the two screws from the
+front. The switch plunger sits 0.1 mm behind the cap; the cap bottoms after
+0.4 mm, past the switch's click. Solder the leads on the back afterwards.
 
 ## Bill of materials
 
@@ -118,14 +129,13 @@ $230 for the parts and $75 for the filament.
 | Panel-mount DC jack, 5.5 × 2.1 mm, threaded | 1 | [Adafruit](https://www.adafruit.com/product/610) | [Amazon](https://www.amazon.com/dp/B07C46XMPT) |
 | Resettable fuse, 1.6 A hold, radial (Bourns MF-R160) | 1 | [DigiKey](https://www.digikey.com/en/products/detail/bourns-inc/MF-R160/259972) | [Amazon](https://www.amazon.com/dp/B0DHSW186L) |
 | Vertical float switch, polypropylene, with cable (Cynergy3 RSF54Y100RC) | 1 | [DigiKey](https://www.digikey.com/en/products/detail/sensata-cynergy3/RSF54Y100RC/753328) | [Amazon](https://www.amazon.com/dp/B07DYW1C7P) |
-| GX12 2-pin panel connector, socket and plug | 1 | [VXB](https://vxb.com/products/gx12-2-pin-panel-mount-circular-metal-aviation-con) | [Amazon](https://www.amazon.com/dp/B01MPXOOI3) |
-| 12 mm momentary push button, black | 2 | [Tayda](https://www.taydaelectronics.com/electromechanical/switches-key-pad/push-button/push-button-switch-momentary-spst-3a-250vac-12mm-black.html) | [Amazon](https://www.amazon.com/dp/B0GS8WXKG4) |
-| 5 mm chromed LED holder (fits the 8 mm hole) | 1 | [Adafruit](https://www.adafruit.com/product/2178) | [Amazon](https://www.amazon.com/dp/B00SFB6438) |
+| GX12 6-pin panel connector, socket and plug (float switch, TDS probe, temperature probe) | 1 | [ZYLtech](https://www.zyltech.com/new-zyltech-aviation-plug-6-pin-12mm/) | [Amazon](https://www.amazon.com/dp/B089YT21LY) |
+| 6 × 6 × 5 mm tactile switch, 4 pin | 2 | [Adafruit](https://www.adafruit.com/product/367) | [Amazon](https://www.amazon.com/dp/B0796QHL5Z) |
 | 5 mm green LED | 1 | [Adafruit](https://www.adafruit.com/product/298) | [Amazon](https://www.amazon.com/dp/B01C3ZZTB4) |
 | Push-in grommet for a 5/8" hole, 1/2" ID | 1 | [Grainger](https://www.grainger.com/product/GRAINGER-APPROVED-Grommet-3MPL5) | [Amazon](https://www.amazon.com/dp/B0FH2DNHN6) |
 | Expandable braided sleeving, 1/2", 10 ft | 1 | [McMaster-Carr](https://www.mcmaster.com/9284K614/) | [Amazon](https://www.amazon.com/dp/B071ZV6MZ2) |
-| M3 brass heat-set inserts (7 used) | 1 pack | [McMaster-Carr](https://www.mcmaster.com/94459A130/) | [Amazon](https://www.amazon.com/dp/B0BVMMBG2N) |
-| M3 × 8 flat-head socket screws, stainless (13 used) | 1 pack | [Bolt Depot](https://boltdepot.com/Product-Details?product=7213) | [Amazon](https://www.amazon.com/dp/B01HBN0UU8) |
+| M3 brass heat-set inserts (9 used) | 1 pack | [McMaster-Carr](https://www.mcmaster.com/94459A130/) | [Amazon](https://www.amazon.com/dp/B0BVMMBG2N) |
+| M3 × 8 flat-head socket screws, stainless (15 used) | 1 pack | [Bolt Depot](https://boltdepot.com/Product-Details?product=7213) | [Amazon](https://www.amazon.com/dp/B01HBN0UU8) |
 | M3 × 12 socket-head screws, stainless (3 used, the seam) | 1 pack | [Bolt Depot](https://boltdepot.com/Product-Details?product=6381) | [Amazon](https://www.amazon.com/dp/B01MYX1XBO) |
 | M3 hex nuts, stainless (3 used) | 1 pack | [Bolt Depot](https://boltdepot.com/Product-Details?product=4773) | [Amazon](https://www.amazon.com/dp/B01MYX1XBO) |
 | M3 × 10 thread-forming screws for plastic (6 used, the pump flanges) | 1 pack | [McMaster-Carr](https://www.mcmaster.com/95893A191/) | [Amazon](https://www.amazon.com/dp/B0779QYZXH) |
@@ -149,7 +159,9 @@ $230 for the parts and $75 for the filament.
 the pump axis 2 mm higher (z 34) and pilot holes for a guessed bracket. It
 still works: seat each pump at the bottom of its U-slot, roll it 43° so the
 nozzles point up and toward the neighbouring pump, mark through the flange's
-two holes, and drill Ø2.5. That clears the plate by 2.8 mm.
+two holes, and drill Ø2.5. That clears the plate by 2.8 mm. It also has no
+holes for the panel plate's screws: drill Ø3.5 at 183 mm from the dock's
+left edge, 16 and 52 mm up, and countersink them from the front.
 
 ## Files
 

@@ -105,6 +105,13 @@ chk "the boards fit under the column floor" CLEAR 'intersection(){ electronics()
 chk "no board sits over another" CLEAR 'for (a = [0:2], b = [0:2]) if (a < b) intersection(){ translate([x_cen,0,0] + boards[a][0]) cube(boards[a][1]); translate([x_cen,0,0] + boards[b][0]) cube(boards[b][1]); }'
 chk "the USB slot lands on the DevKit's end" SOLID 'intersection(){ translate([x_cen + usb_slot[0] - 6, D - wall - 1, usb_slot[1]]) cube([12, wall + 2, 8]); translate([x_cen + boards[0][0][0] - 1, D - wall - 2, boards[0][0][2] - 2]) cube([boards[0][1][0] + 2, 3, 10]); }'
 chk "panel hardware passes its holes and clears everything" CLEAR 'intersection(){ union(){ printed(); electronics(); pumps(); covers(); } panel_hw(); }'
+chk "the panel plate sits behind the wall clear of the pumps, tubes, ribs and covers" CLEAR 'intersection(){ union(){ for (n = [0:2]) piece(n); pumps(); covers(); } panel_plate(); }'
+chk "the caps pass the wall and sit in the plate's recesses" CLEAR 'intersection(){ union(){ for (n = [0:2]) piece(n); panel_plate(); } caps(); }'
+chk "each switch is in its pocket, the LED in its bore, clear of the caps" CLEAR 'intersection(){ union(){ panel_plate(); caps(); } union(){ tact_sw(panel[0][0], panel[0][1]); tact_sw(panel[2][0], panel[2][1]); led5_at(panel[1][0], panel[1][1]); } }'
+chk "a cap pressed 0.3 mm meets its switch's plunger" SOLID 'intersection(){ translate([0, 0.3, 0]) caps(); union(){ tact_sw(panel[0][0], panel[0][1]); tact_sw(panel[2][0], panel[2][1]); } }'
+chk "the LED tube fills the wall's hole and stands proud of the face" SOLID 'intersection(){ panel_plate(); translate([panel[1][0] - 5, -0.5, panel[1][1] - 5]) cube([10, wall + 0.5, 10]); }'
+chk "the plate screws pass the wall and land in their inserts" SOLID 'for (p = pp_screws) intersection(){ translate([p[0], wall, p[1]]) rotate([-90, 0, 0]) cylinder(d = 2.9, h = 5); difference(){ translate([p[0] - 3, wall, p[1] - 3]) cube([6, 5, 6]); panel_plate(); } }'
+chk "the plate screws hit nothing on the way" CLEAR 'for (p = pp_screws) intersection(){ translate([p[0], -1, p[1]]) rotate([-90, 0, 0]) cylinder(d = 2.9, h = wall + 6); union(){ tray(0); panel_plate(); } }'
 chk "self-test: the DC jack 4 mm over hits the back wall" SOLID 'intersection(){ printed(); translate([4,0,0]) dc_jack(); }'
 chk "the seam carries two tube holes and a wire hole" CLEAR 'intersection(){ printed(); union(){ for (t = seam_tube) translate([x_cen - 10, t[0], t[1]]) rotate([0,90,0]) cylinder(d = seam_tube_d - 1, h = 20); translate([x_cen - 10, seam_wire[0], seam_wire[1]]) rotate([0,90,0]) cylinder(d = seam_wire[2] - 1, h = 20); } }'
 chk "the floors are closed: no hole leads out of the bottom of the case" CLEAR 'difference(){ translate([wall, wall, 0.1]) cube([W - 2*wall, D - 2*wall, floor_t - 0.2]); printed(); }'
@@ -118,6 +125,8 @@ chk "column screws reach the column tray's posts" CLEAR 'intersection(){ printed
 chk "self-test: a screw 3 mm off misses its hole" SOLID 'intersection(){ printed(); at(col_screws[0] + [3, 0], tray_h - 7) cylinder(d = 3, h = 12); }'
 chk "a driver reaches every column and plate screw from above" CLEAR 'intersection(){ union(){ printed(); bottles_shown(); } union(){ for (p = concat(col_screws, dock_posts())) at(p, base_h + 0.5) cylinder(d = 7, h = 400); } }'
 chk "every post stands against a wall" SOLID 'for (p = concat(col_screws, dock_posts())) intersection(){ post(p, tray_h); union(){ cube([W, wall + 0.01, tray_h]); translate([0, D - wall - 0.01, 0]) cube([W, wall + 0.01, tray_h]); cube([wall + 0.01, D, tray_h]); translate([W - wall - 0.01, 0, 0]) cube([wall + 0.01, D, tray_h]); translate([x_cen - wall - 0.01, 0, 0]) cube([wall*2 + 0.02, D, tray_h]); } }'
+chk "the two-colour column halves add up to the column" CLEAR 'difference(){ column(); column_base(); column_towers(); }'
+chk "the two-colour column halves don't overlap" CLEAR 'intersection(){ column_base(); column_towers(); }'
 chk "the bulkhead reaches up to the plate and the column floor" SOLID 'intersection(){ union(){ tray(0); tray(1); } translate([wall + 1, bulk_y, tray_h - 1]) cube([W - 2*wall - 2, wall, 0.4]); }'
 
 echo "== every exported piece: fits the P1S, sits on the bed, mostly supported =="

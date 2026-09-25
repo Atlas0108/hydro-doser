@@ -102,11 +102,12 @@ function nozzle(i)      = rolled((i == 0 ? -1 : 1) * nozzle_sp/2, pump_head_d/2 
 function pump_hole(i)   = rolled((i == 0 ? -1 : 1) * pump_hole_sp/2, 0);                        // mounting hole i, (dx, dz) from the axis
 function barb_tip(k)    = pump_x[k] + nozzle(1)[0];          // x of the outer nozzle's tip
 function tube_slot_x(k) = pump_x[k] + 40;                    // where the tubes cross the bulkhead
-opening   = 50;                            // front access opening (4 mm corners: the flange screws sit at their centres), behind a 66 x 66 cover
-cover_w   = 66;
+opening   = 50;                            // front access opening (4 mm corners: the flange screws sit at their centres), behind a 68 x 62 cover
 cover_t   = 2;
 cover_screw = 29;                          // cover screws at (+-29, +-26), M3 into ribs inside the wall
 cover_screw_z = 26;
+cover_w   = 2*cover_screw + 10;           // 68: 5 mm around each screw, both ways
+cover_h   = 2*cover_screw_z + 10;         // 62
 crossbar_y = 165;                          // second wall across the dock, under the plate
 pump_names = ["Water", "Nutrient A", "Nutrient B"];
 
@@ -147,6 +148,22 @@ seam_wire  = [150, 16, 10];
 // Dock front, local x: the control panel at the far right, stacked: Dose
 // below, Stop above, the light beside them.
 panel  = [[200, 22, 12.5, "Dose"], [186, 34, 8, "status LED"], [200, 46, 12.5, "Stop"]];   // [x, z, dia]
+// Behind those holes: an adapter plate that screws to the wall from the
+// front (two M3 countersunk into inserts) and carries two 6 x 6 mm tactile
+// switches and a 5 mm LED. Printed caps pass the 12.5 holes from behind, a
+// rear flange keeps them in; the LED sits in a tube on the plate that fills
+// the 8 mm hole and stands 0.5 proud as its bezel. The switch plunger rests
+// 0.1 behind the cap; the cap has 0.4 of travel before it bottoms.
+tact      = [6, 3.5, 5, 3.5];     // body square, base height, height to the plunger top, plunger dia
+tact_pin  = [6.5, 4.5];           // pin pitch across x, across z
+led5      = [5, 5.8, 8.6, 1];     // body dia, flange dia, flange face to tip, flange thickness
+cap_d     = 12.2;                 // in the 12.5 hole
+cap_fl    = [14, 1.5];            // rear flange dia, thickness
+cap_proud = 1.5;                  // past the face
+pp_box    = [176, 10, 36, 48];    // the plate on the wall: x, z, w, h (local x)
+pp_t      = 1.6 + tact[2] + 2;    // 8.6: cap recess and pre-travel, the switch, a 2 mm floor the pins pass
+pp_screws = [[183, 16], [183, 52]];
+tact_y    = wall + 1.6 + tact[2]; // the switch's base
 // Column tray back wall, local x: USB slot for the DevKit, jack, GX12 for
 // the float lead, and the grommet the sleeved bundle leaves through.
 usb_slot = [20, 12];                                     // local x, z
@@ -252,6 +269,7 @@ module tray(i) let (x0 = i == 0 ? 0 : x_cen, w = i == 0 ? dock_w : cen_w, rl = i
   for (t = seam_tube) translate([x_cen - wall - 1, t[0], t[1]]) rotate([0, 90, 0]) cylinder(d = seam_tube_d, h = wall*2 + 2);
   translate([x_cen - wall - 1, seam_wire[0], seam_wire[1]]) rotate([0, 90, 0]) cylinder(d = seam_wire[2], h = wall*2 + 2);
   if (i == 0) for (p = panel) front_hole(x0 + p[0], p[1], p[2]);
+  if (i == 0) for (p = pp_screws) translate([p[0], -1, p[1]]) rotate([-90, 0, 0]) { cylinder(d = 3.4, h = wall + 2); cylinder(d1 = 7.4, d2 = 3.4, h = 3); }   // plate screws, countersunk
   if (i == 1) {
     for (j = jacks) back_hole(x0 + j[0], j[1], j[2]);
     translate([x0 + usb_slot[0] - 6, D - wall - 1, usb_slot[1]]) cube([12, wall + 2, 8]);
@@ -272,7 +290,7 @@ module plate() difference() {
 
 // A cover for a pump's front opening: a plate with two countersunk screws.
 module cover(k = 0) translate([pump_x[k], 0, pump_z]) rotate([90, 0, 0]) difference() {
-  fillet_extrude(cover_t, 0, 1) rsq(cover_w, cover_w, 6);
+  fillet_extrude(cover_t, 0, 1) rsq(cover_w, cover_h, 6);
   for (sx = [-1, 1], sz = [-1, 1]) translate([sx*cover_screw, sz*cover_screw_z, -0.01]) csk(3.4, cover_t + 0.02);
 }
 // The cover, lying flat for export: outside face on the bed.
@@ -403,14 +421,41 @@ module uln(j) { uln_pcb(j); uln_chip(j); uln_hdr(j); uln_pins(j); uln_leds(j); u
 module buck_body() translate([x_cen, 0, 0] + boards[2][0]) color("#111") cube([45, 20, 12]);
 module buck_wire(c) translate([x_cen, 0, 0] + boards[2][0]) color(c == 0 ? "#c00" : "#222") translate([-6, c == 0 ? 6 : 12, 8]) rotate([0, 90, 0]) cylinder(d = 2, h = 6);
 module buck() { buck_body(); buck_wire(0); buck_wire(1); }
-module button(x, z, d) translate([x, 0, z]) {
-  color("#222") { translate([0, -1.5, 0]) rotate([90, 0, 0]) cylinder(d = d + 3, h = 2); translate([0, -6, 0]) rotate([90, 0, 0]) cylinder(d = d - 2, h = 4.5); }
-  color("#777") translate([0, wall + 1, 0]) rotate([-90, 0, 0]) { cylinder(d = d + 3, h = 2); cylinder(d = d - 1.5, h = 10); }
-  color("#444") translate([0, wall + 11, 0]) rotate([-90, 0, 0]) cylinder(d = 3, h = 8);
+// 6 x 6 tactile switch, base at tact_y, pins out the back; the LED, flange
+// on the plate's shoulder, tip flush with the wall's face.
+module tact_sw(x, z) translate([x, tact_y, z]) {
+  color("#333") translate([-tact[0]/2, -tact[1], -tact[0]/2]) cube([tact[0], tact[1], tact[0]]);
+  color("#111") translate([0, -tact[2], 0]) rotate([-90, 0, 0]) cylinder(d = tact[3], h = tact[2] - tact[1] + 0.01);
+  color("#bbb") for (sx = [-1, 1], sz = [-1, 1]) translate([sx*tact_pin[0]/2, -0.5, sz*tact_pin[1]/2]) rotate([-90, 0, 0]) cylinder(d = 0.7, h = 4);
 }
-module light_pipe(x, z) translate([x, 0, z]) {
-  color([0.75, 0.95, 0.75, 0.9]) translate([0, -2, 0]) rotate([-90, 0, 0]) cylinder(d = 8, h = wall + 8);
-  color("#333") translate([0, wall + 2, 0]) rotate([-90, 0, 0]) cylinder(d = 11, h = 2);
+module led5_at(x, z) translate([x, 0, z]) color([0.3, 0.4, 0.95, 0.85]) {
+  translate([0, led5[2], 0]) rotate([90, 0, 0]) { cylinder(d = led5[0], h = led5[2] - led5[0]/2); translate([0, 0, led5[2] - led5[0]/2]) sphere(d = led5[0]); }
+  translate([0, led5[2], 0]) rotate([-90, 0, 0]) cylinder(d = led5[1], h = led5[3]);
+  color("#bbb") for (sx = [-1, 1]) translate([sx*1.27, led5[2] + led5[3], 0]) rotate([-90, 0, 0]) cylinder(d = 0.5, h = 4);
+}
+// A cap: body through the wall, rounded face proud of it, flange behind.
+module button_cap(x, z) translate([x, 0, z]) {
+  translate([0, wall + cap_fl[1], 0]) rotate([90, 0, 0]) cylinder(d = cap_fl[0], h = cap_fl[1]);
+  translate([0, wall + 0.01, 0]) rotate([90, 0, 0]) hull() { cylinder(d = cap_d, h = wall + cap_proud - 1); translate([0, 0, wall + cap_proud - 1]) rotate_extrude() translate([cap_d/2 - 1, 0]) circle(1); }
+}
+module caps() for (k = [0, 2]) color(c_black) button_cap(panel[k][0], panel[k][1]);
+// The adapter plate, in place behind the wall.
+module panel_plate() color(c_black) difference() {
+  union() {
+    translate([pp_box[0] + pp_box[2]/2, wall + pp_t, pp_box[1] + pp_box[3]/2]) rotate([90, 0, 0]) linear_extrude(pp_t) rsq(pp_box[2], pp_box[3], 3);
+    translate([panel[1][0], -0.5, panel[1][1]]) rotate([-90, 0, 0]) cylinder(d = panel[1][2] - 0.2, h = wall + 0.5 + 0.01);   // the LED tube, through the wall
+  }
+  for (k = [0, 2]) translate([panel[k][0], 0, panel[k][1]]) {
+    translate([0, wall - 0.01, 0]) rotate([-90, 0, 0]) cylinder(d = cap_fl[0] + 0.5, h = 1.9 + 0.01);                                     // the cap's flange, 0.4 of travel
+    translate([-(tact[0] + 0.4)/2, wall + 1.9 - 0.01, -(tact[0] + 0.2)/2]) cube([tact[0] + 0.4, tact_y - wall - 1.9 + 0.01, tact[0] + 0.2]);   // the switch's pocket
+    for (sx = [-1, 1], sz = [-1, 1]) translate([sx*tact_pin[0]/2, tact_y - 0.5, sz*tact_pin[1]/2]) rotate([-90, 0, 0]) cylinder(d = 1.4, h = 10);   // its pins
+  }
+  translate([panel[1][0], 0, panel[1][1]]) {
+    translate([0, -1, 0]) rotate([-90, 0, 0]) cylinder(d = 4.4, h = 2);                       // the bezel's lip
+    translate([0, 0.3, 0]) rotate([-90, 0, 0]) cylinder(d = led5[0] + 0.2, h = led5[2] - 0.3 + 0.01);   // the LED's body, tip flush with the face
+    translate([0, led5[2], 0]) rotate([-90, 0, 0]) cylinder(d = led5[1] + 0.4, h = 20);        // its flange and leads, from the back
+  }
+  for (p = pp_screws) translate([p[0], wall - 0.01, p[1]]) rotate([-90, 0, 0]) cylinder(d = 4, h = 6);   // heat-set inserts
 }
 module dc_jack() translate([x_cen + jacks[0][0], D, jacks[0][1]]) color("#222") {
   translate([0, 1, 0]) rotate([-90, 0, 0]) cylinder(d = 14, h = 2);
@@ -424,7 +469,7 @@ module gx12() translate([x_cen + jacks[1][0], D, jacks[1][1]]) color("#888") {
 module grommet() translate([x_cen + jacks[2][0], D, jacks[2][1]]) color("#222")
   rotate([-90, 0, 0]) difference() { union() { translate([0, 0, -wall - 2]) cylinder(d = 20, h = 2); translate([0, 0, -wall]) cylinder(d = jacks[2][2] - 0.2, h = wall); cylinder(d = 20, h = 2); } translate([0, 0, -wall - 3]) cylinder(d = 11, h = wall + 6); }
 module bundle() translate([x_cen + jacks[2][0], D, jacks[2][1]]) color("#1a1a1a") translate([0, 2, 0]) rotate([-90, 0, 0]) cylinder(d = 12, h = 45);   // the sleeved bundle, to the reservoir
-module panel_hw() { button(panel[0][0], panel[0][1], panel[0][2]); light_pipe(panel[1][0], panel[1][1]); button(panel[2][0], panel[2][1], panel[2][2]); dc_jack(); gx12(); grommet(); bundle(); }
+module panel_hw() { tact_sw(panel[0][0], panel[0][1]); led5_at(panel[1][0], panel[1][1]); tact_sw(panel[2][0], panel[2][1]); dc_jack(); gx12(); grommet(); bundle(); }
 module pumps() for (k = [0:2]) pump(k);
 module covers() for (k = [0:2]) color(c_black) cover(k);
 module electronics() { esp32(); uln(1); buck(); }
@@ -442,12 +487,13 @@ module piece(n) {
   if (n == 2) plate();
   if (n == 3) column();
 }
-// The column prints as one piece with a filament change at the top of its
-// floor plate (z = floor_t): the floor green like the trays, the towers white.
+// The column prints as one piece in two colours: the floor green like the
+// trays, the towers white. stl/two-colour/ has it as two STLs to load as one
+// object with a filament each; stl/column.stl is the same piece whole.
 module col_slab() translate([x_cen - 1, -1, z_floor - 1]) cube([cen_w + 2, D + 2, floor_t + 1]);
 module column_base()   intersection() { column(); col_slab(); }
 module column_towers() difference()   { column(); col_slab(); }
-module printed() { for (n = [0:2]) color(c_shell) piece(n); color(c_shell) column_base(); color(c_col) column_towers(); }
+module printed() { for (n = [0:2]) color(c_shell) piece(n); color(c_shell) column_base(); color(c_col) column_towers(); panel_plate(); caps(); }
 module assembly() {
   printed(); covers();
   bin(); bin_lid();
@@ -460,8 +506,10 @@ else if (part == "tray_dock") tray(0);
 else if (part == "tray_col")  translate([-x_cen, 0, 0]) tray(1);
 else if (part == "plate")     translate([0, 0, -tray_h]) plate();
 else if (part == "column")    translate([-x_cen, 0, -z_floor]) column();
-else if (part == "column_base")   column_base();      // the two colours, in place, for the renders
-else if (part == "column_towers") column_towers();
+else if (part == "column_floor")  translate([-x_cen, 0, -z_floor]) column_base();     // the column in two colours: load both
+else if (part == "column_towers") translate([-x_cen, 0, -z_floor]) column_towers();   // as one object, a filament each
+else if (part == "column_base_at")   column_base();      // the same two, in place, for the renders
+else if (part == "column_towers_at") column_towers();
 else if (part == "sleeve")    sleeve();
 else if (part == "cover")     cover_flat();
 else if (part == "spout")     spout();
@@ -477,9 +525,13 @@ else if (part == "uln")       uln(idx);
 else if (part == "buck")      buck();
 else if (part == "sleeve_at") sleeve_at(idx);
 else if (part == "bottle")    bottle_at(idx);
-else if (part == "dose")      button(panel[0][0], panel[0][1], panel[0][2]);
-else if (part == "stop")      button(panel[2][0], panel[2][1], panel[2][2]);
-else if (part == "led")       light_pipe(panel[1][0], panel[1][1]);
+else if (part == "dose")      button_cap(panel[0][0], panel[0][1]);
+else if (part == "stop")      button_cap(panel[2][0], panel[2][1]);
+else if (part == "led")       led5_at(panel[1][0], panel[1][1]);
+else if (part == "tact")      tact_sw(panel[idx][0], panel[idx][1]);
+else if (part == "panel_plate_at") panel_plate();
+else if (part == "panel_plate") translate([0, 0, wall + pp_t]) rotate([-90, 0, 0]) translate([-pp_box[0], 0, -pp_box[1]]) panel_plate();   // back face down, tube up
+else if (part == "button_cap")  translate([0, 0, wall + cap_fl[1]]) rotate([-90, 0, 0]) translate([-panel[0][0], 0, -panel[0][1]]) button_cap(panel[0][0], panel[0][1]);   // flange down, face up
 else if (part == "dcjack")    dc_jack();
 else if (part == "gx12")      gx12();
 else if (part == "grommet")   grommet();
