@@ -153,6 +153,16 @@ chk "the window shows the whole picture" CLEAR 'intersection(){ plate(); transla
 chk "the glass sits behind a skin of the face" SOLID 'intersection(){ plate(); translate([oled_x - 12, 0.2, ctl_z + oled[7]/2 + 1.5]) cube([24, 1, 1]); }'
 chk "the knob and the screen sit on one line, the plate\x27s middle" SOLID 'intersection(){ union(){ knob_at(); oled_at(); } translate([0, -20, ctl_z - 0.5]) cube([Bx, 40, 1]); }'
 
+echo "== the second colours =="
+chk "the cups are the body\x27s black part and the rest its olive part: they don\x27t overlap" CLEAR 'intersection(){ body_main(); body_cups(); }'
+chk "the cups exist as black" SOLID 'body_cups();'
+chk "the deck is the lid\x27s black part: no overlap with the rest" CLEAR 'intersection(){ lid_main(); lid_deck(); }'
+chk "the deck exists as black" SOLID 'lid_deck();'
+chk "the lid\x27s olive part has no deck above its top face" CLEAR 'intersection(){ lid_main(); translate([deck[0][0] + 5, deck[0][1] + 5, H + lid_t + 0.05]) cube([deck[1][0] - 10, deck[1][1] - 10, deck[2]]); }'
+chk "the knob\x27s cap and ring don\x27t overlap" CLEAR 'intersection(){ knob_ring(); knob_cap(); }'
+chk "the cap is the face and the rounded edge: nothing of it below the knurl\x27s top" CLEAR 'intersection(){ knob_cap(); translate([-30, -30, -1]) cube([60, 60, knob[1] - knob[4] + 1 - 0.05]); }'
+chk "and the ring stops at the knurl\x27s top" CLEAR 'intersection(){ knob_ring(); translate([-30, -30, knob[1] - knob[4] + 0.05]) cube([60, 60, 10]); }'
+
 echo "== the fuzz modifier =="
 chk "the fuzz modifier wraps the body\x27s outer walls between the seams" SOLID 'intersection(){ fuzz_mod(); body(); }'
 chk "it reaches 1 mm outside the body, so the outer wall is inside it everywhere" SOLID 'intersection(){ fuzz_mod(); difference(){ translate([-0.5, -0.5, 0]) linear_extrude(H) offset(0.5) rr(Bx, By, R); linear_extrude(H) rr(Bx, By, R); } }'
@@ -168,9 +178,10 @@ chk "self-test: a rim 1 mm thicker hits" SOLID 'intersection(){ spout(); transla
 chk "the tubes and the float lead pass through" CLEAR 'intersection(){ spout(); union(){ for (i = [0:2]) translate([7 + 10*i, spout[3] + spout[4] + (spout[1] - spout[3] - spout[4])/2, -1]) cylinder(d = tube_od, h = spout[2] + 2); translate([spout[0] - 5, spout[3] + spout[4] + (spout[1] - spout[3] - spout[4])/2, -1]) cylinder(d = 3.5, h = spout[2] + 2); } }'
 
 echo "== every exported piece fits the bed and prints unsupported =="
-for p in body lid plate knob foot spout; do
+for p in body body_cups lid lid_deck plate knob knob_cap foot spout; do
   [[ -s stl/$p.stl ]] || { echo "  FAIL  $p  no stl/$p.stl (run ./export.sh)"; ((fail++)); continue; }
   allow=0; [[ $p == lid ]] && allow=2100   # the pocket's ceiling and the groove's top: 2 mm and 0.7 mm bridges round the rim
+  [[ $p == body_cups ]] && allow=800; [[ $p == lid_deck ]] && allow=11000; [[ $p == knob_cap ]] && allow=1100   # the second colours sit on their piece: their undersides are its top
   [[ $p == body ]] && allow=2000           # the vents' ceilings: fourteen 2 mm bridges; the wall-board ribs' undersides; the flange and port holes
   [[ $p == plate ]] && allow=600           # the DevKit's rails: short bridges between their posts
   if python3 $T/piece.py $p stl/$p.stl $allow; then ((pass++)); else ((fail++)); fi

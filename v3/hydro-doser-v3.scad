@@ -172,6 +172,11 @@ module lid_pocket() {   // in the lid, from its underside (z = 0 local): the rin
 }
 
 // ------------------------------------------------------------------- body
+// The body prints in two colours: the cups black, the rest olive. body() is
+// the whole; body_main() and body_cups() are its two exact parts.
+module cups_region() for (c = cup_c) at(c, -0.5) cylinder(d = cup_d + 2*cup_wall + 0.2, h = H + 1);
+module body_main() color("#5a7a48") difference() { body(); cups_region(); }
+module body_cups() color("#1c1c1c") intersection() { body(); cups_region(); }
 module body() difference() {
   union() {
     difference() { linear_extrude(H) rr(Bx, By, R); translate([0, 0, -1]) linear_extrude(H + 2) cav2d(); }                         // the walls
@@ -210,6 +215,11 @@ module foot_local() color("#333") { cylinder(d = foot[0], h = foot[1]); translat
 module foot_at(i) at(feet[i], -base_t - foot[1] + 1) foot_local();
 
 // -------------------------------------------------------------------- lid
+// Two colours: the deck black (everything above the lid's top face inside
+// the deck's footprint and its cove), the rest olive.
+module deck_region() translate([deck[0][0], deck[0][1], H + lid_t - 0.005]) linear_extrude(deck[2] + 2) offset(deck[5] + 0.2) rr(deck[1][0], deck[1][1], deck[4]);   // 0.005 under the top face: a cut on the face itself leaves the mesh non-manifold
+module lid_main() color("#5a7a48") difference() { lid(); deck_region(); }
+module lid_deck() color("#1c1c1c") intersection() { lid(); deck_region(); }
 module lid() translate([0, 0, H]) difference() {
   union() {
     rounded_top(lid_t, lid_r) rr(Bx, By, R);                                                                                          // flush with the walls, its top edge rounded
@@ -253,7 +263,14 @@ module knob_local() color("#a8451a") difference() {   // burnt orange          /
   translate([0, 0, -1]) cylinder(d = knob[5], h = knob[6] + 1);                                                         // the nut's pocket
   translate([0, 0, -1]) linear_extrude(bore_d + 1) difference() { circle(d = enc[6] + 0.1); translate([-5, enc[7] - enc[6]/2 + 0.05]) square([10, 5]); }   // the D bore, stopping on the shaft's end
 }
+// Two colours: the knurled ring burnt orange, the cap (the face and its
+// rounded edge, everything above the knurl) black.
+module cap_region() translate([0, 0, knob[1] - knob[4] + 0.01]) cylinder(d = knob[0] + 2, h = knob[4] + 1);   // 0.01 above the knurl's top, off its face
+module knob_ring() color("#a8451a") difference() { knob_local(); cap_region(); }
+module knob_cap() color("#1c1c1c") intersection() { knob_local(); cap_region(); }
 module knob_at() translate([knob_x, knob_y, ctl_z]) rotate([90, 0, 0]) knob_local();
+module knob_ring_at() translate([knob_x, knob_y, ctl_z]) rotate([90, 0, 0]) knob_ring();
+module knob_cap_at() translate([knob_x, knob_y, ctl_z]) rotate([90, 0, 0]) knob_cap();
 
 // --------------------------------------------------------- fuzz modifier
 // Not a print: a slicer modifier. A shell hugging the body's outer vertical
@@ -312,22 +329,28 @@ module screws() color("#999") for (s = pscrews) translate([s[0], 0, s[1]]) rotat
 module feet_shown() for (i = [0:3]) foot_at(i);
 
 // --------------------------------------------------------------- assembly
-module printed() { color("#5a7a48") { body(); lid(); } plate(); knob_at(); }
+module printed() { body_main(); body_cups(); lid_main(); lid_deck(); plate(); knob_ring_at(); knob_cap_at(); }
 module unit() { printed(); pumps(); electronics(); port_hw(); enc_at(); oled_at(); bottles(); screws(); feet_shown(); }
 
 if      (part == "all")      unit();
 else if (part == "none")     ;
-else if (part == "body")     translate([0, 0, base_t]) body();                             // floor down
-else if (part == "body_at")  body();
-else if (part == "lid")      translate([0, 0, -H]) lid();                                  // underside down: the deck on top
+else if (part == "body")     translate([0, 0, base_t]) body_main();                        // floor down; olive
+else if (part == "body_cups") translate([0, 0, base_t]) body_cups();                       // the same place; black
+else if (part == "body_at")  body_main();
+else if (part == "cups")     body_cups();
+else if (part == "lid")      translate([0, 0, -H]) lid_main();                             // underside down: the deck on top; olive
+else if (part == "lid_deck") translate([0, 0, -H]) lid_deck();                             // the same place; black
+else if (part == "deck")     lid_deck();
 else if (part == "plate")    rotate([90, 0, 0]) translate([-px0, 0, -(pz0 + ph)]) plate();  // face down
-else if (part == "knob")     knob_local();                                                 // base down
+else if (part == "knob")     knob_ring();                                                  // base down; burnt orange
+else if (part == "knob_cap") knob_cap();                                                   // the same place; black
 else if (part == "foot")     foot_local();                                                 // disc down (TPU)
 else if (part == "spout")    spout();                                                      // top down, legs up
 else if (part == "fuzz")     fuzz_mod();                                                   // a slicer modifier, not a print
-else if (part == "lid_at")   lid();
+else if (part == "lid_at")   lid_main();
 else if (part == "plate_at") plate();
-else if (part == "knob_at")  knob_at();
+else if (part == "knob_at")  knob_ring_at();
+else if (part == "cap")      knob_cap_at();
 else if (part == "feet")     feet_shown();
 else if (part == "screws")   screws();
 else if (part == "pump")     pump(idx);

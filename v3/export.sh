@@ -4,7 +4,7 @@ set -e
 cd "$(dirname "$0")"
 mkdir -p stl
 setopt nullglob; rm -f stl/*.stl
-for p in body lid plate knob foot spout; do
+for p in body body_cups lid lid_deck plate knob knob_cap foot spout; do   # body/lid/knob print with their second colour: load the pair as one object
   echo "  $p"; openscad -q -o stl/$p.stl --export-format binstl -D "part=\"$p\"" hydro-doser-v3.scad
 done
 echo "  fuzz (a slicer modifier, not a print)"; openscad -q -o stl/fuzz-modifier.stl --export-format binstl -D 'part="fuzz"' hydro-doser-v3.scad

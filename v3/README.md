@@ -26,12 +26,14 @@ the firmware under `firmware/v3/`; this copy is the working one.
 
 | Piece | Prints | Size | |
 |---|---|---|---|
-| `body` | floor down | 202 × 178 × 82 | floor and walls in one: bulkhead, cups, wall-board ribs, vents, the front opening, the feet's pockets, the rim on top |
-| `lid` | underside down | 202 × 178 × 11 | flat underneath but for its pocket; the deck on top |
+| `body` + `body_cups` | floor down | 202 × 178 × 82 | floor and walls in one: bulkhead, wall-board ribs, vents, the front opening, the feet's pockets, the rim on top; the cups are the second file, printed black |
+| `lid` + `lid_deck` | underside down | 202 × 178 × 11 | flat underneath but for its pocket; the deck on top is the second file, printed black |
 | `plate` | face down | 96 × 59 × 22 | black; ribs, slots, ledge and the DevKit's rails on its back |
-| `knob` | base down | Ø36 × 7.5 | burnt orange; knurled, rounded, D bore; the encoder's shaft is cut to 13.5 above its pcb |
+| `knob` + `knob_cap` | base down | Ø36 × 7.5 | the knurled ring burnt orange, the cap (face and rounded edge) black; D bore; the encoder's shaft is cut to 13.5 above its pcb |
 | `foot` | disc down, TPU | Ø18 × 6 | four |
 | `spout` | top down, legs up | 40 × 16 × 34 | clips the reservoir's rim |
+
+The body, the lid and the knob each come as two STLs in the same place: the olive (or orange) part and its black part. Load the pair as one object in the slicer (Bambu Studio: import both together and answer yes to loading them as a single object with multiple parts), then give the black part the black filament.
 
 `./export.sh` writes them into `stl/` as they print, no supports. The
 front band slopes at 45° underneath; the vents' ceilings, the lid's
