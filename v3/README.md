@@ -19,6 +19,9 @@ The lid snaps on; the faceplate is the only screwed piece,
 its four screws at the centres of its corner radii. The feet sit at the
 centres of the body's corner radii. Every edge is rounded.
 
+Published at <https://github.com/Atlas0108/hydro-doser> under `v3/`, with
+the firmware under `firmware/v3/`; this copy is the working one.
+
 ## Pieces
 
 | Piece | Prints | Size | |

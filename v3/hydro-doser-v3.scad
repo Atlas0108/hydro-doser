@@ -96,7 +96,7 @@ ctl_z  = 37;
 pt     = 3;                                          // its thickness, the wall's
 knob   = [36, 15, 38, 2, 1.5, 11, 4];                // dia, height, recess dia, recess depth, chamfer, nut pocket dia, depth
 pr     = 8;                                          // the plate's corner radius; its screws sit at the radius centres
-m_knob = 14;  m_scr = 19;  gap = 8;  m_v = 10.7;     // margins: around the knob, beside the screen, between them, above and below (10 % shorter)
+m_knob = 14;  m_scr = 14;  gap = 8;  m_v = 10.7;     // margins: beside the knob, beside the screen (the same), between them, above and below
 pw     = m_knob + knob[2] + gap + (oled[6] + 0.6) + m_scr;
 ph     = knob[2] + 2*m_v;
 px0    = (Bx - pw)/2;  pz0 = ctl_z - ph/2;
@@ -141,7 +141,8 @@ assert(esp_z0 + esp[0] - 12 >= oled_pcb_z - oled[1]/2 - 2.1 && esp_z0 + esp[0] <
 assert(esp_z0 - 3.5 >= pz0 + 2, "the cage's bottom bar runs off the plate");
 assert(bottle[1] - H_lid - deck[2] >= 30, "the bottle must show 30 mm above the deck");
 assert(pz0 >= 4 && pz0 + ph + 0.8 <= H - 0.5, "the faceplate's band runs into the lid seam");
-assert(oled_x + oled[0]/2 + 0.2 + oled_rib[0] <= px0 + pw - band[0] - 0.5 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the plate's works run under the band");
+assert(oled_x + oled[0]/2 + 0.2 + oled_rib[0] <= px0 + pw - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the plate's works run off the plate or under the band by the knob");
+assert(oled_pcb_z - oled[1]/2 - 2.1 - 1 >= pscrews[0][1] + insert[0]/2 + 1 && oled_pcb_z - oled[1]/2 - 2.1 + oled[1] + 4.6 + 1 <= pscrews[3][1] - insert[0]/2 - 1, "the band's notch for the screen runs into a screw");
 assert(Bx <= 256 && By <= 256, "bigger than the bed");
 
 // ---------------------------------------------------------------- helpers
@@ -197,6 +198,7 @@ module body() difference() {
     translate([0, 0, -1]) linear_extrude(wall + 1) plate2d(0.3);                                                                     // the opening the plate sits in, through the wall only: the band behind bears the plate
     round_cut(pch) plate2d(0.3);                                                                                                     // its edge rounded
     translate([0, 0, -1]) linear_extrude(wall + band[1] + 2) plate2d(-band[0] + 0.05);                                               // through the band: the plate's works pass
+    translate([0, 0, -1]) linear_extrude(wall + band[1] + 2) translate([px0 + pw - band[0] - 0.05, oled_pcb_z - oled[1]/2 - 2.1 - 1]) square([band[0] + 0.4, oled[1] + 4.6 + 2]);   // the band notched at the screen's left rib, between the two screws: the screen sits as close to the edge as the knob does
     for (s = pscrews) translate([s[0], s[1], wall - 0.01]) cylinder(d = insert[0], h = insert[1] + 0.01);                            // inserts in the band
   }
   wedge_x(px0 - 2, pw + 4, [[wall, pz0 - 0.8], [wall + 12, pz0 - 0.8 + 12], [wall + 12, 0.01], [wall, 0.01]]);                   // the band's underside slopes 45 down to the wall, stopping at the floor
