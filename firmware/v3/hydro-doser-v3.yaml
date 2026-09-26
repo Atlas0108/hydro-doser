@@ -164,20 +164,25 @@ display:
       else snprintf(title, sizeof title, "Dose %s, manual", DOSES[id(sel0)]);
       if (id(page) == 1 && id(sel1) < 0) { it.filled_rectangle(0, 0, 128, 16); it.printf(2, 3, id(f_title), COLOR_OFF, "<  Go back"); }
       else it.printf(2, 3, id(f_title), "%s", title);
-      // the list below it: four rows of 11, scrolling if there are more
-      auto list = [&](const char **items, int n, int sel) {
+      // the list below it: four rows of 11, scrolling if there are more; at
+      // the right of each row a glyph: a chevron for a submenu, a play
+      // triangle for something that runs
+      auto list = [&](const char **items, int n, int sel, bool play) {
         int first = sel > 3 ? sel - 3 : 0;
         for (int i = first; i < n && i < first + 4; i++) {
           int y = 18 + (i - first)*11;
-          if (i == sel) { it.filled_rectangle(0, y - 1, 128, 11); it.printf(4, y, id(f_row), COLOR_OFF, "%s", items[i]); }
-          else it.printf(4, y, id(f_row), "%s", items[i]);
+          auto col = i == sel ? COLOR_OFF : COLOR_ON;
+          if (i == sel) it.filled_rectangle(0, y - 1, 128, 11);
+          it.printf(4, y, id(f_row), col, "%s", items[i]);
+          if (play) it.filled_triangle(118, y + 1, 118, y + 8, 124, y + 4, col);
+          else { it.line(118, y + 1, 121, y + 4, col); it.line(121, y + 4, 118, y + 7, col); it.line(119, y + 1, 122, y + 4, col); it.line(122, y + 4, 119, y + 7, col); }
         }
       };
       if (id(page) == 0) {
         static const char *ITEMS[4] = {"Dose A", "Dose B", "Dose C", "Dose ABC"};
-        list(ITEMS, 4, id(sel0));
+        list(ITEMS, 4, id(sel0), false);
       } else if (id(page) == 1) {
-        list(QTYS, 5, id(sel1));
+        list(QTYS, 5, id(sel1), true);
       } else if (id(page) == 2) {
         uint32_t now = millis();
         int left = id(dose_end) > now ? (id(dose_end) - now + 999) / 1000 : 0;
