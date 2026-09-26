@@ -1,5 +1,14 @@
 # Hydro Doser
 
+> **v3 is in [`v3/`](v3/)**: a clean-sheet enclosure on its own feet, a faceplate
+> with a screen, a knob and the ESP32, snap-on lid, the pumps across the back.
+> Its firmware is in [`firmware/v3/`](firmware/v3/). What follows is v1.
+
+## v3
+
+See [`v3/README.md`](v3/README.md) and [`v3/BRIEF.md`](v3/BRIEF.md).
+
+
 A low unit that stands beside a hydroponic garden and doses straight into it:
 a water tank for top-offs, the Nutrient A and Nutrient B bottles, and three
 peristaltic pumps. The firmware is in `firmware/` (still the
