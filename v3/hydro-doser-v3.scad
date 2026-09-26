@@ -33,9 +33,9 @@ nozzle_off = 10;  nozzle_pitch = 16;  nozzle_y = 8;   // off the head's circumfe
 tube_od = 5;
 esp  = [28.3, 51.5, 1.6, 8.5];             // the 30-pin DevKit V1: w (z), l (x), pcb, pins back; the pin rows 1.3 in from the long edges
 esp_hole = [3, 2.3];                       // its four corner holes: dia, centre in from both edges (46.9 x 23.7 apart: measure yours)
-tds  = [32, 42, 1.6, 9];                   // the DFRobot Gravity TDS (or pH V2) signal board: w (x), h (z), pcb, parts on its back
+tds  = [32, 42, 1.6, 6];                   // the DFRobot Gravity TDS (or pH V2) signal board: short side, long side, pcb, parts on its back
 tds_hole = [3.1, 3.5];                     // its four corner holes: dia, centre in from both edges (25 x 35 apart: measure yours)
-tds_so   = [5.5, 10, 2.6];                 // standoffs: dia, height (lifts it over the band and the encoder's back), pilot for an M3 self-tapper
+tds_so   = [6, 25, 2.6];                  // standoffs: dia, height (lifts it over the screen's header and its Dupont plugs), pilot for an M3 self-tapper
 esp_so   = [5.5, 5, 2.2];                    // standoffs: dia, height off the plate's back (clears the module and the USB), pilot for an M2.5 self-tapper
 uln  = [32, 35, 15];  buck = [20, 45, 12]; // both turned to lie along y, between the motors
 enc  = [31, 19, 1.6, 6.5, 11.5, 16, 6, 4.5, 9.5];   // pcb w, h, t; body, bushing top, shaft top above the pcb (the KY-040's 20 cut to 16: the knob's bore then reaches 1.2 short of its face); shaft dia, flat; shaft centre from the pcb's top edge
@@ -111,10 +111,10 @@ pscrews = [[px0 + pr, pz0 + pr], [px0 + pw - pr, pz0 + pr], [px0 + pw - pr, pz0 
 oled_rib = [3, 10, 1.2, 2.0];                        // thick (x), deep (y), slot depth, slot width: deep enough to carry the DevKit's cage
 esp_c   = [pscrews[1][0] - insert[0]/2 - 4.2 - esp[1]/2, ctl_z];   // the DevKit's centre, lying along x left of the screen (as seen from the front): its left end 4.2 short of the left screws' inserts
 esp_holes = [for (sx = [-1, 1], sz = [-1, 1]) [esp_c[0] + sx*(esp[1]/2 - esp_hole[1]), esp_c[1] + sz*(esp[0]/2 - esp_hole[1])]];
-oled_x = esp_c[0] - esp[1]/2 - 1 - oled_rib[0] - 0.2 - oled[0]/2;   // the screen's outer rib 1 short of the DevKit
-knob_x = oled_x - (oled[6] + 0.6)/2 - gap - knob[2]/2;             // the knob, gap from the screen's window
-tds_c   = [knob_x - 6.35 - 0.8 - tds_so[0]/2 - (tds[0]/2 - tds_hole[1]) - tds[0]/2 + tds[0]/2, ctl_z];   // right of the knob (as seen from the front): its left standoffs just right of the encoder's pins
-tds_holes = [for (sx = [-1, 1], sz = [-1, 1]) [tds_c[0] + sx*(tds[0]/2 - tds_hole[1]), tds_c[1] + sz*(tds[1]/2 - tds_hole[1])]];
+oled_x = Bx/2;                                                      // the screen, dead centre
+knob_x = (oled_x + px0)/2;                                          // the knob, midway between the screen's centre and the plate's right edge
+tds_c   = [oled_x, ctl_z];                 // the TDS board lying along x straight behind the screen, over its header
+tds_holes = [for (sx = [-1, 1], sz = [-1, 1]) [tds_c[0] + sx*(tds[1]/2 - tds_hole[1]), tds_c[1] + sz*(tds[0]/2 - tds_hole[1])]];
 tds_y   = pt + tds_so[1];
 knob_y = knob[3] - 0.5;                              // the knob's base, 0.5 off the recess floor
 enc_pcb_y = pt + enc[3];                             // the encoder's pcb, its body against the plate's back
@@ -151,8 +151,8 @@ assert(pz0 >= 4 && pz0 + ph + 0.8 <= H - 0.5, "the faceplate's band runs into th
 assert(esp_c[0] - esp[1]/2 - 1 >= oled_x + oled[0]/2 + 0.2 + oled_rib[0] - 0.01 && esp_c[0] + esp[1]/2 + 1 + 3 <= pscrews[1][0] - insert[0]/2, "the DevKit runs into the screen's rib or the left screws' inserts");
 assert(esp_c[1] - esp[0]/2 >= pz0 + 2 && esp_c[1] + esp[0]/2 <= pz0 + ph - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the DevKit or the knob runs off the plate");
 assert(esp_y + esp[2] + esp[3] + 2 <= cup_c[1][1] - cup_d/2 - cup_wall, "the DevKit's pins run into the cups");
-assert(tds_c[0] - tds[0]/2 >= pscrews[0][0] + insert[0]/2 + 1 && tds_c[1] - tds[1]/2 >= pz0 && tds_c[1] + tds[1]/2 <= pz0 + ph, "the TDS board runs into the right screws' inserts or off the plate");
-assert(tds_y + tds[2] + tds[3] + 2 <= cup_c[0][1] - cup_d/2 - cup_wall, "the TDS board's parts run into the cups");
+assert(tds_c[1] - tds[0]/2 >= pz0 && tds_c[1] + tds[0]/2 <= pz0 + ph && tds_c[0] + tds[1]/2 + 1 <= esp_c[0] - esp[1]/2, "the TDS board runs off the plate or into the DevKit");
+
 assert(oled_x + oled[0]/2 + 0.2 + oled_rib[0] <= px0 + pw - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the plate's works run off the plate or under the band by the knob");
 assert(oled_pcb_z - oled[1]/2 - 2.1 - 1 >= pscrews[0][1] + insert[0]/2 + 1 && oled_pcb_z - oled[1]/2 - 2.1 + oled[1] + 4.6 + 1 <= pscrews[3][1] - insert[0]/2 - 1, "the band's notch for the screen runs into a screw");
 assert(Bx <= 256 && By <= 256, "bigger than the bed");
@@ -211,7 +211,7 @@ module body() color("#5a7a48") difference() {
     round_cut(pch) plate2d(0.3);                                                                                                     // its edge rounded
     translate([0, 0, -1]) linear_extrude(wall + band[1] + 2) plate2d(-band[0] + 0.05);                                               // through the band: the plate's works pass
     hull() { translate([esp_c[0] - esp[1]/2 - 1, esp_c[1] - esp[0]/2 - 1, wall - 0.01]) cube([esp[1] + 2, esp[0] + 2, 0.01]); translate([esp_c[0] - esp[1]/2 - 1, esp_c[1] - esp[0]/2 - 1, wall + band[1] + 1]) cube([esp[1] + 2, esp[0] + 2 + band[1] + 1, 0.01]); }   // the band notched under the DevKit, its ceiling rising 45 into the box so it prints; the inserts' bosses untouched
-    for (h = tds_holes) translate([h[0], h[1], wall - 0.01]) cylinder(d = tds_so[0] + 1, h = band[1] + 1);                          // pockets in the band where the TDS board's standoffs pass
+
     for (s = pscrews) translate([s[0], s[1], wall - 0.01]) cylinder(d = insert[0], h = insert[1] + 0.01);                            // inserts in the band
   }
   wedge_x(px0 - 2, pw + 4, [[wall, pz0 - 0.8], [wall + 12, pz0 - 0.8 + 12], [wall + 12, 0.01], [wall, 0.01]]);                   // the band's underside slopes 45 down to the wall, stopping at the floor
@@ -303,8 +303,8 @@ module pump(k) color("#d8d8d8") translate([pump_x[k], head_y, pump_z]) rotate([0
 module pumps() for (k = [0:2]) pump(k);
 module board(i) color(i == 0 ? "#101418" : i == 1 ? "#1e6b35" : i == 3 ? "#1d4fa0" : "#111") {
   if (i == 3) translate([tds_c[0], tds_y, tds_c[1]]) difference() { union() {
-    translate([-tds[0]/2, 0, -tds[1]/2]) cube([tds[0], tds[2], tds[1]]);                                                              // the pcb, upright
-    translate([-tds[0]/2 + 6, tds[2], -tds[1]/2 + 7]) cube([tds[0] - 12, tds[3], tds[1] - 14]);                                        // its parts and connectors, back into the box
+    translate([-tds[1]/2, 0, -tds[0]/2]) cube([tds[1], tds[2], tds[0]]);                                                              // the pcb, lying along x
+    translate([-tds[1]/2 + 6, tds[2], -tds[0]/2 + 7]) cube([tds[1] - 12, tds[3], tds[0] - 14]);                                        // its parts and connectors, back into the box
   }
   for (h = tds_holes) translate([h[0] - tds_c[0], -4, h[1] - tds_c[1]]) rotate([-90, 0, 0]) cylinder(d = tds_hole[0], h = 10); }
   if (i == 0) translate([esp_c[0], esp_y, esp_c[1]]) difference() { union() {
@@ -333,6 +333,7 @@ module oled_at() translate([oled_x, pt, oled_pcb_z]) {
   color("#1f3a5f") translate([-oled[0]/2, 0, -oled[1]/2]) cube([oled[0], oled[2], oled[1]]);                            // the pcb, against the plate's back
   color("#111") translate([-oled[3]/2, -oled[5], oled_glass_dz - oled[4]/2]) cube([oled[3], oled[5], oled[4]]);           // the glass, into the plate
   color("#888") translate([-5, oled[2], oled[1]/2 - 3]) cube([10, 8, 2]);                                                // the header, pointing in
+  color("#222") translate([-5.2, oled[2] + 8 - 6, oled[1]/2 - 3 - 0.27]) cube([10.4, 20, 2.54]);                          // its Dupont plugs, 14 past the pins
 }
 // The Rise Gardens 125 mL bottle (Sprout in the right cup, Thrive in the
 // left): a white HDPE cylinder round, its shoulder rounded into a 24 mm

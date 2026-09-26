@@ -87,22 +87,23 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   pocket in its base, sits 0.5 off the recess floor, and stops on the
   shaft's end (the KY-040's 20 mm shaft cut to 16 above the pcb; the
   knob is 9.5 thick and its D bore runs to 1.2 short of the face).
-  Left of the screen, as seen from the front, the 30-pin ESP32 DevKit
-  V1 lies along the plate, its left end 4 short of the left screws'
-  inserts; the screen sits 1 clear of it and the knob 12 from the
-  screen. It stands on four Ø5.5 standoffs, 5 tall, module toward the plate and
+  The screen sits dead centre; the knob is midway between the screen's
+  centre and the plate's right edge. Left of the screen, as seen from
+  the front, the 30-pin ESP32 DevKit lies along the plate, its left end
+  4 short of the left screws' inserts. It stands on four Ø5.5 standoffs, 5 tall, module toward the plate and
   pins pointing into the box, held by M2.5 self-tappers through its
   corner holes into Ø2.2 pilots. The holes are taken as Ø3, 2.3 in from
   each edge (46.9 × 23.7 apart): measure your board and change
   `esp_hole` if it differs. The band behind the wall is notched there
   so the board clears it, the notch's ceiling sloped 45° so it prints.
-  Right of the knob, the DFRobot Gravity TDS (or pH V2) signal board,
-  42 × 32, stands upright on four Ø5.5 standoffs, 10 tall, which lift it
-  over the band and the encoder's back and land just right of the
-  encoder's pins; M3 self-tappers through its corner holes into Ø2.6
-  pilots. The holes are taken as Ø3.1, 3.5 in from each edge (25 × 35
-  apart): measure your board and change `tds_hole` if it differs. The
-  band is pocketed where those standoffs pass.
+  Straight behind the screen, the DFRobot Gravity TDS (or pH V2) signal
+  board, 42 × 32, lies along the plate on four Ø6 standoffs, 25 tall, so
+  it clears the screen's header and the Dupont plugs on it; its back
+  runs between the two cups. Two of the standoffs merge into the
+  screen's side ribs. M3 self-tappers through its corner holes into
+  Ø2.6 pilots. The holes are taken as Ø3.1, 3.5 in from each edge (35 ×
+  25 apart): measure your board and change `tds_hole` if it differs.
+  Fit the screen before the board: the board covers its way in.
   Fit all four, then screw the plate on.
   The window sits 14 from the plate's edge, the same as the knob's
   recess; the screen's outer rib lands where the band would be, so the
