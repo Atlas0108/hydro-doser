@@ -256,10 +256,10 @@ module knob_local() color("#a8451a") difference() {   // burnt orange          /
   translate([0, 0, -1]) cylinder(d = knob[5], h = knob[6] + 1);                                                         // the nut's pocket
   translate([0, 0, -1]) linear_extrude(bore_d + 1) difference() { circle(d = enc[6] + 0.1); translate([-5, enc[7] - enc[6]/2 + 0.05]) square([10, 5]); }   // the D bore, stopping on the shaft's end
 }
-// Two colours: the knurled ring burnt orange, the cap (the face and its
+// Two colours: the knurled ring brown-red, the cap (the face and its
 // rounded edge, everything above the knurl) black.
 module cap_region() translate([0, 0, knob[1] - knob[4] + 0.01]) cylinder(d = knob[0] + 2, h = knob[4] + 1);   // 0.01 above the knurl's top, off its face
-module knob_ring() color("#a8451a") difference() { knob_local(); cap_region(); }
+module knob_ring() color("#7a2e1e") difference() { knob_local(); cap_region(); }
 module knob_cap() color("#1c1c1c") intersection() { knob_local(); cap_region(); }
 module knob_at() translate([knob_x, knob_y, ctl_z]) rotate([90, 0, 0]) knob_local();
 module knob_ring_at() translate([knob_x, knob_y, ctl_z]) rotate([90, 0, 0]) knob_ring();

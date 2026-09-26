@@ -90,7 +90,7 @@ def grained(m, scale=900, strength=0.06):   # a very fine bump so printed plasti
 MAT = {
   'shell': grained(principled('shell', (0.027, 0.072, 0.015), rough=0.74, sheen=0.2)),      # Anycubic matte olive PETG
   'plate': grained(principled('plate', (0.012, 0.012, 0.012), rough=0.7, sheen=0.15)),      # matte black
-  'knob':  grained(principled('knob', (0.394, 0.060, 0.010), rough=0.62, sheen=0.2), 600),  # burnt orange, #a8451a
+  'knob':  grained(principled('knob', (0.196, 0.027, 0.012), rough=0.62, sheen=0.2), 600),  # brown-red, #7a2e1e
   'pump': principled('pump', (0.88, 0.88, 0.86), rough=0.35, coat=0.3),
   'pcb_green': principled('pcb_green', (0.04, 0.22, 0.09), rough=0.35, coat=0.5),
   'pcb_dark': principled('pcb_dark', (0.03, 0.04, 0.06), rough=0.35, coat=0.4),
@@ -143,7 +143,25 @@ for ins in routes['inserts']:
     ob.data.materials.append(MAT['brass'])
     insert_obs.append((ob, Vector((ins['x'], ins['y0'] + ins['len'] / 2, ins['z'])) * S, ROFF['inserts']))
 
+# The screen: the menu as an emissive image in the window, just in front of
+# the OLED's glass, riding with the OLED. screen.jpg beside the parts.
+screen_ob = None
+SCREEN = os.path.join(PARTS, 'screen.jpg')
+if os.path.exists(SCREEN):
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0), rotation=(math.radians(90), 0, 0))
+    screen_ob = bpy.context.object; screen_ob.name = 'screen'; screen_ob.parent = model
+    screen_ob.scale = (-21.7 * S, 10.9 * S, 1)   # the active area; x negated to undo the parent's mirror on the picture
+    sm = bpy.data.materials.new('screen'); sm.use_nodes = True; nt = sm.node_tree
+    for n in list(nt.nodes): nt.nodes.remove(n)
+    tex = nt.nodes.new('ShaderNodeTexImage'); tex.image = bpy.data.images.load(SCREEN); tex.interpolation = 'Cubic'
+    em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Strength'].default_value = 6.0
+    out = nt.nodes.new('ShaderNodeOutputMaterial')
+    nt.links.new(tex.outputs['Color'], em.inputs['Color']); nt.links.new(em.outputs['Emission'], out.inputs['Surface'])
+    screen_ob.data.materials.append(sm)
+    screen_base = Vector((124, 1.4, 37)) * S          # oled_x, 0.1 in front of the glass, ctl_z
+
 def pose_routes(k):
+    if screen_ob: screen_ob.location = screen_base + ROFF['oled'] * k
     for sp, pts in curves:
         for bp, (base, off) in zip(sp.bezier_points, pts): bp.co = base + off * k
     for ob, base, off in insert_obs: ob.location = base + off * k

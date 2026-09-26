@@ -5,7 +5,7 @@ outputs and are not kept here; regenerate them.
 
 | File | What |
 |---|---|
-| `doser-v3.py` | Blender 5.2 scene: imports the parts exported in assembly position, matte olive PETG, a black plate, the burnt-orange knob, a dark studio, and renders a basic explosion (every part slides straight out, together, the wall boards staying put) as a 96-frame WebP sequence plus a hero still. `--device CPU\|METAL\|HIP`, `--test` renders three check frames. |
+| `doser-v3.py` | Blender 5.2 scene: imports the parts exported in assembly position, matte olive PETG, a black plate, the brown-red knob, a dark studio, and renders a basic explosion (every part slides straight out, together, the wall boards staying put) as a 96-frame WebP sequence plus a hero still. `--device CPU\|METAL\|HIP`, `--test` renders three check frames. |
 | `routes.py` | The tubes and the faceplate's heat-set inserts as routes in model mm, each point riding with the part it is attached to; `python3 routes.py > routes.json`. The scene and the exploded-view page both read `routes.json`. |
 | `encode.py` | Blender's FFmpeg: frames to MP4, forward, hold, reverse, hold, 24 fps. |
 
