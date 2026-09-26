@@ -351,6 +351,11 @@ display:
           bool searching = id(wifi_id).has_sta() && millis() < 60000;
           it.printf(126, 8, id(f_title), TextAlign::CENTER_RIGHT, searching ? "searching..." : "set up wifi");
         }
+        // on the home screen, once online: the nutrient level at the right
+        else if (p == 0) {
+          const std::string &lvl = id(nutrient_level).state;
+          if (!lvl.empty()) it.printf(126, 8, id(f_title), TextAlign::CENTER_RIGHT, "%s", lvl == "No reading" ? "No probe" : lvl.c_str());
+        }
       }
       // the list below it: four rows of 11, scrolling if there are more; at
       // the right of each row a glyph: a chevron for a submenu, a play
