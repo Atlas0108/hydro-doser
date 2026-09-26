@@ -343,16 +343,8 @@ display:
       if (sel_band) { it.filled_rectangle(0, 0, 128, 16); it.printf(2, 8, id(f_title), COLOR_OFF, TextAlign::CENTER_LEFT, "<  Go back"); }
       else {
         it.printf(2, 8, id(f_title), TextAlign::CENTER_LEFT, "%s", title);
-        // "searching..." while it looks for a network it knows, for the
-        // minute before the set-up modes take over; "set up wifi" after that,
-        // or straight away when it knows none (the app, over Bluetooth, or
-        // the Hydrohomie access point)
-        if (!id(wifi_id).is_connected() && p != 6) {
-          bool searching = id(wifi_id).has_sta() && millis() < 60000;
-          it.printf(126, 8, id(f_title), TextAlign::CENTER_RIGHT, searching ? "searching..." : "set up wifi");
-        }
-        // on the home screen, once online: the nutrient level at the right
-        else if (p == 0) {
+        // on the home screen: the nutrient level at the right
+        if (p == 0) {
           const std::string &lvl = id(nutrient_level).state;
           if (!lvl.empty()) it.printf(126, 8, id(f_title), TextAlign::CENTER_RIGHT, "%s", lvl == "No reading" ? "No probe" : lvl.c_str());
         }

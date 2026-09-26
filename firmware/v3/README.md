@@ -11,8 +11,8 @@ button, or the manual page with a stop button.
 
 ## Setting it up
 
-Nothing is baked in: no network, no password, no key. Plug it in, and
-the title band says "set up wifi" until it is on a network. Two ways,
+Nothing is baked in: no network, no password, no key. Plug it in and
+set it up on a network. Two ways,
 both local:
 
 1. Open the Home Assistant app on a phone near it, with Bluetooth
