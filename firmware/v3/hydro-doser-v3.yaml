@@ -394,6 +394,10 @@ sensor:
     lambda: |-
       float v = id(tds_volts).state;
       if (isnan(v)) return NAN;
+      // The ESP32's ADC can't see below about 0.14 V: a dry probe reads
+      // 0.142. Anything under 0.16 is that floor, so 0 ppm (it hides
+      // readings under about 70 ppm, far below a nutrient reservoir).
+      if (v < 0.16f) return 0.0f;
       float c = v / (1.0f + 0.02f * (id(water_temp).state - 25.0f));
       float ppm = (133.42f * c * c * c - 255.86f * c * c + 857.39f * c) * 0.5f * id(tds_k).state;
       return ppm < 0 ? 0 : ppm;
