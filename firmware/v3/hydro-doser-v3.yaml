@@ -2,7 +2,7 @@
 # faceplate, three 12 V peristaltic pumps through a ULN2003. Works without a
 # phone: turn to choose, click to open, click to run, hold to go back.
 #
-#   Dose        ->   < Dose A      ->   Dose A, 25 ml
+#   Hydrohomie  ->   Dose A        ->   Dose A, 25 ml
 #   > A              > 5 ml             12 s left
 #     B                10 ml            click to cancel
 #     C                25 ml
@@ -155,11 +155,11 @@ display:
       static const char *DOSES[4] = {"A", "B", "C", "ABC"};
       static const char *QTYS[5] = {"5 ml", "10 ml", "25 ml", "50 ml", "Manual"};
       // The yellow band carries the active menu's title. On the quantities
-      // page it starts with a back arrow; scrolling up past the first item
-      // highlights the band as "Go back", and a click goes back.
+      // page, scrolling up past the first item turns the band into a
+      // highlighted "< Go back", and a click goes back.
       char title[32];
-      if (id(page) == 0) snprintf(title, sizeof title, "Dose");
-      else if (id(page) == 1) snprintf(title, sizeof title, "< Dose %s", DOSES[id(sel0)]);
+      if (id(page) == 0) snprintf(title, sizeof title, "Hydrohomie");
+      else if (id(page) == 1) snprintf(title, sizeof title, "Dose %s", DOSES[id(sel0)]);
       else if (id(page) == 2) snprintf(title, sizeof title, "Dose %s, %.0f ml", DOSES[id(sel0)], id(dose_ml));
       else snprintf(title, sizeof title, "Dose %s, manual", DOSES[id(sel0)]);
       if (id(page) == 1 && id(sel1) < 0) { it.filled_rectangle(0, 0, 128, 16); it.printf(2, 3, id(f_title), COLOR_OFF, "<  Go back"); }

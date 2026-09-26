@@ -56,7 +56,7 @@ esphome logs hydro-doser-v3.yaml --device /dev/cu.usbserial-110   # watch it
 ## The menu
 
 ```
-  Dose        click ->   < Dose A      click ->   Dose A, 25 ml
+  Hydrohomie  click ->   Dose A        click ->   Dose A, 25 ml
   > Dose A               > 5 ml                   12 s left
     B                      10 ml                  click to cancel
     C                      25 ml
