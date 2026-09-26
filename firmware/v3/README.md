@@ -11,19 +11,23 @@ button, or the manual page with a stop button.
 
 ## Setting it up
 
-A unit built with its owner's networks in `secrets.yaml` joins them on
-its own. Built with the secrets left empty, nothing is baked in: plug it
-in, and the title band says "set up wifi" until it is on a network. Two
-ways, both local, and they are also the fallback if the built-in network
-is not found after a minute:
+Nothing is baked in: no network, no password, no key. Plug it in, and
+the title band says "set up wifi" until it is on a network. Two ways,
+both local:
 
 1. Open the Home Assistant app on a phone near it. It finds "Hydrohomie"
    over Bluetooth and asks for the Wi-Fi network and password.
 2. Or join the open Wi-Fi network "Hydrohomie" the doser raises; a page
    pops up to enter the network and password.
 
-Once it is on the network, Home Assistant lists it under Discovered on
-the integrations page; click Add. No key to paste.
+Once it is on the network it remembers it, and Home Assistant lists it
+under Discovered on the integrations page; click Add. No key to paste.
+If Home Assistant runs in Docker on a Mac with port mapping, as on the
+iMac here, it cannot see mDNS and will not discover anything: add the
+ESPHome integration by hand with the host `hydro-doser-v3.local` (or its
+address) and port 6053. To make a unit forget its network, erase the
+`nvs` partition (`esptool erase_region 0x390000 0x70000`) or hold no
+network: the set-up modes come back.
 
 A dose's time is ml divided by the pump's flow rate. The rates default to
 100 mL/min; calibrate each pump (run 50 ml into a measuring cup, adjust
@@ -68,8 +72,7 @@ esphome run hydro-doser-v3.yaml --device hydro-doser-v3.local     # over the air
 esphome logs hydro-doser-v3.yaml --device /dev/cu.usbserial-110   # watch it
 ```
 
-`secrets.yaml` holds only the OTA password now, for `esphome run` over
-the air; it is gitignored. Copy `secrets.yaml.example` and fill it in.
+There is no `secrets.yaml`: the firmware has no secrets.
 
 ## The menu
 

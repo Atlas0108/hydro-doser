@@ -39,17 +39,8 @@ logger:
 # on the network, Home Assistant discovers it and adds it with one click.
 wifi:
   id: wifi_id
-  # This unit's own network, from the gitignored secrets.yaml. Leave the
-  # secrets empty for a unit that should ask its owner instead: it then
-  # raises the access point and advertises over Bluetooth straight away.
-  networks:
-    - ssid: !secret wifi_ssid
-      password: !secret wifi_password
-    - ssid: !secret wifi_ssid_main
-      password: !secret wifi_password
   ap:
     ssid: "Hydrohomie"
-    ap_timeout: 1min
   on_connect:
     - component.update: oled
   on_disconnect:
@@ -82,7 +73,6 @@ api:
 
 ota:
   - platform: esphome
-    password: !secret ota_password
 
 # ------------------------------------------------------------- the pumps
 # Menu order A, B, C maps to the ULN2003's IN1 (Nutrient A), IN3 (Nutrient
