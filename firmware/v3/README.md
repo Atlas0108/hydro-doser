@@ -11,8 +11,11 @@ button, or the manual page with a stop button.
 
 ## Setting it up
 
-No Wi-Fi details are baked in. Plug it in; the title band says "set up
-wifi" until it is on a network. Two ways, both local:
+A unit built with its owner's networks in `secrets.yaml` joins them on
+its own. Built with the secrets left empty, nothing is baked in: plug it
+in, and the title band says "set up wifi" until it is on a network. Two
+ways, both local, and they are also the fallback if the built-in network
+is not found after a minute:
 
 1. Open the Home Assistant app on a phone near it. It finds "Hydrohomie"
    over Bluetooth and asks for the Wi-Fi network and password.
