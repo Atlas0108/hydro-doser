@@ -462,7 +462,9 @@ sensor:
     update_interval: 10s
     lambda: |-
       float v = id(ph_volts).state;
-      if (isnan(v) || v < 0.2f) return NAN;           // nothing on the input
+      // the ADC's floor (0.142 V, x1.5 = 0.21) is nothing on the input; a real
+      // pH board sits around 1.5 to 3.5 V
+      if (isnan(v) || v < 0.3f) return NAN;
       return 7.0f + (id(ph7_v).state - v) / id(ph_slope).state;
   # The Gravity TDS board's output, 0 to 2.3 V.
   - platform: adc
@@ -659,7 +661,7 @@ button:
     on_press:
       - lambda: |-
           float v = id(ph_volts).state;
-          if (!isnan(v) && v > 0.2f) { auto c = id(ph7_v).make_call(); c.set_value(v); c.perform(); }
+          if (!isnan(v) && v > 0.3f) { auto c = id(ph7_v).make_call(); c.set_value(v); c.perform(); }
   - platform: template
     name: "Calibrate pH 4"
     icon: mdi:ph
