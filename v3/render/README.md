@@ -15,8 +15,9 @@ for p in body_at:body lid_at:lid deck:deck plate_at:plate knob_at:knob cap:cap f
   openscad -o parts/${p#*:}.stl --export-format binstl -D "part=\"${p%:*}\"" ../hydro-doser-v3.scad; done
 for i in 0 1 2; do for p in pump board; do openscad -o parts/$p$i.stl --export-format binstl -D "part=\"$p\"" -D "idx=$i" ../hydro-doser-v3.scad; done; done
 for i in 0 1; do openscad -o parts/bottle$i.stl --export-format binstl -D 'part="bottle"' -D "idx=$i" ../hydro-doser-v3.scad; done
-# on node-01 (32 threads, about 8 s a frame at 64 samples)
+# on node-01 (32 threads): a preview at about 8 s a frame, the high-quality pass at about a minute a frame
 python3 routes.py > parts/routes.json
 blender -b -P doser-v3.py -- --device CPU --frames 96 --samples 64 --parts parts --out frames
+blender -b -P doser-v3.py -- --device CPU --frames 120 --samples 192 --width 2400 --parts parts --out frames
 blender -b -P encode.py -- frames hydro-doser-v3-explosion.mp4
 ```

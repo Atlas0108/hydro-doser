@@ -1,5 +1,5 @@
 # Encode the rendered frames as an MP4 with Blender's own FFmpeg: forward,
-# hold, reverse, hold. 24 fps, H.264 high quality, native 1440 x 810.
+# hold, reverse, hold. 24 fps, H.264 high quality, at the frames' own size.
 import bpy, os, sys
 argv = sys.argv[sys.argv.index('--') + 1:]
 FR, OUT = argv[0], argv[1]
@@ -7,7 +7,8 @@ files = sorted(f for f in os.listdir(FR) if f.startswith('f') and f.endswith('.w
 N, HOLD, FPS = len(files), 24, 24
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
-sc.render.resolution_x, sc.render.resolution_y, sc.render.resolution_percentage = 1600, 800, 100
+first = bpy.data.images.load(os.path.join(FR, files[0]))   # the frames' own size
+sc.render.resolution_x, sc.render.resolution_y, sc.render.resolution_percentage = first.size[0], first.size[1], 100
 sc.render.fps = FPS
 sc.sequence_editor_create()
 seq = sc.sequence_editor

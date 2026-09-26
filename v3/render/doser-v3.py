@@ -2,7 +2,7 @@
 # position, light it as a studio product shot, and render a basic explosion
 # as a frame sequence.
 #
-#   blender -b -P doser-v3.py -- --parts DIR --out DIR [--frames 96] [--samples 64] [--device CPU] [--test]
+#   blender -b -P doser-v3.py -- --parts DIR --out DIR [--frames 96] [--samples 64] [--width 1600] [--device CPU] [--test]
 #
 # Model coordinates are mm: x right->left, y front->back, z up from the
 # body's bottom edge. Blender is metres, z up, so parts are scaled 0.001 in
@@ -19,6 +19,7 @@ SAMPLES = arg('--samples', 64)
 OUT     = arg('--out', os.path.expanduser('~/doser-v3/frames'))
 PARTS   = arg('--parts', os.path.expanduser('~/doser-v3/parts'))
 DEVICE  = arg('--device', 'CPU')
+WIDTH   = arg('--width', 1600)              # 2:1 frames; --width 2400 for the high-quality pass
 TEST    = '--test' in argv
 os.makedirs(OUT, exist_ok=True)
 
@@ -56,7 +57,7 @@ if DEVICE != 'CPU':
 scene.cycles.samples = SAMPLES
 scene.cycles.use_denoising = True
 scene.cycles.use_adaptive_sampling = True
-scene.render.resolution_x, scene.render.resolution_y = (1600, 800)
+scene.render.resolution_x, scene.render.resolution_y = (WIDTH, WIDTH // 2)
 scene.render.resolution_percentage = 100
 scene.render.film_transparent = False
 scene.render.image_settings.file_format = 'WEBP'
@@ -201,6 +202,6 @@ else:
     for fr in range(1, FRAMES + 1):
         pose((fr - 1) / (FRAMES - 1))
         scene.render.filepath = os.path.join(OUT, f'f{fr:03d}.webp'); bpy.ops.render.render(write_still=True)
-    pose(0.0); scene.render.resolution_x, scene.render.resolution_y = (2400, 1200); scene.cycles.samples = SAMPLES * 2
+    pose(0.0); scene.render.resolution_x, scene.render.resolution_y = (max(WIDTH, 2400), max(WIDTH, 2400) // 2); scene.cycles.samples = SAMPLES * 2
     scene.render.filepath = os.path.join(OUT, 'hero.webp'); bpy.ops.render.render(write_still=True)
 print('done')
