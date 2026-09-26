@@ -84,6 +84,8 @@ sections dashboard: Status, Cancel, the dose buttons at 5, 10, 25 and
 
 ## The menu
 
+Home lists Dose A, Dose B, Dose C, Dose ABC and Settings.
+
 ```
   Hydrohomie  click ->   Dose A        click ->   Dose A, 25 ml
   > Dose A               > 5 ml                   12 s left
@@ -93,6 +95,14 @@ sections dashboard: Status, Cancel, the dose buttons at 5, 10, 25 and
                            Manual       hold ->   A running
                                                   release to stop
 ```
+
+Settings holds PIN, Autolock and Reset. PIN sets a four-digit PIN: turn
+to pick each digit, click to move on; 0000 clears it. Autolock (Off,
+1 min, 5 min) locks the screen after that long without a touch, and needs
+a PIN first: chosen without one it says "Set a PIN first". A locked
+screen asks for the PIN before the menu is usable; Home Assistant is not
+affected. Reset, after a confirmation, forgets the network, the PIN and
+the settings and reboots into set-up.
 
 Turn: move the highlight. Click: open the dose, then run the quantity,
 and while it runs, click again to cancel; a run started from Home

@@ -3,11 +3,16 @@
 # phone: turn to choose, click to open, click to run, hold to go back.
 #
 #   Hydrohomie  ->   Dose A        ->   Dose A, 25 ml
-#   > A              > 5 ml             12 s left
-#     B                10 ml            click to cancel
-#     C                25 ml
-#     ABC              50 ml
-#                      Manual          (hold the button: the pump runs while it is held)
+#   > Dose A         > 5 ml             12 s left
+#     Dose B           10 ml            click to cancel
+#     Dose C           25 ml
+#     Dose ABC         50 ml
+#     Settings         Manual          (hold the button: the pump runs while it is held)
+#
+#   Settings: PIN (set a 4-digit PIN with the knob; 0000 clears it), Autolock
+#   (Off, 1 min, 5 min: with a PIN set, the screen locks after that long
+#   without a touch and asks for the PIN), Reset (forget the network, the PIN
+#   and the settings, and reboot into set-up).
 #
 # A is Nutrient A (pump 0), B is Nutrient B (pump 2), C is Water (pump 1),
 # ABC runs A, then B, then C. A dose's time is ml / flow rate; the flow rates
@@ -112,12 +117,6 @@ switch:
     turn_on_action: { script.execute: { id: manual_on, which: 2 } }
     turn_off_action: { script.execute: stop_all }
 
-button:
-  - platform: template
-    name: "Cancel"
-    icon: mdi:stop
-    on_press: { script.execute: stop_all }
-
 text_sensor:
   - platform: template
     id: status
@@ -202,6 +201,39 @@ globals:
   - id: from_ha
     type: bool
     initial_value: "false"      # the run came from Home Assistant: cancelling goes to the home page
+  # pages 4..9: settings, autolock, PIN entry, a message, reset confirm, locked
+  - id: sel4
+    type: int
+    initial_value: "0"          # settings: -1 back, 0 PIN, 1 Autolock, 2 Reset
+  - id: sel5
+    type: int
+    initial_value: "0"          # autolock: -1 back, 0 Off, 1 1 min, 2 5 min
+  - id: pin
+    type: int
+    initial_value: "0"          # 0 means no PIN; otherwise 1..9999, shown as four digits
+    restore_value: true
+  - id: autolock_min
+    type: int
+    initial_value: "0"          # 0 off, else minutes
+    restore_value: true
+  - id: digits
+    type: int[4]
+    initial_value: "{0, 0, 0, 0}"
+  - id: pin_pos
+    type: int
+    initial_value: "0"
+  - id: pin_mode
+    type: int
+    initial_value: "0"          # 0 set a new PIN, 1 unlock
+  - id: last_input
+    type: uint32_t
+    initial_value: "0"
+  - id: msg_until
+    type: uint32_t
+    initial_value: "0"
+  - id: page_after_msg
+    type: int
+    initial_value: "4"
 
 display:
   - platform: ssd1306_i2c
@@ -213,22 +245,30 @@ display:
       // A two-colour OLED: the top 16 rows are yellow, the rest blue.
       static const char *DOSES[4] = {"A", "B", "C", "ABC"};
       static const char *QTYS[5] = {"5 ml", "10 ml", "25 ml", "50 ml", "Manual"};
-      // The yellow band carries the active menu's title. On the quantities
-      // page, scrolling up past the first item turns the band into a
-      // highlighted "< Go back", and a click goes back.
+      static const char *LOCKS[3] = {"Off", "1 min", "5 min"};
+      int p = id(page);
+      // the yellow band: the active menu's title; a highlighted "< Go back"
+      // when the back arrow is selected
       char title[32];
-      if (id(page) == 0) snprintf(title, sizeof title, "Hydrohomie");
-      else if (id(page) == 1) snprintf(title, sizeof title, "Dose %s", DOSES[id(sel0)]);
-      else if (id(page) == 2) snprintf(title, sizeof title, "Dose %s, %.0f ml", DOSES[id(sel0)], id(dose_ml));
-      else snprintf(title, sizeof title, "Dose %s, manual", DOSES[id(sel0)]);
-      if (id(page) == 1 && id(sel1) < 0) { it.filled_rectangle(0, 0, 128, 16); it.printf(2, 8, id(f_title), COLOR_OFF, TextAlign::CENTER_LEFT, "<  Go back"); }
+      int sel_band = (p == 1 && id(sel1) < 0) || (p == 4 && id(sel4) < 0) || (p == 5 && id(sel5) < 0);
+      if (p == 0) snprintf(title, sizeof title, "Hydrohomie");
+      else if (p == 1) snprintf(title, sizeof title, "Dose %s", DOSES[id(sel0)]);
+      else if (p == 2) snprintf(title, sizeof title, "Dose %s, %.0f ml", DOSES[id(sel0)], id(dose_ml));
+      else if (p == 3) snprintf(title, sizeof title, "Dose %s, manual", DOSES[id(sel0)]);
+      else if (p == 4) snprintf(title, sizeof title, "Settings");
+      else if (p == 5) snprintf(title, sizeof title, "Autolock");
+      else if (p == 6) snprintf(title, sizeof title, id(pin_mode) == 0 ? "New PIN" : "Enter PIN");
+      else if (p == 7) snprintf(title, sizeof title, "Settings");
+      else if (p == 8) snprintf(title, sizeof title, "Reset");
+      else snprintf(title, sizeof title, "Locked");
+      if (sel_band) { it.filled_rectangle(0, 0, 128, 16); it.printf(2, 8, id(f_title), COLOR_OFF, TextAlign::CENTER_LEFT, "<  Go back"); }
       else {
         it.printf(2, 8, id(f_title), TextAlign::CENTER_LEFT, "%s", title);
         // "searching..." while it looks for a network it knows, for the
         // minute before the set-up modes take over; "set up wifi" after that,
         // or straight away when it knows none (the app, over Bluetooth, or
         // the Hydrohomie access point)
-        if (!id(wifi_id).is_connected()) {
+        if (!id(wifi_id).is_connected() && p != 6) {
           bool searching = id(wifi_id).has_sta() && millis() < 60000;
           it.printf(126, 8, id(f_title), TextAlign::CENTER_RIGHT, searching ? "searching..." : "set up wifi");
         }
@@ -242,30 +282,52 @@ display:
           int y = 18 + (i - first)*11;
           auto col = i == sel ? COLOR_OFF : COLOR_ON;
           if (i == sel) it.filled_rectangle(0, y - 2, 128, 12);
-          it.printf(4, y + 4, id(f_row), col, TextAlign::CENTER_LEFT, "%s", items[i]);   // centred in the bar, so the text clears its floor
+          it.printf(4, y + 4, id(f_row), col, TextAlign::CENTER_LEFT, "%s", items[i]);
           if (play) it.filled_triangle(118, y + 1, 118, y + 8, 124, y + 4, col);
           else { it.line(118, y + 1, 121, y + 4, col); it.line(121, y + 4, 118, y + 7, col); it.line(119, y + 1, 122, y + 4, col); it.line(122, y + 4, 119, y + 7, col); }
         }
       };
-      if (id(page) == 0) {
-        static const char *ITEMS[4] = {"Dose A", "Dose B", "Dose C", "Dose ABC"};
-        list(ITEMS, 4, id(sel0), false);
-      } else if (id(page) == 1) {
+      auto button = [&](const char *text) { it.filled_rectangle(0, 49, 128, 13); it.printf(64, 55, id(f_row), COLOR_OFF, TextAlign::CENTER, "%s", text); };
+      if (p == 0) {
+        static const char *ITEMS[5] = {"Dose A", "Dose B", "Dose C", "Dose ABC", "Settings"};
+        list(ITEMS, 5, id(sel0), false);
+      } else if (p == 1) {
         list(QTYS, 5, id(sel1), true);
-      } else if (id(page) == 2) {
+      } else if (p == 2) {
         uint32_t now = millis();
         int left = id(dose_end) > now ? (id(dose_end) - now + 999) / 1000 : 0;
         if (id(sel0) == 3) it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "%s: %d s", DOSES[id(dose_step)], left);
         else it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "%d s left", left);
-        it.filled_rectangle(0, 49, 128, 13);
-        it.printf(64, 55, id(f_row), COLOR_OFF, TextAlign::CENTER, "click to cancel");
-      } else if (id(from_ha)) {
+        button("click to cancel");
+      } else if (p == 3) {
         it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "running");
-        it.filled_rectangle(0, 49, 128, 13);
-        it.printf(64, 55, id(f_row), COLOR_OFF, TextAlign::CENTER, "click to stop");
+        if (id(from_ha)) button("click to stop"); else it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "release to stop");
+      } else if (p == 4) {
+        char lock[24]; snprintf(lock, sizeof lock, "Autolock:    %s", LOCKS[id(autolock_min) == 0 ? 0 : id(autolock_min) == 1 ? 1 : 2]);
+        const char *ITEMS[3] = {id(pin) ? "PIN (set)" : "PIN", lock, "Reset"};
+        list(ITEMS, 3, id(sel4), false);
+      } else if (p == 5) {
+        char rows[3][12]; const char *ITEMS[3];
+        for (int i = 0; i < 3; i++) { int m = i == 0 ? 0 : i == 1 ? 1 : 5; snprintf(rows[i], sizeof rows[i], "%s%s", LOCKS[i], id(autolock_min) == m ? "  *" : ""); ITEMS[i] = rows[i]; }
+        list(ITEMS, 3, id(sel5), true);
+      } else if (p == 6) {
+        // four digits; the one being set is highlighted; turn to change it, click to move on
+        for (int i = 0; i < 4; i++) {
+          int x = 26 + i*20;
+          if (i == id(pin_pos)) { it.filled_rectangle(x - 8, 22, 16, 22); it.printf(x, 33, id(f_big), COLOR_OFF, TextAlign::CENTER, "%d", id(digits)[i]); }
+          else if (i < id(pin_pos)) it.printf(x, 33, id(f_big), TextAlign::CENTER, "*");
+          else it.printf(x, 33, id(f_big), TextAlign::CENTER, "_");
+        }
+        it.printf(64, 55, id(f_row), TextAlign::CENTER, id(pin_mode) == 0 ? "0000 clears the PIN, hold to cancel" : "hold to cancel");
+      } else if (p == 7) {
+        it.printf(64, 30, id(f_big), TextAlign::CENTER, "Set a PIN first");
+      } else if (p == 8) {
+        it.printf(64, 24, id(f_row), TextAlign::CENTER, "Forget the network, the PIN");
+        it.printf(64, 36, id(f_row), TextAlign::CENTER, "and the settings?");
+        button("click to reset, hold to keep");
       } else {
-        it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "running");
-        it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "release to stop");
+        it.printf(64, 30, id(f_big), TextAlign::CENTER, "Locked");
+        button("click to unlock");
       }
 
 # --------------------------------------------------------------- the knob
@@ -298,14 +360,24 @@ sensor:
     on_clockwise:
       then:
         - lambda: |-
-            if (id(page) == 0 && id(sel0) < 3) id(sel0)++;
-            if (id(page) == 1 && id(sel1) < 4) id(sel1)++;
+            id(last_input) = millis();
+            int p = id(page);
+            if (p == 0 && id(sel0) < 4) id(sel0)++;
+            if (p == 1 && id(sel1) < 4) id(sel1)++;
+            if (p == 4 && id(sel4) < 2) id(sel4)++;
+            if (p == 5 && id(sel5) < 2) id(sel5)++;
+            if (p == 6) id(digits)[id(pin_pos)] = (id(digits)[id(pin_pos)] + 1) % 10;
         - component.update: oled
     on_anticlockwise:
       then:
         - lambda: |-
-            if (id(page) == 0 && id(sel0) > 0) id(sel0)--;
-            if (id(page) == 1 && id(sel1) > -1) id(sel1)--;
+            id(last_input) = millis();
+            int p = id(page);
+            if (p == 0 && id(sel0) > 0) id(sel0)--;
+            if (p == 1 && id(sel1) > -1) id(sel1)--;
+            if (p == 4 && id(sel4) > -1) id(sel4)--;
+            if (p == 5 && id(sel5) > -1) id(sel5)--;
+            if (p == 6) id(digits)[id(pin_pos)] = (id(digits)[id(pin_pos)] + 9) % 10;
         - component.update: oled
 
 binary_sensor:
@@ -326,6 +398,7 @@ binary_sensor:
     # Manual: the pump runs from press to release
     on_press:
       then:
+        - lambda: "id(last_input) = millis();"
         - if:
             condition: { lambda: "return id(page) == 1 && id(sel1) == 4;" }
             then:
@@ -346,45 +419,71 @@ binary_sensor:
                   id(status).publish_state("idle");
               - component.update: oled
     on_multi_click:
-      # a click: opens the dose, or runs the quantity
+      # a click
       - timing:
           - ON for at most 500ms
           - OFF for at least 80ms
         then:
-          - if:
-              condition: { lambda: "return id(page) == 0;" }
-              then:
-                - lambda: |-
-                    id(page) = 1;
-                    id(sel1) = 0;
-                - component.update: oled
-              else:
-                - if:
-                    condition: { lambda: "return id(page) == 1 && id(sel1) < 0;" }
-                    then:
-                      - lambda: "id(page) = 0;"
-                      - component.update: oled
-                - if:
-                    condition: { lambda: "return id(page) == 1 && id(sel1) >= 0 && id(sel1) < 4;" }
-                    then:
-                      - lambda: "id(from_ha) = false;"
-                      - script.execute:
-                          id: dose
-                          which: !lambda return id(sel0);
-                          ml: !lambda 'static const float ML[4] = {5, 10, 25, 50}; return ML[id(sel1)];'
-                    else:
-                      - if:
-                          condition: { lambda: "return id(page) == 2 || (id(page) == 3 && id(from_ha));" }
-                          then: { script.execute: stop_all }
+          - lambda: |-
+              int p = id(page);
+              if (p == 0) {                                          // home: open the item
+                if (id(sel0) == 4) { id(page) = 4; id(sel4) = 0; }
+                else { id(page) = 1; id(sel1) = 0; }
+              } else if (p == 1) {                                   // quantities
+                if (id(sel1) < 0) id(page) = 0;
+                else if (id(sel1) < 4) { id(from_ha) = false; id(dose)->execute(id(sel0), id(sel1) == 0 ? 5 : id(sel1) == 1 ? 10 : id(sel1) == 2 ? 25 : 50); }
+              } else if (p == 2 || (p == 3 && id(from_ha))) {        // running: cancel
+                id(stop_all)->execute();
+              } else if (p == 4) {                                   // settings
+                if (id(sel4) < 0) { id(page) = 0; }
+                else if (id(sel4) == 0) { id(pin_mode) = 0; id(pin_pos) = 0; for (int i = 0; i < 4; i++) id(digits)[i] = 0; id(page) = 6; }
+                else if (id(sel4) == 1) { if (id(pin)) { id(page) = 5; id(sel5) = id(autolock_min) == 0 ? 0 : id(autolock_min) == 1 ? 1 : 2; } else { id(page) = 7; id(msg_until) = millis() + 2000; } }
+                else { id(page) = 8; }
+              } else if (p == 5) {                                   // autolock
+                if (id(sel5) >= 0) id(autolock_min) = id(sel5) == 0 ? 0 : id(sel5) == 1 ? 1 : 5;
+                id(page) = 4;
+              } else if (p == 6) {                                   // a PIN digit accepted
+                if (id(pin_pos) < 3) id(pin_pos)++;
+                else {
+                  int v = id(digits)[0]*1000 + id(digits)[1]*100 + id(digits)[2]*10 + id(digits)[3];
+                  if (id(pin_mode) == 0) { id(pin) = v; if (v == 0) id(autolock_min) = 0; id(page) = 4; }
+                  else if (v == id(pin)) { id(page) = 0; }
+                  else { id(pin_pos) = 0; for (int i = 0; i < 4; i++) id(digits)[i] = 0; }   // wrong: again
+                }
+              } else if (p == 8) {                                   // reset confirmed
+                id(factory).press();
+              } else if (p == 9) {                                   // locked: ask for the PIN
+                id(pin_mode) = 1; id(pin_pos) = 0; for (int i = 0; i < 4; i++) id(digits)[i] = 0; id(page) = 6;
+              }
+          - component.update: oled
       # a hold: back (a dose in progress is cancelled by a click)
       - timing:
           - ON for at least 800ms
         then:
-          - if:
-              condition: { lambda: "return id(page) == 1 && id(sel1) != 4;" }
-              then:
-                - lambda: "id(page) = 0;"
-                - component.update: oled
+          - lambda: |-
+              int p = id(page);
+              if (p == 1 && id(sel1) != 4) id(page) = 0;
+              else if (p == 4) id(page) = 0;
+              else if (p == 5 || p == 6 || p == 7 || p == 8) id(page) = id(pin_mode) == 1 && p == 6 ? 9 : 4;
+          - component.update: oled
+
+button:
+  - platform: template
+    name: "Cancel"
+    icon: mdi:stop
+    on_press: { script.execute: stop_all }
+  - platform: factory_reset
+    id: factory
+    internal: true               # Settings > Reset: forgets the network, the PIN and the settings, then reboots
+
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-
+          uint32_t now = millis();
+          if (id(page) == 7 && now > id(msg_until)) { id(page) = 4; id(oled).update(); }
+          bool idle_page = id(page) <= 1 || id(page) == 4 || id(page) == 5 || id(page) == 8;
+          if (id(pin) && id(autolock_min) > 0 && idle_page && now - id(last_input) > (uint32_t) id(autolock_min) * 60000UL) { id(page) = 9; id(oled).update(); }
 
 script:
   # Home Assistant turned a pump's switch on: run it until the switch goes
