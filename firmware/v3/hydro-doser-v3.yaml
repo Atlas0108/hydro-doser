@@ -1,18 +1,29 @@
 # Hydro Doser v3 -- an ESP32 with a 0.96" OLED and a KY-040 knob on the
-# faceplate, three 12 V peristaltic pumps through a ULN2003. This first cut
-# is the menu only: turn the knob to pick Dose A, Dose B, Dose C or Dose
-# ABC, click to open it, click again to run, hold to go back. Running is a
-# placeholder until the pumps are wired: it shows a page and logs.
+# faceplate, three 12 V peristaltic pumps through a ULN2003. Works without a
+# phone: turn to choose, click to open, click to run, hold to go back.
 #
-#   esphome run hydro-doser-v3.yaml --device /dev/cu.usbserial-110    # first flash, over USB
-#   esphome run hydro-doser-v3.yaml --device hydro-doser-v3.local     # OTA after that
+#   Dose        ->   Dose A        ->   Dose A 25 ml
+#   > A              > 5 ml             12 s left
+#     B                10 ml            hold to stop
+#     C                25 ml
+#     ABC              50 ml
+#                      Manual          (hold the button: the pump runs while it is held)
 #
-# Wiring (README.md has the table): OLED SDA GPIO21, SCL GPIO22; knob CLK
-# GPIO18, DT GPIO19, SW GPIO23; pumps IN1..IN3 GPIO25/26/27 (not used yet).
+# A is Nutrient A (pump 0), B is Nutrient B (pump 2), C is Water (pump 1),
+# ABC runs A, then B, then C. A dose's time is ml / flow rate; the flow rates
+# are numbers you can set from Home Assistant once the pumps are calibrated.
+#
+#   esphome run hydro-doser-v3.yaml --device /dev/cu.usbserial-110    # over USB
+#   esphome run hydro-doser-v3.yaml --device hydro-doser-v3.local     # over the air after that
+#
+# Wiring (README.md): OLED SDA GPIO21, SCL GPIO22; knob CLK GPIO18, DT
+# GPIO19, SW GPIO23; ULN2003 IN1..IN3 GPIO25/26/27.
 
 esphome:
   name: hydro-doser-v3
   friendly_name: Hydro Doser v3
+  includes:
+    - pumps.h       # pump_on / pumps_on, by the menu's numbering
 
 esp32:
   board: esp32dev
@@ -22,6 +33,14 @@ logger:
 api:
   encryption:
     key: !secret api_key
+  actions:
+    - action: dose
+      variables: { pump: string, ml: float }
+      then:
+        - script.execute:
+            id: dose
+            which: !lambda 'return pump == "A" || pump == "a" ? 0 : pump == "B" || pump == "b" ? 1 : pump == "C" || pump == "c" ? 2 : 3;'
+            ml: !lambda return ml;
 
 ota:
   - platform: esphome
@@ -37,6 +56,55 @@ wifi:
     ssid: "Hydro Doser v3"
     password: !secret ap_password
 
+# ------------------------------------------------------------- the pumps
+# Menu order A, B, C maps to the ULN2003's IN1 (Nutrient A), IN3 (Nutrient
+# B), IN2 (Water): see the wiring table.
+output:
+  - platform: gpio
+    id: out_a
+    pin: GPIO25
+  - platform: gpio
+    id: out_b
+    pin: GPIO27
+  - platform: gpio
+    id: out_c
+    pin: GPIO26
+
+number:
+  - platform: template
+    id: rate_a
+    name: "Flow rate A"
+    unit_of_measurement: "mL/min"
+    min_value: 10
+    max_value: 300
+    step: 1
+    initial_value: 100
+    restore_value: true
+    optimistic: true
+    entity_category: config
+  - platform: template
+    id: rate_b
+    name: "Flow rate B"
+    unit_of_measurement: "mL/min"
+    min_value: 10
+    max_value: 300
+    step: 1
+    initial_value: 100
+    restore_value: true
+    optimistic: true
+    entity_category: config
+  - platform: template
+    id: rate_c
+    name: "Flow rate C"
+    unit_of_measurement: "mL/min"
+    min_value: 10
+    max_value: 300
+    step: 1
+    initial_value: 100
+    restore_value: true
+    optimistic: true
+    entity_category: config
+
 # ------------------------------------------------------------- the screen
 i2c:
   sda: GPIO21
@@ -45,97 +113,102 @@ i2c:
 
 font:
   - file: "/System/Library/Fonts/Supplemental/Verdana.ttf"
-    id: f_menu
-    size: 13
+    id: f_row
+    size: 9
   - file: "/System/Library/Fonts/Supplemental/Verdana.ttf"
-    id: f_small
-    size: 10
+    id: f_title
+    size: 9
   - file: "/System/Library/Fonts/Supplemental/Verdana.ttf"
     id: f_big
-    size: 20
+    size: 16
 
-# page: 0 the menu, 1 a dose's page (click runs it, hold goes back),
-# 2 dosing (a placeholder timer for now)
+# page 0: the dose list. page 1: a dose's quantities. page 2: dosing a
+# quantity (a timer). page 3: manual, running while the button is held.
 globals:
   - id: page
     type: int
     initial_value: "0"
-  - id: chosen
+  - id: sel0
     type: int
-    initial_value: "0"          # 0 A, 1 B, 2 C, 3 ABC
+    initial_value: "0"          # highlight on page 0: 0 A, 1 B, 2 C, 3 ABC
+  - id: sel1
+    type: int
+    initial_value: "0"          # highlight on page 1: 0..3 the quantities, 4 Manual
+  - id: dose_ml
+    type: float
+    initial_value: "0"
+  - id: dose_end
+    type: uint32_t
+    initial_value: "0"          # millis() when the running step ends
+  - id: dose_step
+    type: int
+    initial_value: "0"          # which pump is running now, for ABC
 
 display:
   - platform: ssd1306_i2c
     id: oled
     model: "SSD1306 128x64"
     address: 0x3C
-    update_interval: 200ms
+    update_interval: 250ms
     lambda: |-
-      static const char *NAMES[4] = {"Dose A", "Dose B", "Dose C", "Dose ABC"};
+      // A two-colour OLED: the top 16 rows are yellow, the rest blue. The
+      // yellow band is the breadcrumb, always: Home > Dose A > 25 ml.
+      static const char *DOSES[4] = {"A", "B", "C", "ABC"};
+      static const char *QTYS[5] = {"5 ml", "10 ml", "25 ml", "50 ml", "Manual"};
+      char crumb[40];
+      if (id(page) == 0) snprintf(crumb, sizeof crumb, "Home");
+      else if (id(page) == 1) snprintf(crumb, sizeof crumb, "Home > Dose %s", DOSES[id(sel0)]);
+      else if (id(page) == 2) snprintf(crumb, sizeof crumb, "Home > Dose %s > %.0f ml", DOSES[id(sel0)], id(dose_ml));
+      else snprintf(crumb, sizeof crumb, "Home > Dose %s > Manual", DOSES[id(sel0)]);
+      it.printf(2, 3, id(f_title), "%s", crumb);
+      // the list below it: four rows of 11, scrolling if there are more
+      auto list = [&](const char **items, int n, int sel) {
+        int first = sel > 3 ? sel - 3 : 0;
+        for (int i = first; i < n && i < first + 4; i++) {
+          int y = 18 + (i - first)*11;
+          if (i == sel) { it.filled_rectangle(0, y - 1, 128, 11); it.printf(4, y, id(f_row), COLOR_OFF, "%s", items[i]); }
+          else it.printf(4, y, id(f_row), "%s", items[i]);
+        }
+      };
       if (id(page) == 0) {
-        display::Rect bounds(0, 0, 128, 64);
-        id(main_menu).draw(&it, &bounds);
+        static const char *ITEMS[4] = {"Dose A", "Dose B", "Dose C", "Dose ABC"};
+        list(ITEMS, 4, id(sel0));
       } else if (id(page) == 1) {
-        it.printf(64, 4, id(f_big), TextAlign::TOP_CENTER, "%s", NAMES[id(chosen)]);
-        it.printf(64, 36, id(f_small), TextAlign::TOP_CENTER, "click to run");
-        it.printf(64, 50, id(f_small), TextAlign::TOP_CENTER, "hold to go back");
+        list(QTYS, 5, id(sel1));
+      } else if (id(page) == 2) {
+        uint32_t now = millis();
+        int left = id(dose_end) > now ? (id(dose_end) - now + 999) / 1000 : 0;
+        if (id(sel0) == 3) it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "%s: %d s", DOSES[id(dose_step)], left);
+        else it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "%d s left", left);
+        it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "hold to stop");
       } else {
-        it.printf(64, 4, id(f_big), TextAlign::TOP_CENTER, "%s", NAMES[id(chosen)]);
-        it.printf(64, 36, id(f_menu), TextAlign::TOP_CENTER, "dosing...");
-        it.printf(64, 52, id(f_small), TextAlign::TOP_CENTER, "hold to stop");
+        it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "running");
+        it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "release to stop");
       }
-
-graphical_display_menu:
-  id: main_menu
-  font: f_menu
-  active: true
-  mode: rotary
-  on_redraw:
-    then:
-      component.update: oled
-  items:
-    - type: command
-      text: "Dose A"
-      on_value:
-        then:
-          - script.execute: { id: open_page, which: 0 }
-    - type: command
-      text: "Dose B"
-      on_value:
-        then:
-          - script.execute: { id: open_page, which: 1 }
-    - type: command
-      text: "Dose C"
-      on_value:
-        then:
-          - script.execute: { id: open_page, which: 2 }
-    - type: command
-      text: "Dose ABC"
-      on_value:
-        then:
-          - script.execute: { id: open_page, which: 3 }
 
 # --------------------------------------------------------------- the knob
 sensor:
   - platform: rotary_encoder
     id: knob
     pin_a:
-      number: GPIO18
-      mode: { input: true, pullup: true }
-    pin_b:
       number: GPIO19
       mode: { input: true, pullup: true }
-    resolution: 2
+    pin_b:
+      number: GPIO18
+      mode: { input: true, pullup: true }
+    resolution: 1               # one step per detent on the KY-040; A and B swapped so clockwise moves down the list
     on_clockwise:
       then:
-        - if:
-            condition: { lambda: "return id(page) == 0;" }
-            then: { display_menu.down: main_menu }
+        - lambda: |-
+            if (id(page) == 0 && id(sel0) < 3) id(sel0)++;
+            if (id(page) == 1 && id(sel1) < 4) id(sel1)++;
+        - component.update: oled
     on_anticlockwise:
       then:
-        - if:
-            condition: { lambda: "return id(page) == 0;" }
-            then: { display_menu.up: main_menu }
+        - lambda: |-
+            if (id(page) == 0 && id(sel0) > 0) id(sel0)--;
+            if (id(page) == 1 && id(sel1) > 0) id(sel1)--;
+        - component.update: oled
 
 binary_sensor:
   - platform: gpio
@@ -146,51 +219,94 @@ binary_sensor:
       inverted: true
     filters:
       - delayed_on_off: 30ms
+    # Manual: the pump runs from press to release
+    on_press:
+      then:
+        - if:
+            condition: { lambda: "return id(page) == 1 && id(sel1) == 4;" }
+            then:
+              - lambda: |-
+                  id(page) = 3;
+                  pumps_on(id(sel0), true);
+              - component.update: oled
+    on_release:
+      then:
+        - if:
+            condition: { lambda: "return id(page) == 3;" }
+            then:
+              - lambda: |-
+                  pumps_on(id(sel0), false);
+                  id(page) = 1;
+              - component.update: oled
     on_multi_click:
-      # a click: on the menu it opens the item; on a dose's page it runs it
+      # a click: opens the dose, or runs the quantity
       - timing:
           - ON for at most 500ms
           - OFF for at least 80ms
         then:
           - if:
               condition: { lambda: "return id(page) == 0;" }
-              then: { display_menu.enter: main_menu }
-              else:
-                - if:
-                    condition: { lambda: "return id(page) == 1;" }
-                    then: { script.execute: run_dose }
-      # a hold: back to the menu (later: stop the pumps)
+              then:
+                - lambda: |-
+                    id(page) = 1;
+                    id(sel1) = 0;
+                - component.update: oled
+          - if:
+              condition: { lambda: "return id(page) == 1 && id(sel1) < 4;" }
+              then:
+                - script.execute:
+                    id: dose
+                    which: !lambda return id(sel0);
+                    ml: !lambda 'static const float ML[4] = {5, 10, 25, 50}; return ML[id(sel1)];'
+      # a hold: back, or stop
       - timing:
           - ON for at least 800ms
         then:
-          - script.execute: go_back
+          - if:
+              condition: { lambda: "return id(page) == 1 && id(sel1) != 4;" }
+              then:
+                - lambda: "id(page) = 0;"
+                - component.update: oled
+          - if:
+              condition: { lambda: "return id(page) == 2;" }
+              then:
+                - script.execute: stop_all
 
 script:
-  - id: open_page
+  # Dose `ml` from pump `which` (0 A, 1 B, 2 C), or from A, B and C in turn (3).
+  - id: dose
+    mode: restart
     parameters:
       which: int
+      ml: float
     then:
       - lambda: |-
-          id(chosen) = which;
-          id(page) = 1;
-      - component.update: oled
-
-  - id: go_back
-    then:
-      - script.stop: run_dose
-      - lambda: "id(page) = 0;"
-      - component.update: oled
-
-  # Placeholder: the pumps come next. For now it holds the dosing page for
-  # three seconds and logs what it would have done.
-  - id: run_dose
-    mode: restart
-    then:
-      - lambda: |-
-          static const char *NAMES[4] = {"A", "B", "C", "ABC"};
-          ESP_LOGI("dose", "would dose %s", NAMES[id(chosen)]);
+          id(sel0) = which;
+          id(dose_ml) = ml;
           id(page) = 2;
       - component.update: oled
-      - delay: 3s
+      - repeat:
+          count: !lambda "return which == 3 ? 3 : 1;"
+          then:
+            - lambda: |-
+                int p = which == 3 ? iteration : which;
+                id(dose_step) = p;
+                float rate = p == 0 ? id(rate_a).state : p == 1 ? id(rate_b).state : id(rate_c).state;
+                uint32_t ms = (uint32_t) (ml / rate * 60000.0f);
+                id(dose_end) = millis() + ms;
+                ESP_LOGI("dose", "pump %d: %.0f ml at %.0f mL/min = %u ms", p, ml, rate, ms);
+                pump_on(p, true);
+            - component.update: oled
+            - delay: !lambda "return (uint32_t) (id(dose_end) - millis());"
+            - lambda: "pump_on(id(dose_step), false);"
       - lambda: "id(page) = 0;"
+      - component.update: oled
+
+  - id: stop_all
+    then:
+      - script.stop: dose
+      - lambda: |-
+          pump_on(0, false); pump_on(1, false); pump_on(2, false);
+          ESP_LOGI("dose", "stopped");
+          id(page) = 0;
       - component.update: oled
