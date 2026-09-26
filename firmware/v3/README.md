@@ -58,15 +58,16 @@ esphome logs hydro-doser-v3.yaml --device /dev/cu.usbserial-110   # watch it
 ```
   Dose        click ->   Dose A        click ->   Dose A 25 ml
   > A                    > 5 ml                   12 s left
-    B                      10 ml                  hold to stop
+    B                      10 ml                  click to cancel
     C                      25 ml
     ABC                    50 ml
                            Manual       hold ->   A running
                                                   release to stop
 ```
 
-Turn: move the highlight. Click: open the dose, then run the quantity.
-Hold (0.8 s) on the quantities: back. Hold while dosing: stop. On
+Turn: move the highlight. Click: open the dose, then run the quantity,
+and while it runs, click again to cancel. Hold (0.8 s) on the
+quantities: back. On
 Manual, the pump runs from the moment the button goes down until it is
 released; on ABC's Manual all three run together. A timed ABC runs A,
 then B, then C, each for the chosen quantity.

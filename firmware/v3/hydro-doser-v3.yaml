@@ -4,7 +4,7 @@
 #
 #   Dose        ->   Dose A        ->   Dose A 25 ml
 #   > A              > 5 ml             12 s left
-#     B                10 ml            hold to stop
+#     B                10 ml            click to cancel
 #     C                25 ml
 #     ABC              50 ml
 #                      Manual          (hold the button: the pump runs while it is held)
@@ -180,7 +180,7 @@ display:
         int left = id(dose_end) > now ? (id(dose_end) - now + 999) / 1000 : 0;
         if (id(sel0) == 3) it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "%s: %d s", DOSES[id(dose_step)], left);
         else it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "%d s left", left);
-        it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "hold to stop");
+        it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "click to cancel");
       } else {
         it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "running");
         it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "release to stop");
@@ -259,7 +259,11 @@ binary_sensor:
                           id: dose
                           which: !lambda return id(sel0);
                           ml: !lambda 'static const float ML[4] = {5, 10, 25, 50}; return ML[id(sel1)];'
-      # a hold: back, or stop
+                    else:
+                      - if:
+                          condition: { lambda: "return id(page) == 2;" }
+                          then: { script.execute: stop_all }
+      # a hold: back (a dose in progress is cancelled by a click)
       - timing:
           - ON for at least 800ms
         then:
@@ -268,10 +272,6 @@ binary_sensor:
               then:
                 - lambda: "id(page) = 0;"
                 - component.update: oled
-          - if:
-              condition: { lambda: "return id(page) == 2;" }
-              then:
-                - script.execute: stop_all
 
 script:
   # Dose `ml` from pump `which` (0 A, 1 B, 2 C), or from A, B and C in turn (3).
@@ -303,11 +303,12 @@ script:
       - lambda: "id(page) = 0;"
       - component.update: oled
 
+  # Cancel: back to the quantities page the dose came from
   - id: stop_all
     then:
       - script.stop: dose
       - lambda: |-
           pump_on(0, false); pump_on(1, false); pump_on(2, false);
-          ESP_LOGI("dose", "stopped");
-          id(page) = 0;
+          ESP_LOGI("dose", "cancelled");
+          id(page) = 1;
       - component.update: oled
