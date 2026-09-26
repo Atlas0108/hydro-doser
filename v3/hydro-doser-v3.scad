@@ -108,7 +108,7 @@ px0    = deck_in;  pw = Bx - 2*deck_in;              // the plate: as wide as th
 pch    = 1;                                          // the round on its face edge, and on the opening's: the seam a soft groove
 band   = [pr + 4, 6];                                // behind the wall around the opening: width inside the plate's outline (2 mm past the insert), depth
 pscrews = [[px0 + pr, pz0 + pr], [px0 + pw - pr, pz0 + pr], [px0 + pw - pr, pz0 + ph - pr], [px0 + pr, pz0 + ph - pr]];
-oled_rib = [3, 10, 1.2, 2.0];                        // thick (x), deep (y), slot depth, slot width: deep enough to carry the DevKit's cage
+oled_pk = [0.3, 0.2, 2, 3];                         // the screen's pocket on the plate's back: clearance each side in x (0.2 wider than the old slots' fit), in z, wall, depth
 esp_c   = [pscrews[1][0] - insert[0]/2 - 4.2 - esp[1]/2, ctl_z];   // the DevKit's centre, lying along x left of the screen (as seen from the front): its left end 4.2 short of the left screws' inserts
 esp_holes = [for (sx = [-1, 1], sz = [-1, 1]) [esp_c[0] + sx*(esp[1]/2 - esp_hole[1]), esp_c[1] + sz*(esp[0]/2 - esp_hole[1])]];
 oled_x = Bx/2;                                                      // the screen, dead centre
@@ -148,13 +148,13 @@ assert(ports[1][1] - ports[1][2]/2 >= pump_z + pump_motor[0]/2 + 6, "the grommet
 assert(vents[0][0] >= bulk_y + wall + 2 && vents[0][0] + vents[0][1] <= By - wall - 2 && vents[1][0] >= 4 && vents[1][0] + vents[1][1]*(vents[1][2] - 1) + vents[2] <= H - cap[1] - 6, "the vents run off the motor section");
 assert(bottle[1] - H_lid - deck[2] >= 30, "the bottle must show 30 mm above the deck");
 assert(pz0 >= 4 && pz0 + ph + 0.8 <= H - 0.5, "the faceplate's band runs into the lid seam");
-assert(esp_c[0] - esp[1]/2 - 1 >= oled_x + oled[0]/2 + 0.2 + oled_rib[0] - 0.01 && esp_c[0] + esp[1]/2 + 1 + 3 <= pscrews[1][0] - insert[0]/2, "the DevKit runs into the screen's rib or the left screws' inserts");
+assert(esp_c[0] - esp[1]/2 - 1 >= oled_x + oled[0]/2 + oled_pk[0] + oled_pk[2] - 0.01 && esp_c[0] + esp[1]/2 + 1 + 3 <= pscrews[1][0] - insert[0]/2, "the DevKit runs into the screen's pocket or the left screws' inserts");
 assert(esp_c[1] - esp[0]/2 >= pz0 + 2 && esp_c[1] + esp[0]/2 <= pz0 + ph - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the DevKit or the knob runs off the plate");
 assert(esp_y + esp[2] + esp[3] + 2 <= cup_c[1][1] - cup_d/2 - cup_wall, "the DevKit's pins run into the cups");
 assert(tds_c[1] - tds[0]/2 >= pz0 && tds_c[1] + tds[0]/2 <= pz0 + ph && tds_c[0] + tds[1]/2 + 1 <= esp_c[0] - esp[1]/2, "the TDS board runs off the plate or into the DevKit");
 
-assert(oled_x + oled[0]/2 + 0.2 + oled_rib[0] <= px0 + pw - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the plate's works run off the plate or under the band by the knob");
-assert(oled_pcb_z - oled[1]/2 - 2.1 - 1 >= pscrews[0][1] + insert[0]/2 + 1 && oled_pcb_z - oled[1]/2 - 2.1 + oled[1] + 4.6 + 1 <= pscrews[3][1] - insert[0]/2 - 1, "the band's notch for the screen runs into a screw");
+assert(oled_x + oled[0]/2 + oled_pk[0] + oled_pk[2] <= px0 + pw - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the plate's works run off the plate or under the band by the knob");
+assert(oled_pcb_z - oled[1]/2 - oled_pk[1] - oled_pk[2] >= pz0 + band[0] && oled_pcb_z + oled[1]/2 + oled_pk[1] + oled_pk[2] <= pz0 + ph - band[0], "the screen's pocket runs under the band");
 assert(Bx <= 256 && By <= 256, "bigger than the bed");
 
 // ---------------------------------------------------------------- helpers
@@ -244,8 +244,8 @@ module plate() color("#1c1c1c") difference() {
   union() {
     on_front() translate([0, 0, pt]) mirror([0, 0, 1]) rounded_top(pt, pch) plate2d(0);                                             // the plate, its face edge rounded
     for (s = [-1, 1]) translate([knob_x + s*(enc[0]/2 + 0.3) - (s < 0 ? 2 : 0), pt - 0.01, ctl_z - 17]) cube([2, 9, 30]);         // ribs either side of the encoder's pcb, inside the band's opening
-    for (s = [-1, 1]) translate([oled_x + s*(oled[0]/2 + 0.2) - (s < 0 ? oled_rib[0] : 0), pt - 0.01, oled_pcb_z - oled[1]/2 - 2.1]) cube([oled_rib[0], oled_rib[1], oled[1] + 4.6]);   // the screen's ribs
-    translate([oled_x - oled[0]/2, pt - 0.01, oled_pcb_z - oled[1]/2 - 2]) cube([oled[0], oled_rib[3], 2]);                          // the ledge it sits on
+    translate([oled_x, pt - 0.01, oled_pcb_z]) rotate([-90, 0, 0]) linear_extrude(oled_pk[3] + 0.01) difference() { offset(oled_pk[2]) square([oled[0] + 2*oled_pk[0], oled[1] + 2*oled_pk[1]], center = true); square([oled[0] + 2*oled_pk[0], oled[1] + 2*oled_pk[1]], center = true); }   // the screen's pocket: a low frame it drops into from behind
+
     for (h = esp_holes) translate([h[0], pt - 0.01, h[1]]) rotate([-90, 0, 0]) cylinder(d = esp_so[0], h = esp_so[1] + 0.01);   // the DevKit's four standoffs
     for (h = tds_holes) translate([h[0], pt - 0.01, h[1]]) rotate([-90, 0, 0]) cylinder(d = tds_so[0], h = tds_so[1] + 0.01);   // the TDS board's four, taller
   }
@@ -254,8 +254,8 @@ module plate() color("#1c1c1c") difference() {
   for (s = pscrews) translate([s[0], 0, s[1]]) rotate([-90, 0, 0]) csk(screw[0], screw[1], pt);                                     // its screws, countersunk in the face, at the corners' radius centres
   translate([knob_x, -1, ctl_z]) rotate([-90, 0, 0]) { cylinder(d = 7.5, h = pt + 2); cylinder(d = knob[2], h = knob[3] + 1); translate([0, 0, 1]) round_cut(0.8) circle(d = knob[2]); }   // the bushing hole, the knob's recess, its mouth rounded
   translate([oled_x, -1, ctl_z]) rotate([-90, 0, 0]) { linear_extrude(pt + 2) rrc(oled[6] + 0.6, oled[7] + 0.6, 2); translate([0, 0, 1]) round_cut(0.5) rrc(oled[6] + 0.6, oled[7] + 0.6, 2); }   // the window, the picture's size, its mouth rounded
-  translate([oled_x - oled[3]/2 - 0.2, pt - oled[5] - 0.2, oled_pcb_z + oled_glass_dz - oled[4]/2 - 0.2]) cube([oled[3] + 0.4, oled[5] + 1, H]);   // a channel for the glass, open at the plate's top edge: the module slides down it
-  for (s = [-1, 1]) translate([oled_x + s*(oled[0]/2 + 0.2) - (s < 0 ? oled_rib[2] : 0), pt - 0.01, oled_pcb_z - oled[1]/2 - 7]) cube([oled_rib[2], oled_rib[3], H]);   // the slots the pcb slides down
+  translate([oled_x - oled[3]/2 - oled_pk[0], pt - oled[5] - 0.2, oled_pcb_z + oled_glass_dz - oled[4]/2 - oled_pk[1]]) cube([oled[3] + 2*oled_pk[0], oled[5] + 1, oled[4] + 2*oled_pk[1]]);   // the glass's recess, blind: the module drops in from behind
+
 }
 
 // ------------------------------------------------------------------- knob

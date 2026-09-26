@@ -151,12 +151,10 @@ chk "pushed 0.5 mm in it stops on the shaft\x27s end" SOLID 'intersection(){ tra
 chk "and pushed 0.4 mm it still clears the recess floor" CLEAR 'intersection(){ translate([0, 0.4, 0]) knob_at(); plate(); }'
 chk "the knob\x27s bore has its D flat" SOLID 'intersection(){ knob_at(); translate([knob_x - 2, knob_y - 9, ctl_z + enc[7] - enc[6]/2 + 0.3]) cube([4, 3, 1]); }'
 chk "the knob is countersunk: its base is behind the face" SOLID 'intersection(){ knob_at(); translate([0, 0.01, 0]) cube([Bx, wall, H]); }'
-chk "the screen sits in its slots on its ledge, clear of the plate" CLEAR 'intersection(){ plate(); oled_at(); }'
-chk "it slides down into place from the plate\x27s top edge" CLEAR 'intersection(){ plate(); union(){ for (dz = [0:5:40]) translate([0, 0, dz]) oled_at(); } }'
+chk "the screen sits in its pocket, clear of the plate" CLEAR 'intersection(){ plate(); oled_at(); }'
+chk "it drops straight in from behind" CLEAR 'intersection(){ plate(); union(){ for (dy = [0:2:30]) translate([0, dy, 0]) oled_at(); } }'
 chk "it cannot come out the front" SOLID 'intersection(){ plate(); translate([0, -2, 0]) oled_at(); }'
-chk "the slots hold it: shifted 2 mm either way it hits" SOLID 'for (dx = [-2, 2]) intersection(){ plate(); translate([dx, 0, 0]) oled_at(); }'
-chk "the ledge holds it: 0.5 mm lower it hits" SOLID 'intersection(){ plate(); translate([0, 0, -0.5]) oled_at(); }'
-chk "once the plate is on, the band stops the screen rising out of its slots" SOLID 'intersection(){ body(); translate([0, 0, 12]) oled_at(); }'
+chk "the pocket holds it: shifted 0.5 mm any way across the plate it hits" SOLID 'for (d = [[0.5,0],[-0.5,0],[0,0.5],[0,-0.5]]) intersection(){ plate(); translate([d[0], 0, d[1]]) oled_at(); }'
 chk "the window shows the whole picture" CLEAR 'intersection(){ plate(); translate([oled_x, -1, ctl_z]) rotate([-90, 0, 0]) linear_extrude(pt + 1) rrc(oled[6], oled[7], 1.5); }'
 chk "the glass sits behind a skin of the face" SOLID 'intersection(){ plate(); translate([oled_x - 12, 0.2, ctl_z + oled[7]/2 + 1.5]) cube([24, 1, 1]); }'
 chk "the knob and the screen sit on one line, the plate\x27s middle" SOLID 'intersection(){ union(){ knob_at(); oled_at(); } translate([0, -20, ctl_z - 0.5]) cube([Bx, 40, 1]); }'
@@ -188,7 +186,7 @@ for p in body lid lid_deck plate knob knob_cap foot spout; do
   allow=0; [[ $p == lid ]] && allow=2100   # the pocket's ceiling and the groove's top: 2 mm and 0.7 mm bridges round the rim
   [[ $p == lid_deck ]] && allow=30000; [[ $p == knob_cap ]] && allow=1100   # the second colours sit on their piece: their undersides are its top
   [[ $p == body ]] && allow=2000           # the vents' ceilings: fourteen 2 mm bridges; the wall-board ribs' undersides; the flange and port holes
-  [[ $p == plate ]] && allow=600           # the screen's ledge and the ribs' tops
+  [[ $p == plate ]] && allow=600           # the knob's ribs' tops
   if python3 $T/piece.py $p stl/$p.stl $allow; then ((pass++)); else ((fail++)); fi
 done
 echo "== $pass passed, $fail failed =="

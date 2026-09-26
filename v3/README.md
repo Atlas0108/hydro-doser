@@ -28,7 +28,7 @@ the firmware under `firmware/v3/`; this copy is the working one.
 |---|---|---|---|
 | `body` | floor down | 202 × 178 × 82 | floor and walls in one: bulkhead, cups, wall-board ribs, vents, the front opening, the feet's pockets, the rim on top |
 | `lid` + `lid_deck` | underside down | 202 × 178 × 11 | flat underneath but for its pocket; the deck on top is the second file, printed black |
-| `plate` | face down | 176 × 59 × 13 | black; the screen's ribs, slots and ledge, the knob's ribs, and standoffs for the DevKit and the TDS board on its back |
+| `plate` | face down | 176 × 59 × 28 | black; the screen's pocket, the knob's ribs, and standoffs for the DevKit and the TDS board on its back |
 | `knob` + `knob_cap` | base down | Ø36 × 9.5 | the knurled ring brown-red, the cap (face and rounded edge) black; the D bore reaches 1.2 short of the face; the encoder's shaft is cut to 16 above its pcb |
 | `foot` | disc down, TPU | Ø18 × 6 | four |
 | `spout` | top down, legs up | 40 × 16 × 34 | clips the reservoir's rim |
@@ -37,7 +37,7 @@ The lid and the knob each come as two STLs in the same place: the olive (or oran
 
 `./export.sh` writes them into `stl/` as they print, no supports. The
 front band slopes at 45° underneath; the vents' ceilings, the lid's
-pocket ceiling and the screen's ledge are short bridges.
+pocket ceiling is a short bridge.
 
 Hardware: 4 × M3 heat-set inserts and 4 × M3 × 8 countersunk (the
 faceplate), 6 × M3 × 8 (pump flanges, from the motor side, threading into
@@ -80,8 +80,10 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
 - **Faceplate.** A black plate, 3 thick, 96 × 59, centred on the front
   and flush with it, its edge and the opening's edge rounded 1 so the
   seam is a soft groove. Four M3 × 8 at its corner-radius centres into
-  inserts in a 12 mm band behind the wall. On its back: the OLED slides
-  down two slots into a glass channel and rests on a ledge, the window
+  inserts in a 12 mm band behind the wall. On its back: the OLED drops
+  straight into a pocket, a 3 mm frame 0.3 clear each side and 0.2 top
+  and bottom, its glass in a blind recess behind the face (a dab of hot
+  glue or foam tape keeps it seated); the window
   the size of its picture; the KY-040 sits between two ribs, its nut on
   the floor of a Ø38 × 2 recess, and the Ø36 knob hides the nut in a
   pocket in its base, sits 0.5 off the recess floor, and stops on the
