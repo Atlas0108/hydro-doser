@@ -85,6 +85,9 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   left rail tied at its top to the screen's left rib by a 9 × 12 arm
   behind the screen's way in, so the load runs in one loop through the
   plate. Fit all three, then screw the plate on.
+  The window sits 14 from the plate's edge, the same as the knob's
+  recess; the screen's outer rib lands where the band would be, so the
+  band is notched there between the two screws.
 - **Back.** The jack and the GX12-6 low in the back wall at the motors'
   height, between the motors; the grommet above the middle motor. The
   nutrient outlets run back over the bulkhead to the grommet with the
