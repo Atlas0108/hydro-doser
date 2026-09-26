@@ -22,13 +22,16 @@
 #   esphome run hydro-doser-v3.yaml --device hydro-doser-v3.local     # over the air after that
 #
 # Wiring (README.md): OLED SDA GPIO21, SCL GPIO22; knob CLK GPIO18, DT
-# GPIO19, SW GPIO23; ULN2003 IN1..IN3 GPIO25/26/27.
+# GPIO19, SW GPIO23; ULN2003 IN1..IN3 GPIO25/26/27; Gravity TDS board's
+# 3-pin plug on GPIO35 (A), GPIO32 (+), GPIO33 (-), side by side on the header.
 
 esphome:
   name: hydro-doser-v3
   friendly_name: Hydrohomie
   on_boot:
     - lambda: 'id(status).publish_state("idle");'
+    - output.turn_off: tds_gnd   # the TDS board's ground ...
+    - output.turn_on: tds_vcc    # ... and its 3.3 V, from two GPIOs beside its signal pin
   includes:
     - pumps.h       # pump_on / pumps_on, by the menu's numbering
 
@@ -93,6 +96,14 @@ output:
   - platform: gpio
     id: out_c
     pin: GPIO26
+  # The Gravity TDS board powered from the two pins beside its signal, so
+  # its 3-pin plug goes on the header in one piece: it draws a few mA.
+  - platform: gpio
+    id: tds_vcc
+    pin: GPIO32
+  - platform: gpio
+    id: tds_gnd
+    pin: GPIO33
 
 switch:
   - platform: template
@@ -156,6 +167,30 @@ number:
     max_value: 300
     step: 1
     initial_value: 100
+    restore_value: true
+    optimistic: true
+    entity_category: config
+  # TDS: the reading is compensated to 25 °C, so it needs the water's
+  # temperature (no probe for it yet: set it here), and a factor to
+  # calibrate against a known solution.
+  - platform: template
+    id: water_temp
+    name: "Water temperature"
+    unit_of_measurement: "°C"
+    min_value: 0
+    max_value: 40
+    step: 0.5
+    initial_value: 22
+    restore_value: true
+    optimistic: true
+    entity_category: config
+  - platform: template
+    id: tds_k
+    name: "TDS calibration"
+    min_value: 0.5
+    max_value: 2
+    step: 0.01
+    initial_value: 1
     restore_value: true
     optimistic: true
     entity_category: config
@@ -332,6 +367,36 @@ display:
 
 # --------------------------------------------------------------- the knob
 sensor:
+  # The Gravity TDS board's output, 0 to 2.3 V.
+  - platform: adc
+    id: tds_volts
+    name: "TDS voltage"
+    pin: GPIO35
+    attenuation: 12db
+    samples: 16
+    update_interval: 2s
+    accuracy_decimals: 3
+    entity_category: diagnostic
+    filters:
+      - median:
+          window_size: 15
+          send_every: 5
+  # DFRobot's formula: the voltage compensated to 25 °C, then its cubic
+  # fit, halved for ppm, times the calibration factor.
+  - platform: template
+    id: tds
+    name: "TDS"
+    unit_of_measurement: "ppm"
+    icon: mdi:water-opacity
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: |-
+      float v = id(tds_volts).state;
+      if (isnan(v)) return NAN;
+      float c = v / (1.0f + 0.02f * (id(water_temp).state - 25.0f));
+      float ppm = (133.42f * c * c * c - 255.86f * c * c + 857.39f * c) * 0.5f * id(tds_k).state;
+      return ppm < 0 ? 0 : ppm;
   # What the screen shows, for Home Assistant: the countdown of a running
   # dose, from the knob or from HA alike; 0 when nothing runs.
   - platform: template

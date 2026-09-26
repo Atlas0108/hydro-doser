@@ -66,6 +66,29 @@ design). The menu's A, B, C are Nutrient A, Nutrient B, Water:
 | ULN2003 IN3 | GPIO27 | B, Nutrient B, the left pump |
 | ULN2003 - | GND | |
 
+The Gravity TDS (or pH V2) signal board, on its 3-pin plug. Its three
+wires go on three neighbouring header pins, so the plug stays in one
+piece: the two pins beside the signal pin are driven as the board's
+supply and ground (it draws a few mA). The pins are all 3.3 V, and
+GPIO35 is on ADC1, which reads with Wi-Fi on.
+
+| TDS board | To ESP32 | Notes |
+|---|---|---|
+| A (signal) | GPIO35 | analog in, 0 to 2.3 V |
+| + | GPIO32 | driven high at boot: 3.3 V |
+| - | GPIO33 | driven low: ground |
+
+On the 30-pin DevKit V1 these three sit together on the header, VN
+side: ... D34, **D35, D32, D33**, D25 ... Plug the lead so its A wire lands
+on D35.
+
+Home Assistant gets TDS in ppm, the raw TDS voltage (diagnostic), and
+two settings: Water temperature, which the reading is compensated to
+25 °C with (there is no temperature probe yet, so set it), and TDS
+calibration, a factor to trim the reading against a known solution.
+The conversion is DFRobot's: the voltage over 1 + 0.02 × (T - 25), then
+(133.42 v³ - 255.86 v² + 857.39 v) × 0.5 × the factor.
+
 ## Flashing
 
 ```sh
