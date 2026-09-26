@@ -89,6 +89,16 @@ calibration, a factor to trim the reading against a known solution.
 The conversion is DFRobot's: the voltage over 1 + 0.02 × (T - 25), then
 (133.42 v³ - 255.86 v² + 857.39 v) × 0.5 × the factor.
 
+**Nutrient level** reads Low, Nominal or High against a reading marked
+as nominal: the Rise reservoir dosed to spec read 592 ppm on
+2026-09-26, and that is the default. It goes Low below nominal minus
+the **TDS band** (10 % by default) and High above nominal plus it, with
+2 % of hysteresis so it doesn't flicker at the edge. After a fresh fill
+dosed to spec, press **Mark TDS nominal** to take the current reading
+as the new nominal. When the probe reads 0 (dry or unplugged) the level
+is "No reading", so an auto-doser built on it never doses on a dead
+probe.
+
 ## Flashing
 
 ```sh

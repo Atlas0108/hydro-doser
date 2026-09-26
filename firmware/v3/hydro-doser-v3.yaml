@@ -135,6 +135,26 @@ text_sensor:
     icon: mdi:water-pump
   - platform: wifi_info
     ip_address: { name: "IP address" }
+  # Nutrient level against the reading marked Nominal (a reservoir dosed to
+  # spec): Low or High once it leaves the band, with a little hysteresis so
+  # it does not flicker at the edge. "No reading" when the probe reads 0
+  # (dry or unplugged), so an auto-doser never doses on a dead probe.
+  - platform: template
+    id: nutrient_level
+    name: "Nutrient level"
+    icon: mdi:beaker-check-outline
+    update_interval: 10s
+    lambda: |-
+      float t = id(tds).state;
+      if (isnan(t) || t <= 0) return {"No reading"};
+      float n = id(tds_nominal).state, b = id(tds_band).state / 100.0f, h = 0.02f;
+      std::string last = id(nutrient_level).state;
+      float lo = n * (1 - b), hi = n * (1 + b);
+      if (last == "Low")  lo += n * h;    // stay Low until it is clearly back
+      if (last == "High") hi -= n * h;    // stay High likewise
+      if (t < lo) return {"Low"};
+      if (t > hi) return {"High"};
+      return {"Nominal"};
 
 number:
   - platform: template
@@ -181,6 +201,30 @@ number:
     max_value: 40
     step: 0.5
     initial_value: 22
+    restore_value: true
+    optimistic: true
+    entity_category: config
+  - platform: template
+    id: tds_nominal
+    name: "TDS nominal"
+    unit_of_measurement: "ppm"
+    icon: mdi:target
+    min_value: 0
+    max_value: 3000
+    step: 1
+    initial_value: 592            # the Rise reservoir dosed to spec, 2026-09-26
+    restore_value: true
+    optimistic: true
+    entity_category: config
+  - platform: template
+    id: tds_band
+    name: "TDS band"
+    unit_of_measurement: "%"
+    icon: mdi:plus-minus-variant
+    min_value: 2
+    max_value: 50
+    step: 1
+    initial_value: 10             # Low below nominal - 10 %, High above + 10 %
     restore_value: true
     optimistic: true
     entity_category: config
@@ -541,6 +585,19 @@ button:
     name: "Cancel"
     icon: mdi:stop
     on_press: { script.execute: stop_all }
+  # After a fresh fill dosed to spec: take the current TDS as Nominal.
+  - platform: template
+    name: "Mark TDS nominal"
+    icon: mdi:target
+    entity_category: config
+    on_press:
+      - lambda: |-
+          float t = id(tds).state;
+          if (!isnan(t) && t > 0) {
+            auto call = id(tds_nominal).make_call();
+            call.set_value(roundf(t));
+            call.perform();
+          }
   - platform: factory_reset
     id: factory
     internal: true               # Settings > Reset: forgets the network, the PIN and the settings, then reboots
