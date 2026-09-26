@@ -115,6 +115,10 @@ MAT.update({
 def ease(x):
     x = max(0.0, min(1.0, x)); return x * x * (3 - 2 * x)
 
+# The model's x runs right to left. Everything in model coordinates hangs
+# under this empty, mirrored in x, so the front view is the real front.
+model = bpy.data.objects.new('model', None); bpy.context.collection.objects.link(model); model.scale = (-1, 1, 1)
+
 # Tubes, wires and the inserts: routes.json beside the parts. Each route point
 # rides with a part, so the tube stays attached as the parts spread.
 import json
@@ -128,13 +132,13 @@ for kind, r_default in (('tubes', routes['tube_r']), ('wires', None)):
         cu.use_fill_caps = True
         sp = cu.splines.new('BEZIER'); sp.bezier_points.add(len(rt['pts']) - 1)
         for bp in sp.bezier_points: bp.handle_left_type = bp.handle_right_type = 'AUTO'
-        ob = bpy.data.objects.new(rt['name'], cu); bpy.context.collection.objects.link(ob)
+        ob = bpy.data.objects.new(rt['name'], cu); bpy.context.collection.objects.link(ob); ob.parent = model
         ob.data.materials.append(MAT[rt['color'] + '_tube' if kind == 'tubes' else rt['color']])
         curves.append((sp, [(Vector(p[:3]) * S, ROFF[p[3]]) for p in rt['pts']]))
 insert_obs = []
 for ins in routes['inserts']:
     bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=ins['d'] / 2 * S, depth=ins['len'] * S, location=(0, 0, 0), rotation=(math.radians(90), 0, 0))
-    ob = bpy.context.object; ob.name = 'insert'
+    ob = bpy.context.object; ob.name = 'insert'; ob.parent = model
     for p in ob.data.polygons: p.use_smooth = True
     ob.data.materials.append(MAT['brass'])
     insert_obs.append((ob, Vector((ins['x'], ins['y0'] + ins['len'] / 2, ins['z'])) * S, ROFF['inserts']))
@@ -151,39 +155,40 @@ for f, mat, off in PARTS_LIST:
     for p in ob.data.polygons: p.use_smooth = True
     if hasattr(bpy.ops.object, 'shade_smooth_by_angle'): bpy.ops.object.shade_smooth_by_angle(angle=math.radians(35))
     ob.data.materials.append(MAT[mat])
+    ob.parent = model
     objects.append((ob, Vector(off) * S))
 
 # Studio: a charcoal floor and world, so the olive shell and the orange
 # knob sit against something and the white bottle reads bright.
-bpy.ops.mesh.primitive_plane_add(size=40, location=(0.101, 0.089, -0.006))   # the feet's bottoms; it sinks with them as they drop
+bpy.ops.mesh.primitive_plane_add(size=40, location=(-0.101, 0.089, -0.006))   # the feet's bottoms; it sinks with them as they drop
 floor = bpy.context.object; floor.name = 'floor'
 floor.data.materials.append(principled('backdrop', (0.035, 0.036, 0.034), rough=0.9))
 scene.world = bpy.data.worlds.new('world'); scene.world.use_nodes = True
 scene.world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.06, 0.06, 0.058, 1)
 scene.world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.5
-scene.view_settings.exposure = -0.1
+scene.view_settings.exposure = -0.55
 
 def area(name, loc, target, size, energy, color=(1, 1, 1)):
     l = bpy.data.lights.new(name, 'AREA'); l.energy = energy; l.size = size; l.color = color
     ob = bpy.data.objects.new(name, l); bpy.context.collection.objects.link(ob); ob.location = loc
     ob.rotation_euler = (Vector(target) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler()
     return ob
-C = Vector((0.101, 0.089, 0.15))
-area('key',  (1.4, -1.4, 1.6), C, 1.6, 170, (1.0, 0.96, 0.9))
-area('fill', (-1.8, -1.0, 1.0), C, 2.5, 70, (0.92, 0.96, 1.0))
-area('rim',  (0.4, 1.6, 1.4), C, 1.2, 200, (1.0, 1.0, 1.0))
-area('top',  (0.2, 0.0, 2.6), C, 2.0, 60)
-area('pool', (0.6, 1.2, 1.8), Vector((0.1, 0.9, 0.0)), 1.4, 90, (0.95, 0.97, 1.0))
+C = Vector((-0.101, 0.089, 0.15))   # the lights and the camera live in Blender's frame: the model's x negated
+area('key',  (-1.4, -1.4, 1.6), C, 1.6, 110, (1.0, 0.96, 0.9))
+area('fill', (1.8, -1.0, 1.0), C, 2.5, 40, (0.92, 0.96, 1.0))
+area('rim',  (-0.4, 1.6, 1.4), C, 1.2, 120, (1.0, 1.0, 1.0))
+area('top',  (-0.2, 0.0, 2.6), C, 2.0, 35)
+area('pool', (-0.6, 1.2, 1.8), Vector((-0.1, 0.9, 0.0)), 1.4, 55, (0.95, 0.97, 1.0))
 
 # Camera: the exploded-view page's 3/4 view from the front left, above.
 # It keeps that direction and only eases back as the parts spread, so the
 # assembled unit fills the frame and the full explosion still fits.
 cam = bpy.data.cameras.new('cam'); cam.lens = 60; cam.sensor_width = 36
 camob = bpy.data.objects.new('cam', cam); bpy.context.collection.objects.link(camob); scene.camera = camob
-DIR = Vector((600, -709, 460)).normalized()          # from the page: three (-700, 520, 620) looking at (-101, 60, -89)
+DIR = Vector((-600, -709, 460)).normalized()         # from the page: three (-700, 520, 620) looking at (-101, 60, -89); x negated for Blender's frame
 def cam_at(t):
     k = ease(t)
-    look = Vector((0.101, 0.089 - 0.045 * k, 0.045 + 0.125 * k))
+    look = Vector((-0.101, 0.089 - 0.045 * k, 0.045 + 0.125 * k))
     pos = look + DIR * (1.0 + 0.72 * k)
     camob.location = pos
     camob.rotation_euler = (look - pos).to_track_quat('-Z', 'Y').to_euler()
