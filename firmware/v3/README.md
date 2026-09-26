@@ -3,9 +3,24 @@
 ESPHome on an ESP32 DevKitC. A 0.96" OLED and a KY-040 knob on the
 faceplate drive a menu, so it works without a phone: turn to choose, click
 to open, click to run, hold to go back. Three 12 V peristaltic pumps
-through a ULN2003. Home Assistant sees it over the API as well, with a
-`dose` action (pump A, B, C or ABC, and ml) and a flow-rate number per
-pump.
+through a ULN2003. Home Assistant sees it as a device with three pump
+switches, a Cancel button, a Status text, a flow-rate number per pump, and
+`dose` and `cancel` actions. Whatever Home Assistant starts shows on the
+screen the same as a knob-started run: the countdown and the cancel
+button, or the manual page with a stop button.
+
+## Setting it up
+
+No Wi-Fi details are baked in. Plug it in; the title band says "set up
+wifi" until it is on a network. Two ways, both local:
+
+1. Open the Home Assistant app on a phone near it. It finds "Hydrohomie"
+   over Bluetooth and asks for the Wi-Fi network and password.
+2. Or join the open Wi-Fi network "Hydrohomie" the doser raises; a page
+   pops up to enter the network and password.
+
+Once it is on the network, Home Assistant lists it under Discovered on
+the integrations page; click Add. No key to paste.
 
 A dose's time is ml divided by the pump's flow rate. The rates default to
 100 mL/min; calibrate each pump (run 50 ml into a measuring cup, adjust
@@ -50,8 +65,8 @@ esphome run hydro-doser-v3.yaml --device hydro-doser-v3.local     # over the air
 esphome logs hydro-doser-v3.yaml --device /dev/cu.usbserial-110   # watch it
 ```
 
-`secrets.yaml` (Wi-Fi, API key, OTA password) is gitignored; copy
-`secrets.yaml.example` and fill it in.
+`secrets.yaml` holds only the OTA password now, for `esphome run` over
+the air; it is gitignored. Copy `secrets.yaml.example` and fill it in.
 
 ## The menu
 
@@ -66,7 +81,9 @@ esphome logs hydro-doser-v3.yaml --device /dev/cu.usbserial-110   # watch it
 ```
 
 Turn: move the highlight. Click: open the dose, then run the quantity,
-and while it runs, click again to cancel. On the quantities, scroll up
+and while it runs, click again to cancel; a run started from Home
+Assistant shows the same pages and a click stops it too. On the
+quantities, scroll up
 past the first item to highlight the title band as Go back and
 click it, or hold (0.8 s), to go back. On
 Manual, the pump runs from the moment the button goes down until it is

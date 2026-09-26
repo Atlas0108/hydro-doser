@@ -21,7 +21,9 @@
 
 esphome:
   name: hydro-doser-v3
-  friendly_name: Hydro Doser v3
+  friendly_name: Hydrohomie
+  on_boot:
+    - lambda: 'id(status).publish_state("idle");'
   includes:
     - pumps.h       # pump_on / pumps_on, by the menu's numbering
 
@@ -30,31 +32,48 @@ esp32:
 
 logger:
 
+# No credentials baked in. Out of the box the device offers two ways to
+# join a network, both local: the Home Assistant app finds it over
+# Bluetooth (Improv) and asks for the Wi-Fi details, or it raises an open
+# "Hydrohomie" access point with a captive portal to type them into. Once
+# on the network, Home Assistant discovers it and adds it with one click.
+wifi:
+  id: wifi_id
+  ap:
+    ssid: "Hydrohomie"
+  on_connect:
+    - component.update: oled
+  on_disconnect:
+    - component.update: oled
+
+captive_portal:
+
+improv_serial:
+
+esp32_ble_server:
+
+esp32_improv:
+  authorizer: none
+  on_provisioned:
+    - component.update: oled
+
 api:
-  encryption:
-    key: !secret api_key
   actions:
     - action: dose
       variables: { pump: string, ml: float }
       then:
+        - lambda: "id(from_ha) = true;"
         - script.execute:
             id: dose
             which: !lambda 'return pump == "A" || pump == "a" ? 0 : pump == "B" || pump == "b" ? 1 : pump == "C" || pump == "c" ? 2 : 3;'
             ml: !lambda return ml;
+    - action: cancel
+      then:
+        - script.execute: stop_all
 
 ota:
   - platform: esphome
     password: !secret ota_password
-
-wifi:
-  networks:
-    - ssid: !secret wifi_ssid
-      password: !secret wifi_password
-    - ssid: !secret wifi_ssid_main
-      password: !secret wifi_password
-  ap:
-    ssid: "Hydro Doser v3"
-    password: !secret ap_password
 
 # ------------------------------------------------------------- the pumps
 # Menu order A, B, C maps to the ULN2003's IN1 (Nutrient A), IN3 (Nutrient
@@ -69,6 +88,43 @@ output:
   - platform: gpio
     id: out_c
     pin: GPIO26
+
+switch:
+  - platform: template
+    id: sw_a
+    name: "Pump A"
+    icon: mdi:pump
+    optimistic: true
+    turn_on_action: { script.execute: { id: manual_on, which: 0 } }
+    turn_off_action: { script.execute: stop_all }
+  - platform: template
+    id: sw_b
+    name: "Pump B"
+    icon: mdi:pump
+    optimistic: true
+    turn_on_action: { script.execute: { id: manual_on, which: 1 } }
+    turn_off_action: { script.execute: stop_all }
+  - platform: template
+    id: sw_c
+    name: "Pump C"
+    icon: mdi:pump
+    optimistic: true
+    turn_on_action: { script.execute: { id: manual_on, which: 2 } }
+    turn_off_action: { script.execute: stop_all }
+
+button:
+  - platform: template
+    name: "Cancel"
+    icon: mdi:stop
+    on_press: { script.execute: stop_all }
+
+text_sensor:
+  - platform: template
+    id: status
+    name: "Status"
+    icon: mdi:water-pump
+  - platform: wifi_info
+    ip_address: { name: "IP address" }
 
 number:
   - platform: template
@@ -143,6 +199,9 @@ globals:
   - id: dose_step
     type: int
     initial_value: "0"          # which pump is running now, for ABC
+  - id: from_ha
+    type: bool
+    initial_value: "false"      # the run came from Home Assistant: cancelling goes to the home page
 
 display:
   - platform: ssd1306_i2c
@@ -163,7 +222,10 @@ display:
       else if (id(page) == 2) snprintf(title, sizeof title, "Dose %s, %.0f ml", DOSES[id(sel0)], id(dose_ml));
       else snprintf(title, sizeof title, "Dose %s, manual", DOSES[id(sel0)]);
       if (id(page) == 1 && id(sel1) < 0) { it.filled_rectangle(0, 0, 128, 16); it.printf(2, 8, id(f_title), COLOR_OFF, TextAlign::CENTER_LEFT, "<  Go back"); }
-      else it.printf(2, 8, id(f_title), TextAlign::CENTER_LEFT, "%s", title);
+      else {
+        it.printf(2, 8, id(f_title), TextAlign::CENTER_LEFT, "%s", title);
+        if (!id(wifi_id).is_connected()) it.printf(126, 8, id(f_title), TextAlign::CENTER_RIGHT, "set up wifi");   // the app, over Bluetooth, or the Hydrohomie access point
+      }
       // the list below it: four rows of 11, scrolling if there are more; at
       // the right of each row a glyph: a chevron for a submenu, a play
       // triangle for something that runs
@@ -190,6 +252,10 @@ display:
         else it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "%d s left", left);
         it.filled_rectangle(0, 49, 128, 13);
         it.printf(64, 55, id(f_row), COLOR_OFF, TextAlign::CENTER, "click to cancel");
+      } else if (id(from_ha)) {
+        it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "running");
+        it.filled_rectangle(0, 49, 128, 13);
+        it.printf(64, 55, id(f_row), COLOR_OFF, TextAlign::CENTER, "click to stop");
       } else {
         it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "running");
         it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "release to stop");
@@ -235,17 +301,20 @@ binary_sensor:
             condition: { lambda: "return id(page) == 1 && id(sel1) == 4;" }
             then:
               - lambda: |-
+                  id(from_ha) = false;
                   id(page) = 3;
                   pumps_on(id(sel0), true);
+                  id(status).publish_state(std::string("manual ") + (id(sel0) == 3 ? "ABC" : id(sel0) == 0 ? "A" : id(sel0) == 1 ? "B" : "C"));
               - component.update: oled
     on_release:
       then:
         - if:
-            condition: { lambda: "return id(page) == 3;" }
+            condition: { lambda: "return id(page) == 3 && !id(from_ha);" }
             then:
               - lambda: |-
                   pumps_on(id(sel0), false);
                   id(page) = 1;
+                  id(status).publish_state("idle");
               - component.update: oled
     on_multi_click:
       # a click: opens the dose, or runs the quantity
@@ -269,13 +338,14 @@ binary_sensor:
                 - if:
                     condition: { lambda: "return id(page) == 1 && id(sel1) >= 0 && id(sel1) < 4;" }
                     then:
+                      - lambda: "id(from_ha) = false;"
                       - script.execute:
                           id: dose
                           which: !lambda return id(sel0);
                           ml: !lambda 'static const float ML[4] = {5, 10, 25, 50}; return ML[id(sel1)];'
                     else:
                       - if:
-                          condition: { lambda: "return id(page) == 2;" }
+                          condition: { lambda: "return id(page) == 2 || (id(page) == 3 && id(from_ha));" }
                           then: { script.execute: stop_all }
       # a hold: back (a dose in progress is cancelled by a click)
       - timing:
@@ -288,6 +358,22 @@ binary_sensor:
                 - component.update: oled
 
 script:
+  # Home Assistant turned a pump's switch on: run it until the switch goes
+  # off, or Cancel, or a click on the knob.
+  - id: manual_on
+    parameters:
+      which: int
+    then:
+      - script.stop: dose
+      - lambda: |-
+          pump_on(0, false); pump_on(1, false); pump_on(2, false);
+          id(from_ha) = true;
+          id(sel0) = which;
+          id(page) = 3;
+          pumps_on(which, true);
+          id(status).publish_state(std::string("manual ") + (which == 0 ? "A" : which == 1 ? "B" : "C"));
+      - component.update: oled
+
   # Dose `ml` from pump `which` (0 A, 1 B, 2 C), or from A, B and C in turn (3).
   - id: dose
     mode: restart
@@ -296,9 +382,12 @@ script:
       ml: float
     then:
       - lambda: |-
+          pump_on(0, false); pump_on(1, false); pump_on(2, false);
           id(sel0) = which;
           id(dose_ml) = ml;
           id(page) = 2;
+          char s[32]; snprintf(s, sizeof s, "dosing %s %.0f ml", which == 3 ? "ABC" : which == 0 ? "A" : which == 1 ? "B" : "C", ml);
+          id(status).publish_state(s);
       - component.update: oled
       - repeat:
           count: !lambda "return which == 3 ? 3 : 1;"
@@ -314,15 +403,22 @@ script:
             - component.update: oled
             - delay: !lambda "return (uint32_t) (id(dose_end) - millis());"
             - lambda: "pump_on(id(dose_step), false);"
-      - lambda: "id(page) = 0;"
+      - lambda: |-
+          id(page) = 0;
+          id(status).publish_state("idle");
       - component.update: oled
 
-  # Cancel: back to the quantities page the dose came from
+  # Cancel or stop, from the knob or from Home Assistant: back to the
+  # quantities page a knob-started dose came from, or home for one from HA
   - id: stop_all
     then:
       - script.stop: dose
       - lambda: |-
           pump_on(0, false); pump_on(1, false); pump_on(2, false);
-          ESP_LOGI("dose", "cancelled");
-          id(page) = 1;
+          ESP_LOGI("dose", "stopped");
+          id(page) = id(from_ha) || id(page) == 3 ? 0 : 1;
+          id(status).publish_state("idle");
+          if (id(sw_a).state) id(sw_a).publish_state(false);
+          if (id(sw_b).state) id(sw_b).publish_state(false);
+          if (id(sw_c).state) id(sw_c).publish_state(false);
       - component.update: oled
