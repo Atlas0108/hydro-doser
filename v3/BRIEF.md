@@ -92,9 +92,9 @@ the head.
    tank features. Anything that goes to a tank goes out the back.
 2. Three pumps in a row, evenly spaced, heads toward one side, reached
    by taking the lid off. No side panel.
-3. Ports in the back: the 12 V jack and the GX12-6 low, spaced between
-   the three pumps; the grommet the outlet tubes and the float lead leave
-   through above. The driver and the buck mount on the inner side walls
+3. Ports in the back: the 12 V jack, the outlets' grommet and the GX12-6
+   on one line, low, the jack and the GX12 between the pumps and the
+   grommet under the middle one. The driver and the buck mount on the inner side walls
    in the bottles' section. Vent slots, as on a router, in both side
    walls beside the motors.
 4. A faceplate carries the controls, the screen left of the knob and
@@ -114,8 +114,7 @@ the head.
    faces carry a fuzzy-skin texture band; the faceplate does not.
 9. The bottles' tubes pass through plain holes in the lid, 16 mm out from
    each bottle, on its outer side: no channels on the cups. The water
-   tube's hole is in the back wall, low, midway between the jack and the
-   GX12.
+   tube's hole is in the back wall, high, above the middle pump.
 10. The wiring stays as built: ULN2003 IN1/2/3 from GPIO25/26/27; right
    pump Nutrient B, middle Nutrient A, left Water; +V chained to the pump
    + terminals; jumper on; 12 V to the board when the jack arrives.

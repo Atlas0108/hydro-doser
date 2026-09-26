@@ -65,9 +65,9 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   at both ends. A bottle stands on the base plate and shows 37 above the
   deck. Two Ø8 holes through the lid, their mouths rounded, one 16 out
   from each bottle on its outer side for the nutrient tube. The water
-  tube comes in through a plain Ø8 hole low in the back wall, midway
-  between the jack and the GX12, under the middle motor: it runs under
-  the motor, up between the motors and over the bulkhead to the nozzles.
+  tube comes in through a plain Ø8 hole high in the back wall, above
+  the middle motor, and runs forward over the motor and the bulkhead to
+  the nozzles.
 - **Bottles.** The Rise Gardens 125 mL Sprout and Thrive bottles, measured
   Ø48 × 122: a white HDPE cylinder round, rounded shoulder, 24 mm neck, a
   black disc-top cap, a wraparound label (Sprout green, Thrive blue). In the
@@ -120,10 +120,13 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   The window sits 14 from the plate's edge, the same as the knob's
   recess; the screen's outer rib lands where the band would be, so the
   band is notched there between the two screws.
-- **Back.** The jack and the GX12-6 low in the back wall at the motors'
-  height, between the motors; the grommet above the middle motor. The
-  nutrient outlets run back over the bulkhead to the grommet with the
-  float lead.
+- **Back.** The jack, the outlets' grommet and the GX12-6 on one line
+  low in the back wall, 11 up from the floor's top: the jack and the
+  GX12 between the motors, the grommet under the middle motor, its hole
+  3 clear of the floor. The nutrient outlets run back over the
+  bulkhead, down between the motors beside the jack and the GX12, and
+  along the floor under the middle motor to the grommet. The water
+  tube's hole is above the middle motor.
 - **Lid.** Flush with the walls, 7 thick with a 4 mm round on its edge.
   A 1.5 mm rim rises 4 from the walls' inner half with a ridge round its
   inside; the lid's underside has a pocket ring over it with a groove the

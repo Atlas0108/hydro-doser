@@ -92,7 +92,8 @@ foot    = [18, 3, 7.8, 9.4, 1.4];
 feet    = [[R, R], [Bx - R, R], [Bx - R, By - R], [R, By - R]];   // at the corners' radius centres
 
 // ports: the back wall. The jack and the GX12 low, between the motors; the grommet above the middle one
-ports  = [[(pump_x[0] + pump_x[1])/2, pump_z, jack_d], [pump_x[1], 58, grommet_d], [(pump_x[1] + pump_x[2])/2, pump_z, gx12_d], [pump_x[1], 8, hole_d]];   // x, z, dia: the jack, the grommet, the GX12, and the water tube's plain hole, low between the jack and the GX12 under the middle motor
+port_z = 11;                                         // the jack, the outlets' grommet and the GX12 on one line, low: the grommet's hole clears the floor by 3
+ports  = [[(pump_x[0] + pump_x[1])/2, port_z, jack_d], [pump_x[1], port_z, grommet_d], [(pump_x[1] + pump_x[2])/2, port_z, gx12_d], [pump_x[1], 58, hole_d]];   // x, z, dia: the jack, the outlets' grommet under the middle motor, the GX12, and the water tube's plain hole up above the middle motor
 
 // the faceplate: black, 3 thick, flush in an opening in the front wall, screwed
 // into a band behind the wall. The screen and the knob mount on its back.
@@ -155,7 +156,8 @@ assert(cup_c[0][0] + hole_dx[0] - hole_d/2 >= wall + 3 && cup_c[1][0] + hole_dx[
 assert(cup_c[0][0] + hole_dx[0] - hole_d/2 - 3 >= deck[0][0] && cup_c[1][0] + hole_dx[1] + hole_d/2 + 3 <= deck[0][0] + deck[1][0], "a tube hole runs off the deck");
 assert(ports[0][0] - ports[0][2]/2 - 2 >= pump_x[0] + pump_motor[0]/2 && ports[0][0] + ports[0][2]/2 + 2 <= pump_x[1] - pump_motor[0]/2, "the jack runs into a motor");
 assert(ports[2][0] - ports[2][2]/2 - 2 >= pump_x[1] + pump_motor[0]/2 && ports[2][0] + ports[2][2]/2 + 2 <= pump_x[2] - pump_motor[0]/2, "the GX12 runs into a motor");
-assert(ports[1][1] - ports[1][2]/2 >= pump_z + pump_motor[0]/2 + 6, "the grommet runs into the motor");
+assert(ports[1][1] - ports[1][2]/2 >= 2, "the grommet's hole runs into the floor");
+assert(ports[3][1] - ports[3][2]/2 >= bulk_h + 1 && ports[3][1] + ports[3][2]/2 <= H - 4, "the water hole runs into the bulkhead's height or the rim");
 assert(vents[0][0] >= bulk_y + wall + 2 && vents[0][0] + vents[0][1] <= By - wall - 2 && vents[1][0] >= 4 && vents[1][0] + vents[1][1]*(vents[1][2] - 1) + vents[2] <= H - cap[1] - 6, "the vents run off the motor section");
 assert(bottle[1] - H_lid - deck[2] >= 30, "the bottle must show 30 mm above the deck");
 assert(pz0 >= 4 && pz0 + ph + 0.8 <= H - 0.5, "the faceplate's band runs into the lid seam");
@@ -348,7 +350,7 @@ module ph_adapter() color("#1c1c1c") difference() {
 module electronics() for (i = [0:4]) board(i);
 module port_hw() for (i = [0:2]) let (p = ports[i]) translate([p[0], By, p[1]]) color(i == 1 ? "#222" : "#888") {
   translate([0, 1, 0]) rotate([-90, 0, 0]) cylinder(d = p[2] + 4, h = 2);
-  translate([0, -wall - 14, 0]) rotate([-90, 0, 0]) cylinder(d = p[2] - 0.3, h = wall + 14);
+  let (inside = i == 1 ? 3 : 14) translate([0, -wall - inside, 0]) rotate([-90, 0, 0]) cylinder(d = p[2] - 0.3, h = wall + inside);   // its body inside the wall: a grommet's lip is short
   if (i == 1) color("#1a1a1a") translate([0, 3, 0]) rotate([-90, 0, 0]) cylinder(d = 12, h = 45);
 }
 module enc_at() color("#3a7a3a") translate([knob_x, enc_pcb_y, ctl_z]) {

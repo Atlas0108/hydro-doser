@@ -10,8 +10,8 @@ import json, math
 pump_x = [39, 101, 163]; pump_z = 28; tip_y = 107          # the nozzle tips' y: head face 99 + 8
 ts = {+1: (28.6956, 19.9139), -1: (16.8053, 30.62)}          # tube_start(s): (dx, dz) from the pump's axis, 5 past the tip
 nz = (math.sin(math.radians(42)), math.cos(math.radians(42)))   # the nozzles' direction, rolled 42
-cup = [(69, 62), (133, 62)]; hole = [(25, 62), (177, 62)]; water_in = (101, 175, 8)   # the plain hole low in the back wall
-grom = (101, 176, 58); jack = (70, 171, 28); gx12 = (132, 171, 28)
+cup = [(69, 62), (133, 62)]; hole = [(25, 62), (177, 62)]; water_in = (101, 175, 58)  # the plain hole high in the back wall, above the middle motor
+grom = (101, 176, 11); jack = (70, 171, 11); gx12 = (132, 171, 11)
 pscrews = [(20.8, 15.3), (181.2, 15.3), (181.2, 58.7), (20.8, 58.7)]
 
 def tip(k, s, along=0):
@@ -41,12 +41,12 @@ def outlet(k, first, mid, g):   # g: where the tube sits in the grommet's bore
 tubes.append({'name': 'A in',  'color': 'green', 'pts': inlet(0, hole[0], cup[0], [(50, 90, 62), (30, 70, 60)])})
 tubes.append({'name': 'A out', 'color': 'green', 'pts': outlet(0, (71, 109, 52), [(78, 125, 62), (90, 150, 64)], (98.2, 176, 59.6))})
 tubes.append({'name': 'B in',  'color': 'blue', 'pts': inlet(2, hole[1], cup[1], [(183, 90, 66), (179, 72, 64)])})
-tubes.append({'name': 'B out', 'color': 'blue', 'pts': outlet(2, (193, 108, 51), [(185, 125, 62), (140, 155, 64)], (103.8, 176, 59.6))})
+tubes.append({'name': 'B out', 'color': 'blue', 'pts': outlet(2, (193, 108, 51), [(170, 125, 66), (140, 140, 60), (140, 140, 8), (122, 160, 6), (106, 166, 9)], (103.8, 176, 11))})
 # water: pump 1's inlet comes in through the hole low in the back wall, runs
 # under the middle motor, up between the motors and over the bulkhead
 tubes.append({'name': 'water in', 'color': 'water', 'pts':
-  P('pump', tip(1, -1), tip(1, -1, 8)) + P('body', (122, 120, 62), (122, 133, 58), (122, 133, 10), (122, 150, 8), (106, 160, 8), (101, 168, 8), (101, 174, 8), (101, 180, 8)) + P('ports', (101, 190, 8), (101, 210, 8), (101, 235, 8))})
-tubes.append({'name': 'water out', 'color': 'water', 'pts': outlet(1, (133, 109, 52), [(128, 125, 60), (112, 150, 58)], (101, 176, 54.8))})
+  P('pump', tip(1, -1), tip(1, -1, 8)) + P('body', (122, 120, 62), (118, 140, 60), (106, 160, 58), (101, 168, 58), (101, 174, 58), (101, 180, 58)) + P('ports', (101, 190, 58), (101, 210, 58), (101, 235, 58))})
+tubes.append({'name': 'water out', 'color': 'water', 'pts': outlet(1, (133, 109, 52), [(128, 125, 64), (140, 142, 58), (140, 142, 8), (118, 160, 5), (101, 166, 6)], (101, 176, 8.6))})
 
 wires = []   # no wiring in the explosion
 
