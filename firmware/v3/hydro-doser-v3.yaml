@@ -162,7 +162,7 @@ display:
       else if (id(page) == 1) snprintf(crumb, sizeof crumb, "< Home > Dose %s", DOSES[id(sel0)]);
       else if (id(page) == 2) snprintf(crumb, sizeof crumb, "Home > Dose %s > %.0f ml", DOSES[id(sel0)], id(dose_ml));
       else snprintf(crumb, sizeof crumb, "Home > Dose %s > Manual", DOSES[id(sel0)]);
-      if (id(page) == 1 && id(sel1) < 0) { it.filled_rectangle(0, 0, 128, 16); it.printf(2, 3, id(f_title), COLOR_OFF, "%s", crumb); }
+      if (id(page) == 1 && id(sel1) < 0) { it.filled_rectangle(0, 0, 128, 16); it.printf(2, 3, id(f_title), COLOR_OFF, "<  Go back"); }
       else it.printf(2, 3, id(f_title), "%s", crumb);
       // the list below it: four rows of 11, scrolling if there are more
       auto list = [&](const char **items, int n, int sel) {
