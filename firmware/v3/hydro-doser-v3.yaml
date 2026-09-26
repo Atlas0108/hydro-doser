@@ -172,8 +172,8 @@ display:
         for (int i = first; i < n && i < first + 4; i++) {
           int y = 18 + (i - first)*11;
           auto col = i == sel ? COLOR_OFF : COLOR_ON;
-          if (i == sel) it.filled_rectangle(0, y - 1, 128, 11);
-          it.printf(4, y, id(f_row), col, "%s", items[i]);
+          if (i == sel) it.filled_rectangle(0, y - 2, 128, 11);
+          it.printf(4, y - 1, id(f_row), col, "%s", items[i]);
           if (play) it.filled_triangle(118, y + 1, 118, y + 8, 124, y + 4, col);
           else { it.line(118, y + 1, 121, y + 4, col); it.line(121, y + 4, 118, y + 7, col); it.line(119, y + 1, 122, y + 4, col); it.line(122, y + 4, 119, y + 7, col); }
         }
@@ -188,7 +188,8 @@ display:
         int left = id(dose_end) > now ? (id(dose_end) - now + 999) / 1000 : 0;
         if (id(sel0) == 3) it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "%s: %d s", DOSES[id(dose_step)], left);
         else it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "%d s left", left);
-        it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "click to cancel");
+        it.filled_rectangle(0, 49, 128, 11);
+        it.printf(64, 50, id(f_row), COLOR_OFF, TextAlign::TOP_CENTER, "click to cancel");
       } else {
         it.printf(64, 22, id(f_big), TextAlign::TOP_CENTER, "running");
         it.printf(64, 50, id(f_row), TextAlign::TOP_CENTER, "release to stop");
