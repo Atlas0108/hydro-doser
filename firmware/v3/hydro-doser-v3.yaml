@@ -251,13 +251,14 @@ binary_sensor:
                     id(page) = 1;
                     id(sel1) = 0;
                 - component.update: oled
-          - if:
-              condition: { lambda: "return id(page) == 1 && id(sel1) < 4;" }
-              then:
-                - script.execute:
-                    id: dose
-                    which: !lambda return id(sel0);
-                    ml: !lambda 'static const float ML[4] = {5, 10, 25, 50}; return ML[id(sel1)];'
+              else:
+                - if:
+                    condition: { lambda: "return id(page) == 1 && id(sel1) < 4;" }
+                    then:
+                      - script.execute:
+                          id: dose
+                          which: !lambda return id(sel0);
+                          ml: !lambda 'static const float ML[4] = {5, 10, 25, 50}; return ML[id(sel1)];'
       # a hold: back, or stop
       - timing:
           - ON for at least 800ms
