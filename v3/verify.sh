@@ -99,7 +99,7 @@ chk "self-test: a screw 3 mm over hits the bulkhead" SOLID 'intersection(){ body
 chk "a driver reaches every screw from the back, between the motors, under the ports" CLEAR 'intersection(){ union(){ body(); pumps(); port_hw(); } union(){ for (k = [0:2], s = [-1, 1]) translate([pump_x[k] + fhole(s)[0], bulk_y + wall + 0.5, pump_z + fhole(s)[1]]) rotate([-90, 0, 0]) cylinder(d = 6, h = By - wall - 1 - bulk_y - wall - 0.5); } }'
 chk "the tubes rise off the rolled nozzles clear of the lid and the cups" CLEAR 'intersection(){ union(){ body(); lid(); pumps(); } union(){ for (k = [0:2], s = [-1, 1]) hull() { translate([pump_x[k] + tube_start(s)[0], head_y + nozzle_y, pump_z + tube_start(s)[1]]) sphere(d = 6); translate([pump_x[k] + nozzle(s)[0] + 4, head_y + nozzle_y, H - 8]) sphere(d = 6); } } }'
 chk "the nutrient tubes run forward to under their holes" CLEAR 'intersection(){ union(){ body(); lid(); pumps(); electronics(); port_hw(); } union(){ for (k = [0, 2]) let (c = cup_c[k/2]) hull() { translate([pump_x[k] + nozzle(-1)[0] + 4, head_y + nozzle_y, H - 8]) sphere(d = 6); translate([c[0] + hole_dx[k/2], c[1], H - 8]) sphere(d = 6); } } }'
-chk "the third hole sits at the rear midway between the other two, and a tube from the middle pump\x27s nozzles rises through it" CLEAR 'intersection(){ union(){ body(); lid(); pumps(); } union(){ for (s = [-1, 1]) hull() { translate([pump_x[1] + tube_start(s)[0], head_y + nozzle_y, pump_z + tube_start(s)[1]]) sphere(d = 5); translate([hole3[0], hole3[1], H - 6]) sphere(d = 5); } at(hole3, H - 6) cylinder(d = 5.5, h = 40); } }'
+chk "the third hole sits at the lid\x27s rear edge midway between the other two, and a tube from the middle pump\x27s nozzles rises over the bulkhead and runs back over the motor to it" CLEAR 'intersection(){ union(){ body(); lid(); pumps(); port_hw(); } union(){ for (s = [-1, 1]) { hull() { translate([pump_x[1] + tube_start(s)[0], head_y + nozzle_y, pump_z + tube_start(s)[1]]) sphere(d = 5); translate([hole3[0], head_y + nozzle_y, H - 6]) sphere(d = 5); } hull() { translate([hole3[0], head_y + nozzle_y, H - 6]) sphere(d = 5); translate([hole3[0], hole3[1], H - 6]) sphere(d = 5); } } at(hole3, H - 6) cylinder(d = 5.5, h = 40); } }'
 chk "self-test: the third hole is midway between the other two" SOLID 'intersection(){ at(hole3, H - 20) cylinder(d = 0.2, h = 30); translate([(cup_c[0][0] + hole_dx[0] + cup_c[1][0] + hole_dx[1])/2 - 0.15, -1, H - 20]) cube([0.3, By + 2, 30]); }'
 chk "the outlet tubes run back over the bulkhead and the motors to the grommet" CLEAR 'intersection(){ union(){ body(); lid(); pumps(); electronics(); port_hw(); } union(){ for (k = [0, 2]) { hull() { translate([pump_x[k] + nozzle(1)[0] + 4, head_y + nozzle_y, H - 8]) sphere(d = 6); translate([pump_x[k] + nozzle(1)[0] + 4, bulk_y + wall + 10, H - 8]) sphere(d = 6); } hull() { translate([pump_x[k] + nozzle(1)[0] + 4, bulk_y + wall + 10, H - 8]) sphere(d = 6); translate([ports[1][0], By - wall - 20, ports[1][1] + 2]) sphere(d = 6); } } } }'
 
@@ -154,8 +154,6 @@ chk "the glass sits behind a skin of the face" SOLID 'intersection(){ plate(); t
 chk "the knob and the screen sit on one line, the plate\x27s middle" SOLID 'intersection(){ union(){ knob_at(); oled_at(); } translate([0, -20, ctl_z - 0.5]) cube([Bx, 40, 1]); }'
 
 echo "== the second colours =="
-chk "the cups are the body\x27s black part and the rest its olive part: they don\x27t overlap" CLEAR 'intersection(){ body_main(); body_cups(); }'
-chk "the cups exist as black" SOLID 'body_cups();'
 chk "the deck is the lid\x27s black part: no overlap with the rest" CLEAR 'intersection(){ lid_main(); lid_deck(); }'
 chk "the deck exists as black" SOLID 'lid_deck();'
 chk "the lid\x27s olive part has no deck above its top face" CLEAR 'intersection(){ lid_main(); translate([deck[0][0] + 5, deck[0][1] + 5, H + lid_t + 0.05]) cube([deck[1][0] - 10, deck[1][1] - 10, deck[2]]); }'
@@ -178,10 +176,10 @@ chk "self-test: a rim 1 mm thicker hits" SOLID 'intersection(){ spout(); transla
 chk "the tubes and the float lead pass through" CLEAR 'intersection(){ spout(); union(){ for (i = [0:2]) translate([7 + 10*i, spout[3] + spout[4] + (spout[1] - spout[3] - spout[4])/2, -1]) cylinder(d = tube_od, h = spout[2] + 2); translate([spout[0] - 5, spout[3] + spout[4] + (spout[1] - spout[3] - spout[4])/2, -1]) cylinder(d = 3.5, h = spout[2] + 2); } }'
 
 echo "== every exported piece fits the bed and prints unsupported =="
-for p in body body_cups lid lid_deck plate knob knob_cap foot spout; do
+for p in body lid lid_deck plate knob knob_cap foot spout; do
   [[ -s stl/$p.stl ]] || { echo "  FAIL  $p  no stl/$p.stl (run ./export.sh)"; ((fail++)); continue; }
   allow=0; [[ $p == lid ]] && allow=2100   # the pocket's ceiling and the groove's top: 2 mm and 0.7 mm bridges round the rim
-  [[ $p == body_cups ]] && allow=800; [[ $p == lid_deck ]] && allow=11000; [[ $p == knob_cap ]] && allow=1100   # the second colours sit on their piece: their undersides are its top
+  [[ $p == lid_deck ]] && allow=11000; [[ $p == knob_cap ]] && allow=1100   # the second colours sit on their piece: their undersides are its top
   [[ $p == body ]] && allow=2000           # the vents' ceilings: fourteen 2 mm bridges; the wall-board ribs' undersides; the flange and port holes
   [[ $p == plate ]] && allow=600           # the DevKit's rails: short bridges between their posts
   if python3 $T/piece.py $p stl/$p.stl $allow; then ((pass++)); else ((fail++)); fi

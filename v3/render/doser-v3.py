@@ -25,7 +25,7 @@ os.makedirs(OUT, exist_ok=True)
 S = 0.001
 # [file, material, where it sits exploded: an offset in model mm]
 PARTS_LIST = [
-  ('body', 'shell', (0, 0, 0)), ('cups', 'plate', (0, 0, 0)),
+  ('body', 'shell', (0, 0, 0)),
   ('feet', 'rubber', (0, 0, -60)),
   ('pump0', 'pump', (0, 0, 110)), ('pump1', 'pump', (0, 0, 110)), ('pump2', 'pump', (0, 0, 110)),
   ('board1', 'pcb_green', (0, 0, 0)), ('board2', 'black', (0, 0, 0)),

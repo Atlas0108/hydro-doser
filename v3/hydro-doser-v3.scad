@@ -71,7 +71,7 @@ function fhole(s)    = rolled(s*flange_pitch/2, 0);                             
 cup_d = bottle[0] + 4;  cup_wall = 2;  hole_d = 8;   // the pocket: 2 mm round the bottle
 cup_c = [[69, 62], [133, 62]];             // Nutrient A (right, fed by pump 0), Nutrient B (left, fed by pump 2)
 hole_dx = [-(bottle[0]/2 + 16 + hole_d/2), bottle[0]/2 + 16 + hole_d/2];   // the hole's centre from the cup's: right cup's to the right, left cup's to the left
-hole3   = [(cup_c[0][0] + hole_dx[0] + cup_c[1][0] + hole_dx[1])/2, head_y + nozzle_y];   // the third hole: at the rear, midway between the left and right holes
+hole3   = [(cup_c[0][0] + hole_dx[0] + cup_c[1][0] + hole_dx[1])/2, By - 12.5];   // the third hole: at the lid's rear edge, clear of the rim pocket, midway between the left and right holes
 
 // boards. The DevKit stands on the faceplate's back behind the knob, its
 // long side up, in two slotted rails; the driver and the buck stand in
@@ -172,12 +172,7 @@ module lid_pocket() {   // in the lid, from its underside (z = 0 local): the rin
 }
 
 // ------------------------------------------------------------------- body
-// The body prints in two colours: the cups black, the rest olive. body() is
-// the whole; body_main() and body_cups() are its two exact parts.
-module cups_region() for (c = cup_c) at(c, -0.5) cylinder(d = cup_d + 2*cup_wall + 0.2, h = H + 1);
-module body_main() color("#5a7a48") difference() { body(); cups_region(); }
-module body_cups() color("#1c1c1c") intersection() { body(); cups_region(); }
-module body() difference() {
+module body() color("#5a7a48") difference() {
   union() {
     difference() { linear_extrude(H) rr(Bx, By, R); translate([0, 0, -1]) linear_extrude(H + 2) cav2d(); }                         // the walls
     translate([0, 0, -base_t]) hull() { linear_extrude(0.01) offset(-base_ch) rr(Bx, By, R); translate([0, 0, base_ch]) linear_extrude(base_t - base_ch) rr(Bx, By, R); }   // the floor, chamfered under its edge, meeting the walls at z = 0
@@ -329,15 +324,13 @@ module screws() color("#999") for (s = pscrews) translate([s[0], 0, s[1]]) rotat
 module feet_shown() for (i = [0:3]) foot_at(i);
 
 // --------------------------------------------------------------- assembly
-module printed() { body_main(); body_cups(); lid_main(); lid_deck(); plate(); knob_ring_at(); knob_cap_at(); }
+module printed() { body(); lid_main(); lid_deck(); plate(); knob_ring_at(); knob_cap_at(); }
 module unit() { printed(); pumps(); electronics(); port_hw(); enc_at(); oled_at(); bottles(); screws(); feet_shown(); }
 
 if      (part == "all")      unit();
 else if (part == "none")     ;
-else if (part == "body")     translate([0, 0, base_t]) body_main();                        // floor down; olive
-else if (part == "body_cups") translate([0, 0, base_t]) body_cups();                       // the same place; black
-else if (part == "body_at")  body_main();
-else if (part == "cups")     body_cups();
+else if (part == "body")     translate([0, 0, base_t]) body();                             // floor down
+else if (part == "body_at")  body();
 else if (part == "lid")      translate([0, 0, -H]) lid_main();                             // underside down: the deck on top; olive
 else if (part == "lid_deck") translate([0, 0, -H]) lid_deck();                             // the same place; black
 else if (part == "deck")     lid_deck();
