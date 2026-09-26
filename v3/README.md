@@ -28,7 +28,7 @@ the firmware under `firmware/v3/`; this copy is the working one.
 |---|---|---|---|
 | `body` | floor down | 202 × 178 × 82 | floor and walls in one: bulkhead, cups, wall-board ribs, vents, the front opening, the feet's pockets, the rim on top |
 | `lid` + `lid_deck` | underside down | 202 × 178 × 11 | flat underneath but for its pocket; the deck on top is the second file, printed black |
-| `plate` | face down | 176 × 59 × 13 | black; the screen's ribs, slots and ledge, the knob's ribs and the DevKit's four standoffs on its back |
+| `plate` | face down | 176 × 59 × 13 | black; the screen's ribs, slots and ledge, the knob's ribs, and standoffs for the DevKit and the TDS board on its back |
 | `knob` + `knob_cap` | base down | Ø36 × 9.5 | the knurled ring brown-red, the cap (face and rounded edge) black; the D bore reaches 1.2 short of the face; the encoder's shaft is cut to 16 above its pcb |
 | `foot` | disc down, TPU | Ø18 × 6 | four |
 | `spout` | top down, legs up | 40 × 16 × 34 | clips the reservoir's rim |
@@ -96,7 +96,14 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   each edge (46.9 × 23.7 apart): measure your board and change
   `esp_hole` if it differs. The band behind the wall is notched there
   so the board clears it, the notch's ceiling sloped 45° so it prints.
-  Fit all three, then screw the plate on.
+  Right of the knob, the DFRobot Gravity TDS (or pH V2) signal board,
+  42 × 32, stands upright on four Ø5.5 standoffs, 10 tall, which lift it
+  over the band and the encoder's back and land just right of the
+  encoder's pins; M3 self-tappers through its corner holes into Ø2.6
+  pilots. The holes are taken as Ø3.1, 3.5 in from each edge (25 × 35
+  apart): measure your board and change `tds_hole` if it differs. The
+  band is pocketed where those standoffs pass.
+  Fit all four, then screw the plate on.
   The window sits 14 from the plate's edge, the same as the knob's
   recess; the screen's outer rib lands where the band would be, so the
   band is notched there between the two screws.

@@ -33,6 +33,9 @@ nozzle_off = 10;  nozzle_pitch = 16;  nozzle_y = 8;   // off the head's circumfe
 tube_od = 5;
 esp  = [28.3, 51.5, 1.6, 8.5];             // the 30-pin DevKit V1: w (z), l (x), pcb, pins back; the pin rows 1.3 in from the long edges
 esp_hole = [3, 2.3];                       // its four corner holes: dia, centre in from both edges (46.9 x 23.7 apart: measure yours)
+tds  = [32, 42, 1.6, 9];                   // the DFRobot Gravity TDS (or pH V2) signal board: w (x), h (z), pcb, parts on its back
+tds_hole = [3.1, 3.5];                     // its four corner holes: dia, centre in from both edges (25 x 35 apart: measure yours)
+tds_so   = [5.5, 10, 2.6];                 // standoffs: dia, height (lifts it over the band and the encoder's back), pilot for an M3 self-tapper
 esp_so   = [5.5, 5, 2.2];                    // standoffs: dia, height off the plate's back (clears the module and the USB), pilot for an M2.5 self-tapper
 uln  = [32, 35, 15];  buck = [20, 45, 12]; // both turned to lie along y, between the motors
 enc  = [31, 19, 1.6, 6.5, 11.5, 16, 6, 4.5, 9.5];   // pcb w, h, t; body, bushing top, shaft top above the pcb (the KY-040's 20 cut to 16: the knob's bore then reaches 1.2 short of its face); shaft dia, flat; shaft centre from the pcb's top edge
@@ -110,6 +113,9 @@ esp_c   = [pscrews[1][0] - insert[0]/2 - 4.2 - esp[1]/2, ctl_z];   // the DevKit
 esp_holes = [for (sx = [-1, 1], sz = [-1, 1]) [esp_c[0] + sx*(esp[1]/2 - esp_hole[1]), esp_c[1] + sz*(esp[0]/2 - esp_hole[1])]];
 oled_x = esp_c[0] - esp[1]/2 - 1 - oled_rib[0] - 0.2 - oled[0]/2;   // the screen's outer rib 1 short of the DevKit
 knob_x = oled_x - (oled[6] + 0.6)/2 - gap - knob[2]/2;             // the knob, gap from the screen's window
+tds_c   = [knob_x - 6.35 - 0.8 - tds_so[0]/2 - (tds[0]/2 - tds_hole[1]) - tds[0]/2 + tds[0]/2, ctl_z];   // right of the knob (as seen from the front): its left standoffs just right of the encoder's pins
+tds_holes = [for (sx = [-1, 1], sz = [-1, 1]) [tds_c[0] + sx*(tds[0]/2 - tds_hole[1]), tds_c[1] + sz*(tds[1]/2 - tds_hole[1])]];
+tds_y   = pt + tds_so[1];
 knob_y = knob[3] - 0.5;                              // the knob's base, 0.5 off the recess floor
 enc_pcb_y = pt + enc[3];                             // the encoder's pcb, its body against the plate's back
 bore_d = knob_y - (enc_pcb_y - enc[5]) + 0.3;        // to the shaft's end, 0.3 clear
@@ -145,6 +151,8 @@ assert(pz0 >= 4 && pz0 + ph + 0.8 <= H - 0.5, "the faceplate's band runs into th
 assert(esp_c[0] - esp[1]/2 - 1 >= oled_x + oled[0]/2 + 0.2 + oled_rib[0] - 0.01 && esp_c[0] + esp[1]/2 + 1 + 3 <= pscrews[1][0] - insert[0]/2, "the DevKit runs into the screen's rib or the left screws' inserts");
 assert(esp_c[1] - esp[0]/2 >= pz0 + 2 && esp_c[1] + esp[0]/2 <= pz0 + ph - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the DevKit or the knob runs off the plate");
 assert(esp_y + esp[2] + esp[3] + 2 <= cup_c[1][1] - cup_d/2 - cup_wall, "the DevKit's pins run into the cups");
+assert(tds_c[0] - tds[0]/2 >= pscrews[0][0] + insert[0]/2 + 1 && tds_c[1] - tds[1]/2 >= pz0 && tds_c[1] + tds[1]/2 <= pz0 + ph, "the TDS board runs into the right screws' inserts or off the plate");
+assert(tds_y + tds[2] + tds[3] + 2 <= cup_c[0][1] - cup_d/2 - cup_wall, "the TDS board's parts run into the cups");
 assert(oled_x + oled[0]/2 + 0.2 + oled_rib[0] <= px0 + pw - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the plate's works run off the plate or under the band by the knob");
 assert(oled_pcb_z - oled[1]/2 - 2.1 - 1 >= pscrews[0][1] + insert[0]/2 + 1 && oled_pcb_z - oled[1]/2 - 2.1 + oled[1] + 4.6 + 1 <= pscrews[3][1] - insert[0]/2 - 1, "the band's notch for the screen runs into a screw");
 assert(Bx <= 256 && By <= 256, "bigger than the bed");
@@ -203,6 +211,7 @@ module body() color("#5a7a48") difference() {
     round_cut(pch) plate2d(0.3);                                                                                                     // its edge rounded
     translate([0, 0, -1]) linear_extrude(wall + band[1] + 2) plate2d(-band[0] + 0.05);                                               // through the band: the plate's works pass
     hull() { translate([esp_c[0] - esp[1]/2 - 1, esp_c[1] - esp[0]/2 - 1, wall - 0.01]) cube([esp[1] + 2, esp[0] + 2, 0.01]); translate([esp_c[0] - esp[1]/2 - 1, esp_c[1] - esp[0]/2 - 1, wall + band[1] + 1]) cube([esp[1] + 2, esp[0] + 2 + band[1] + 1, 0.01]); }   // the band notched under the DevKit, its ceiling rising 45 into the box so it prints; the inserts' bosses untouched
+    for (h = tds_holes) translate([h[0], h[1], wall - 0.01]) cylinder(d = tds_so[0] + 1, h = band[1] + 1);                          // pockets in the band where the TDS board's standoffs pass
     for (s = pscrews) translate([s[0], s[1], wall - 0.01]) cylinder(d = insert[0], h = insert[1] + 0.01);                            // inserts in the band
   }
   wedge_x(px0 - 2, pw + 4, [[wall, pz0 - 0.8], [wall + 12, pz0 - 0.8 + 12], [wall + 12, 0.01], [wall, 0.01]]);                   // the band's underside slopes 45 down to the wall, stopping at the floor
@@ -238,8 +247,10 @@ module plate() color("#1c1c1c") difference() {
     for (s = [-1, 1]) translate([oled_x + s*(oled[0]/2 + 0.2) - (s < 0 ? oled_rib[0] : 0), pt - 0.01, oled_pcb_z - oled[1]/2 - 2.1]) cube([oled_rib[0], oled_rib[1], oled[1] + 4.6]);   // the screen's ribs
     translate([oled_x - oled[0]/2, pt - 0.01, oled_pcb_z - oled[1]/2 - 2]) cube([oled[0], oled_rib[3], 2]);                          // the ledge it sits on
     for (h = esp_holes) translate([h[0], pt - 0.01, h[1]]) rotate([-90, 0, 0]) cylinder(d = esp_so[0], h = esp_so[1] + 0.01);   // the DevKit's four standoffs
+    for (h = tds_holes) translate([h[0], pt - 0.01, h[1]]) rotate([-90, 0, 0]) cylinder(d = tds_so[0], h = tds_so[1] + 0.01);   // the TDS board's four, taller
   }
-  for (h = esp_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = esp_so[2], h = esp_so[1] + 1);             // their pilots, blind: 1 of plate under them
+  for (h = esp_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = esp_so[2], h = esp_so[1] + 1);
+  for (h = tds_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = tds_so[2], h = tds_so[1] + 1);             // their pilots             // their pilots, blind: 1 of plate under them
   for (s = pscrews) translate([s[0], 0, s[1]]) rotate([-90, 0, 0]) csk(screw[0], screw[1], pt);                                     // its screws, countersunk in the face, at the corners' radius centres
   translate([knob_x, -1, ctl_z]) rotate([-90, 0, 0]) { cylinder(d = 7.5, h = pt + 2); cylinder(d = knob[2], h = knob[3] + 1); translate([0, 0, 1]) round_cut(0.8) circle(d = knob[2]); }   // the bushing hole, the knob's recess, its mouth rounded
   translate([oled_x, -1, ctl_z]) rotate([-90, 0, 0]) { linear_extrude(pt + 2) rrc(oled[6] + 0.6, oled[7] + 0.6, 2); translate([0, 0, 1]) round_cut(0.5) rrc(oled[6] + 0.6, oled[7] + 0.6, 2); }   // the window, the picture's size, its mouth rounded
@@ -290,7 +301,12 @@ module pump(k) color("#d8d8d8") translate([pump_x[k], head_y, pump_z]) rotate([0
   for (s = [-1, 1]) translate([s*nozzle_pitch/2, nozzle_y, pump_head[0]/2 - 2]) cylinder(d = 4, h = nozzle_off + 2);   // nozzles, up
 }
 module pumps() for (k = [0:2]) pump(k);
-module board(i) color(i == 0 ? "#101418" : i == 1 ? "#1e6b35" : "#111") {
+module board(i) color(i == 0 ? "#101418" : i == 1 ? "#1e6b35" : i == 3 ? "#1d4fa0" : "#111") {
+  if (i == 3) translate([tds_c[0], tds_y, tds_c[1]]) difference() { union() {
+    translate([-tds[0]/2, 0, -tds[1]/2]) cube([tds[0], tds[2], tds[1]]);                                                              // the pcb, upright
+    translate([-tds[0]/2 + 6, tds[2], -tds[1]/2 + 7]) cube([tds[0] - 12, tds[3], tds[1] - 14]);                                        // its parts and connectors, back into the box
+  }
+  for (h = tds_holes) translate([h[0] - tds_c[0], -4, h[1] - tds_c[1]]) rotate([-90, 0, 0]) cylinder(d = tds_hole[0], h = 10); }
   if (i == 0) translate([esp_c[0], esp_y, esp_c[1]]) difference() { union() {
     translate([-esp[1]/2, 0, -esp[0]/2]) cube([esp[1], esp[2], esp[0]]);                                                              // the pcb, lying along x
     color("#bbb") translate([esp[1]/2 - 25.5, -3.1, -9]) cube([25.5, 3.1, 18]);                                                        // the module, toward the plate, at the left end
@@ -301,7 +317,7 @@ module board(i) color(i == 0 ? "#101418" : i == 1 ? "#1e6b35" : "#111") {
   if (i == 1) let (b = wb[0]) translate([b[0] + wb_rib[4], b[1] - wb_rib[3], 1.2]) { cube([1.6, b[2] + 2*wb_rib[3], b[3]]); translate([1.6, wb_rib[3] + 3, 3]) cube([12, b[2] - 6, b[3] - 6]); }   // in its slots on the right wall, components inward
   if (i == 2) let (b = wb[1]) translate([b[0] - wb_rib[4] - 1.6, b[1] - wb_rib[3], 1.2]) { cube([1.6, b[2] + 2*wb_rib[3], b[3]]); translate([-10, wb_rib[3] + 3, 3]) cube([10, b[2] - 6, b[3] - 6]); }   // in its slots on the left wall
 }
-module electronics() for (i = [0:2]) board(i);
+module electronics() for (i = [0:3]) board(i);
 module port_hw() for (i = [0:2]) let (p = ports[i]) translate([p[0], By, p[1]]) color(i == 1 ? "#222" : "#888") {
   translate([0, 1, 0]) rotate([-90, 0, 0]) cylinder(d = p[2] + 4, h = 2);
   translate([0, -wall - 14, 0]) rotate([-90, 0, 0]) cylinder(d = p[2] - 0.3, h = wall + 14);
@@ -311,6 +327,7 @@ module enc_at() color("#3a7a3a") translate([knob_x, enc_pcb_y, ctl_z]) {
   translate([-enc[0]/2, 0, enc[8] - enc[1]]) cube([enc[0], enc[2], enc[1]]);                                         // the pcb
   rotate([90, 0, 0]) { translate([-6, -6, 0]) cube([12, 12, enc[3]]); cylinder(d = 7, h = enc[4]); color("#bbb") linear_extrude(enc[5]) difference() { circle(d = enc[6]); translate([-5, enc[7] - enc[6]/2]) square([10, 5]); } }   // body, bushing, D shaft
   color("#999") translate([0, knob[3] - enc_pcb_y, 0]) rotate([90, 0, 0]) cylinder(d = enc_nut[0], h = enc_nut[1], $fn = 6);   // the nut, on the recess floor
+  color("#222") translate([-6.35, enc[2]/2 - 1.27, enc[8] - enc[1] - 22]) cube([12.7, 2.54, 22]);                                 // its five pins and the Dupont housings on them, pointing down
 }
 module oled_at() translate([oled_x, pt, oled_pcb_z]) {
   color("#1f3a5f") translate([-oled[0]/2, 0, -oled[1]/2]) cube([oled[0], oled[2], oled[1]]);                            // the pcb, against the plate's back
