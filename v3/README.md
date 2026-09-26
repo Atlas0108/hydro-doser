@@ -29,7 +29,7 @@ the firmware under `firmware/v3/`; this copy is the working one.
 | `body` | floor down | 202 × 178 × 82 | floor and walls in one: bulkhead, cups, wall-board ribs, vents, the front opening, the feet's pockets, the rim on top |
 | `lid` | underside down | 202 × 178 × 11 | flat underneath but for its pocket; the deck on top |
 | `plate` | face down | 96 × 59 × 22 | black; ribs, slots, ledge and the DevKit's rails on its back |
-| `knob` | base down | Ø36 × 15 | burnt orange; knurled, rounded, D bore |
+| `knob` | base down | Ø36 × 7.5 | burnt orange; knurled, rounded, D bore; the encoder's shaft is cut to 13.5 above its pcb |
 | `foot` | disc down, TPU | Ø18 × 6 | four |
 | `spout` | top down, legs up | 40 × 16 × 34 | clips the reservoir's rim |
 
@@ -77,7 +77,8 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   the size of its picture; the KY-040 sits between two ribs, its nut on
   the floor of a Ø38 × 2 recess, and the Ø36 knob hides the nut in a
   pocket in its base, sits 0.5 off the recess floor, and stops on the
-  shaft's end; behind those, 13 off the plate, the DevKit lies along the
+  shaft's end (the KY-040's 20 mm shaft cut to 13.5 above the pcb, so
+  the knob is only 7.5 thick); behind those, 13 off the plate, the DevKit lies along the
   plate with its module toward it and its pin rows pointing back, its
   short edges (the ones without headers) dropped into a cage: two
   vertical slotted rails, 4 thick, tied by a bar along the bottom, the

@@ -47,7 +47,7 @@ the head.
 | ESP32 DevKitC | 55 × 28 | pin headers down, 8.5 tall; USB on a short end |
 | ULN2003 driver | 35 × 32 | ~15 tall with its header |
 | 12 → 5 V buck | 45 × 20 × 12 | |
-| KY-040 encoder | pcb 31 × 19 × 1.6 | body 6.5 above the pcb; threaded bushing (M7) to 11.5; D shaft Ø6, flat at 4.5, to 20; shaft centre 9.5 from the pcb's top edge |
+| KY-040 encoder | pcb 31 × 19 × 1.6 | body 6.5 above the pcb; threaded bushing (M7) to 11.5; D shaft Ø6, flat at 4.5, to 20 (cut to 13.5 for the thin knob); shaft centre 9.5 from the pcb's top edge |
 | 0.96" OLED | pcb 27.3 × 27.8 × 1.6 | glass 26.7 × 19.3 × 1.5, centred 0.75 below the pcb's centre; active area 21.7 × 10.9, centred 1.45 above; 4 pins on the top edge |
 
 ### Panel hardware

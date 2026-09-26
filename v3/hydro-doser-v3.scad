@@ -33,7 +33,7 @@ nozzle_off = 10;  nozzle_pitch = 16;  nozzle_y = 8;   // off the head's circumfe
 tube_od = 5;
 esp  = [28, 55, 1.6, 8.5];                 // w (x), l (y), pcb, pins down; the pin rows 0.6 in from the long edges, 2.5 wide
 uln  = [32, 35, 15];  buck = [20, 45, 12]; // both turned to lie along y, between the motors
-enc  = [31, 19, 1.6, 6.5, 11.5, 20, 6, 4.5, 9.5];   // pcb w, h, t; body, bushing top, shaft top above the pcb; shaft dia, flat; shaft centre from the pcb's top edge
+enc  = [31, 19, 1.6, 6.5, 11.5, 13.5, 6, 4.5, 9.5]; // pcb w, h, t; body, bushing top, shaft top above the pcb (the KY-040's 20 cut to 13.5 for the thin knob); shaft dia, flat; shaft centre from the pcb's top edge
 enc_nut = [10, 2.5];
 oled = [27.3, 27.8, 1.6, 26.7, 19.3, 1.5, 21.7, 10.9];   // pcb w, h, t; glass w, h, t; active w, h
 oled_glass_dz = -0.75;  oled_active_dz = 1.45;              // their centres, from the pcb's
@@ -94,7 +94,7 @@ ports  = [[(pump_x[0] + pump_x[1])/2, pump_z, jack_d], [pump_x[1], 58, grommet_d
 // into a band behind the wall. The screen and the knob mount on its back.
 ctl_z  = 37;
 pt     = 3;                                          // its thickness, the wall's
-knob   = [36, 15, 38, 2, 1.5, 11, 4];                // dia, height, recess dia, recess depth, chamfer, nut pocket dia, depth
+knob   = [36, 7.5, 38, 2, 1.5, 11, 4];               // dia, height (half the first: the shaft is cut down), recess dia, recess depth, chamfer, nut pocket dia, depth
 pr     = 8;                                          // the plate's corner radius; its screws sit at the radius centres
 m_knob = 14;  m_scr = 14;  gap = 8;  m_v = 10.7;     // margins: beside the knob, beside the screen (the same), between them, above and below
 pw     = m_knob + knob[2] + gap + (oled[6] + 0.6) + m_scr;
