@@ -262,6 +262,22 @@ display:
 
 # --------------------------------------------------------------- the knob
 sensor:
+  # What the screen shows, for Home Assistant: the countdown of a running
+  # dose, from the knob or from HA alike; 0 when nothing runs.
+  - platform: template
+    id: seconds_left
+    name: "Seconds left"
+    unit_of_measurement: "s"
+    icon: mdi:timer-outline
+    accuracy_decimals: 0
+    update_interval: 1s
+    lambda: |-
+      if (id(page) != 2) return 0;
+      uint32_t now = millis();
+      return id(dose_end) > now ? (id(dose_end) - now + 999) / 1000 : 0;
+    filters:
+      - delta: 0.5
+
   - platform: rotary_encoder
     id: knob
     pin_a:
@@ -285,6 +301,12 @@ sensor:
         - component.update: oled
 
 binary_sensor:
+  - platform: template
+    id: running
+    name: "Running"
+    icon: mdi:water-pump
+    lambda: "return id(page) == 2 || id(page) == 3;"
+
   - platform: gpio
     id: knob_button
     pin:

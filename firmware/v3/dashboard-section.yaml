@@ -14,16 +14,25 @@
             heading_style: subtitle
             icon: mdi:water-pump
 
+          # What the doser's screen shows, whichever side started it: the
+          # status, the countdown, and the same cancel.
           - type: tile
             entity: sensor.hydrohomie_status
             name: Status
             icon: mdi:water-pump
 
           - type: tile
+            entity: sensor.hydrohomie_seconds_left
+            name: Seconds left
+            icon: mdi:timer-outline
+
+          - type: tile
             entity: button.hydrohomie_cancel
             name: Cancel
             icon: mdi:stop
             color: red
+            grid_options:
+              columns: full
 
           - type: horizontal-stack
             title: Dose A (Nutrient A)
