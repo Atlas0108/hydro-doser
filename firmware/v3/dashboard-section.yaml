@@ -1,0 +1,195 @@
+# A section for a Home Assistant sections dashboard: the doser's controls,
+# the same as its own knob and screen. Paste it under `sections:` of a view.
+# Entity ids assume the device's name Hydrohomie and the ESPHome name
+# hydro-doser-v3.
+
+      # The nutrient doser (3d-models/hydro-doser-v3, firmware/hydro-doser-v3):
+      # the same controls as its own knob and screen. A dose runs for
+      # ml / flow rate; the pump switches are the knob's Manual; Cancel stops
+      # anything. Whatever is pressed here shows on the doser's screen too.
+      - type: grid
+        cards:
+          - type: heading
+            heading: Doser
+            heading_style: subtitle
+            icon: mdi:water-pump
+
+          - type: tile
+            entity: sensor.hydrohomie_status
+            name: Status
+            icon: mdi:water-pump
+
+          - type: tile
+            entity: button.hydrohomie_cancel
+            name: Cancel
+            icon: mdi:stop
+            color: red
+
+          - type: horizontal-stack
+            title: Dose A (Nutrient A)
+            cards:
+              - type: button
+                name: "5 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: A, ml: 5 }
+              - type: button
+                name: "10 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: A, ml: 10 }
+              - type: button
+                name: "25 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: A, ml: 25 }
+              - type: button
+                name: "50 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: A, ml: 50 }
+          - type: horizontal-stack
+            title: Dose B (Nutrient B)
+            cards:
+              - type: button
+                name: "5 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: B, ml: 5 }
+              - type: button
+                name: "10 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: B, ml: 10 }
+              - type: button
+                name: "25 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: B, ml: 25 }
+              - type: button
+                name: "50 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: B, ml: 50 }
+          - type: horizontal-stack
+            title: Dose C (Water)
+            cards:
+              - type: button
+                name: "5 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: C, ml: 5 }
+              - type: button
+                name: "10 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: C, ml: 10 }
+              - type: button
+                name: "25 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: C, ml: 25 }
+              - type: button
+                name: "50 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: C, ml: 50 }
+          - type: horizontal-stack
+            title: Dose ABC, each
+            cards:
+              - type: button
+                name: "5 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: ABC, ml: 5 }
+              - type: button
+                name: "10 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: ABC, ml: 10 }
+              - type: button
+                name: "25 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: ABC, ml: 25 }
+              - type: button
+                name: "50 ml"
+                icon: mdi:water
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: esphome.hydro_doser_v3_dose
+                  data: { pump: ABC, ml: 50 }
+
+          - type: tile
+            entity: switch.hydrohomie_pump_a
+            name: Pump A, manual
+            icon: mdi:pump
+
+          - type: tile
+            entity: switch.hydrohomie_pump_b
+            name: Pump B, manual
+            icon: mdi:pump
+
+          - type: tile
+            entity: switch.hydrohomie_pump_c
+            name: Pump C, manual
+            icon: mdi:pump
+
+          - type: tile
+            entity: number.hydrohomie_flow_rate_a
+            name: Flow rate A
+
+          - type: tile
+            entity: number.hydrohomie_flow_rate_b
+            name: Flow rate B
+
+          - type: tile
+            entity: number.hydrohomie_flow_rate_c
+            name: Flow rate C
+

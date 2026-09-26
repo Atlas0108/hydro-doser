@@ -76,6 +76,12 @@ esphome logs hydro-doser-v3.yaml --device /dev/cu.usbserial-110   # watch it
 
 There is no `secrets.yaml`: the firmware has no secrets.
 
+## In a dashboard
+
+`dashboard-section.yaml` is a ready-made section for a Home Assistant
+sections dashboard: Status, Cancel, the dose buttons at 5, 10, 25 and
+50 ml for A, B, C and ABC, the manual pump switches and the flow rates.
+
 ## The menu
 
 ```
