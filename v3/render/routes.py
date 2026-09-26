@@ -12,7 +12,7 @@ ts = {+1: (28.6956, 19.9139), -1: (16.8053, 30.62)}          # tube_start(s): (d
 nz = (math.sin(math.radians(42)), math.cos(math.radians(42)))   # the nozzles' direction, rolled 42
 cup = [(69, 62), (133, 62)]; hole = [(25, 62), (177, 62)]; water_in = (101, 175, 8)   # the plain hole low in the back wall
 grom = (101, 176, 58); jack = (70, 171, 28); gx12 = (132, 171, 28)
-pscrews = [(60.85, 15.3), (141.15, 15.3), (141.15, 58.7), (60.85, 58.7)]
+pscrews = [(20.8, 15.3), (181.2, 15.3), (181.2, 58.7), (20.8, 58.7)]
 
 def tip(k, s, along=0):
     dx, dz = ts[s]

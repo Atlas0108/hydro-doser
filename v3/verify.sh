@@ -87,7 +87,7 @@ chk "self-test: a bottle 3 mm over hits the cup" SOLID 'intersection(){ body(); 
 chk "a bottle shows 30 mm above the deck" SOLID 'intersection(){ bottle_at(0); translate([0, 0, H_lid + deck[2] + 28]) cube([Bx, By, 12]); }'
 chk "each tube rises through its hole in the lid, 16 out from the bottle, into the cap" CLEAR 'intersection(){ union(){ body(); lid(); bottles(); } union(){ for (i = [0, 1]) at(cup_c[i] + [hole_dx[i], 0], H - 10) cylinder(d = tube_od + 0.5, h = 60); } }'
 chk "self-test: the same tube 3 mm over hits the lid" SOLID 'intersection(){ lid(); at(cup_c[0] + [hole_dx[0] + 3, 0], H - 10) cylinder(d = tube_od + 0.5, h = 60); }'
-chk "the tube hole sits in the flat lid beside the deck, its mouth rounded" CLEAR 'intersection(){ lid(); union(){ at(cup_c[0] + [hole_dx[0], 0], H - 1) cylinder(d = hole_d - 0.2, h = lid_t + 4); at(cup_c[0] + [hole_dx[0], 0], H + lid_t - 0.05) cylinder(d = hole_d + 1.4, h = 2); } }'
+chk "the tube hole passes through the lid and the deck, its mouth rounded" CLEAR 'intersection(){ lid(); union(){ at(cup_c[0] + [hole_dx[0], 0], H - 1) cylinder(d = hole_d - 0.2, h = lid_t + deck[2] + 4); at(cup_c[0] + [hole_dx[0], 0], H + lid_t + deck[2] - 0.05) cylinder(d = hole_d + 1.4, h = 2); } }'
 
 echo "== the pumps =="
 chk "the pumps sit in their slots, flanges on the bulkhead, clear of the printed parts" CLEAR 'intersection(){ printed(); pumps(); }'
@@ -180,7 +180,7 @@ echo "== every exported piece fits the bed and prints unsupported =="
 for p in body lid lid_deck plate knob knob_cap foot spout; do
   [[ -s stl/$p.stl ]] || { echo "  FAIL  $p  no stl/$p.stl (run ./export.sh)"; ((fail++)); continue; }
   allow=0; [[ $p == lid ]] && allow=2100   # the pocket's ceiling and the groove's top: 2 mm and 0.7 mm bridges round the rim
-  [[ $p == lid_deck ]] && allow=11000; [[ $p == knob_cap ]] && allow=1100   # the second colours sit on their piece: their undersides are its top
+  [[ $p == lid_deck ]] && allow=30000; [[ $p == knob_cap ]] && allow=1100   # the second colours sit on their piece: their undersides are its top
   [[ $p == body ]] && allow=2000           # the vents' ceilings: fourteen 2 mm bridges; the wall-board ribs' undersides; the flange and port holes
   [[ $p == plate ]] && allow=600           # the DevKit's rails: short bridges between their posts
   if python3 $T/piece.py $p stl/$p.stl $allow; then ((pass++)); else ((fail++)); fi

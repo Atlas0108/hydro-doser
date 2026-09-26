@@ -79,7 +79,6 @@ esp_y   = 18.8;                            // the DevKit's pcb face (components 
 esp_rail = [4, 9, 1.8, 1.5, 0.2];          // rail thickness (x), depth (y, from 13), slot width, slot depth, clearance
 wb      = [[3, 30, 35, 32], [Bx - 3, 30, 45, 20]];   // wall boards: [wall x, y0, length along y, height]: the ULN on the right wall, the buck on the left
 wb_rib  = [7, 3.5, 1.8, 1.5, 4];           // rib depth off the wall, thickness (y), slot width, slot depth, pcb face off the wall
-deck    = [[32, 26], [138, 72], 4, 2, 32, 1.5];   // a raised deck on the lid the bottles stand in: corner, size, height, edge radius, corner radius, the cove at its foot
 vents   = [[130, 40], [12, 5, 7], 2];      // in the side walls beside the motors: [y0, length], [z0, pitch, count], slot height
 
 // feet: TPU, snapping into the base: disc dia, thickness, peg dia, lip dia, lip thickness
@@ -96,21 +95,25 @@ pt     = 3;                                          // its thickness, the wall'
 knob   = [36, 9.5, 38, 2, 1.5, 11, 4];               // dia, height, recess dia, recess depth, chamfer, nut pocket dia, depth
 pr     = 8;                                          // the plate's corner radius; its screws sit at the radius centres
 m_knob = 14;  m_scr = 14;  gap = 8;  m_v = 10.7;     // margins: beside the knob, beside the screen (the same), between them, above and below
-pw     = m_knob + knob[2] + gap + (oled[6] + 0.6) + m_scr;
+pw_works = m_knob + knob[2] + gap + (oled[6] + 0.6) + m_scr;   // 96.3: the knob, the gap and the screen with their margins; they stay centred on the front
+px_works = (Bx - pw_works)/2;
 ph     = knob[2] + 2*m_v;
-px0    = (Bx - pw)/2;  pz0 = ctl_z - ph/2;
+pz0    = ctl_z - ph/2;
+deck_in = (pz0 + base_t + (H + lid_t - pz0 - ph))/2;   // 12.8: the mean of the faceplate's padding below (11.3) and above (14.3)
+deck    = [[deck_in, deck_in], [Bx - 2*deck_in, By - 2*deck_in], 4, 2, pr, 1.5];   // a raised deck over the lid, inset like the faceplate: corner, size, height, edge radius, corner radius (the plate's), the cove at its foot
+px0    = deck_in;  pw = Bx - 2*deck_in;              // the plate: as wide as the deck, the same 12.8 in from each side as above and below
 pch    = 1;                                          // the round on its face edge, and on the opening's: the seam a soft groove
 band   = [pr + 4, 6];                                // behind the wall around the opening: width inside the plate's outline (2 mm past the insert), depth
 pscrews = [[px0 + pr, pz0 + pr], [px0 + pw - pr, pz0 + pr], [px0 + pw - pr, pz0 + ph - pr], [px0 + pr, pz0 + ph - pr]];
-knob_x = px0 + m_knob + knob[2]/2;
-oled_x = px0 + pw - m_scr - (oled[6] + 0.6)/2;
+knob_x = px_works + m_knob + knob[2]/2;
+oled_x = px_works + pw_works - m_scr - (oled[6] + 0.6)/2;
 knob_y = knob[3] - 0.5;                              // the knob's base, 0.5 off the recess floor
 enc_pcb_y = pt + enc[3];                             // the encoder's pcb, its body against the plate's back
 bore_d = knob_y - (enc_pcb_y - enc[5]) + 0.3;        // to the shaft's end, 0.3 clear
 assert(knob[1] - bore_d >= 1.2 - 0.01, "the knob's face is thinner than 1.2 over the bore");
 oled_pcb_z = ctl_z - oled_active_dz;
 oled_rib = [3, 10, 1.2, 2.0];                        // thick (x), deep (y), slot depth, slot width: deep enough to carry the DevKit's cage
-esp_x0  = px0 + band[0] + 0.5 + esp_rail[0] - esp_rail[3] + esp_rail[4];   // the pcb's right end: its rail just inside the band's opening
+esp_x0  = px_works + band[0] + 0.5 + esp_rail[0] - esp_rail[3] + esp_rail[4];   // the pcb's right end: its rail just inside the band's opening
 esp_z0  = ctl_z - esp[0]/2 - 1.5;          // its bottom edge
 
 // spout, on the reservoir's rim
@@ -130,7 +133,7 @@ assert(cup_c[0][0] - cup_d/2 - cup_wall >= wb[0][0] + wb_rib[0] + 12 + 1, "the d
 assert(cup_c[1][0] + cup_d/2 + cup_wall <= wb[1][0] - wb_rib[0] - 12 - 1, "the buck runs into the left cup");
 assert(wb[0][1] + wb[0][2] + wb_rib[1] + 2 <= bulk_y - pump_flange[0]/2*cos(pump_roll) - 2 && wb[1][1] + wb[1][2] + wb_rib[1] + 2 <= bulk_y, "a wall board runs into the pumps");
 assert(cup_c[0][0] + hole_dx[0] - hole_d/2 >= wall + 3 && cup_c[1][0] + hole_dx[1] + hole_d/2 <= Bx - wall - 3, "a tube hole runs into the wall");
-assert(cup_c[0][0] + hole_dx[0] + hole_d/2 + 1.5 <= deck[0][0] && cup_c[1][0] + hole_dx[1] - hole_d/2 - 1.5 >= deck[0][0] + deck[1][0], "a tube hole runs into the deck");
+assert(cup_c[0][0] + hole_dx[0] - hole_d/2 - 3 >= deck[0][0] && cup_c[1][0] + hole_dx[1] + hole_d/2 + 3 <= deck[0][0] + deck[1][0], "a tube hole runs off the deck");
 assert(ports[0][0] - ports[0][2]/2 - 2 >= pump_x[0] + pump_motor[0]/2 && ports[0][0] + ports[0][2]/2 + 2 <= pump_x[1] - pump_motor[0]/2, "the jack runs into a motor");
 assert(ports[2][0] - ports[2][2]/2 - 2 >= pump_x[1] + pump_motor[0]/2 && ports[2][0] + ports[2][2]/2 + 2 <= pump_x[2] - pump_motor[0]/2, "the GX12 runs into a motor");
 assert(ports[1][1] - ports[1][2]/2 >= pump_z + pump_motor[0]/2 + 6, "the grommet runs into the motor");
@@ -197,7 +200,6 @@ module body() color("#5a7a48") difference() {
     translate([0, 0, -1]) linear_extrude(wall + 1) plate2d(0.3);                                                                     // the opening the plate sits in, through the wall only: the band behind bears the plate
     round_cut(pch) plate2d(0.3);                                                                                                     // its edge rounded
     translate([0, 0, -1]) linear_extrude(wall + band[1] + 2) plate2d(-band[0] + 0.05);                                               // through the band: the plate's works pass
-    translate([0, 0, -1]) linear_extrude(wall + band[1] + 2) translate([px0 + pw - band[0] - 0.05, oled_pcb_z - oled[1]/2 - 2.1 - 1]) square([band[0] + 0.4, oled[1] + 4.6 + 2]);   // the band notched at the screen's left rib, between the two screws: the screen sits as close to the edge as the knob does
     for (s = pscrews) translate([s[0], s[1], wall - 0.01]) cylinder(d = insert[0], h = insert[1] + 0.01);                            // inserts in the band
   }
   wedge_x(px0 - 2, pw + 4, [[wall, pz0 - 0.8], [wall + 12, pz0 - 0.8 + 12], [wall + 12, 0.01], [wall, 0.01]]);                   // the band's underside slopes 45 down to the wall, stopping at the floor
@@ -222,7 +224,7 @@ module lid() translate([0, 0, H]) difference() {
   }
   lid_pocket();                                                                                                                       // over the body's rim
   for (c = cup_c) at(c, -1) { cylinder(d = cup_d + 0.4, h = lid_t + deck[2] + 2); translate([0, 0, lid_t + deck[2] + 1]) mirror([0, 0, 1]) round_cut(1) circle(d = cup_d + 0.4); }   // the bottles' holes, their mouths rounded
-  for (h = [cup_c[0] + [hole_dx[0], 0], cup_c[1] + [hole_dx[1], 0]]) at(h, -1) { cylinder(d = hole_d, h = lid_t + 2); translate([0, 0, lid_t + 1]) mirror([0, 0, 1]) round_cut(1) circle(d = hole_d); }   // the tubes' holes: 16 out from each bottle
+  for (h = [cup_c[0] + [hole_dx[0], 0], cup_c[1] + [hole_dx[1], 0]]) at(h, -1) { cylinder(d = hole_d, h = lid_t + deck[2] + 2); translate([0, 0, lid_t + deck[2] + 1]) mirror([0, 0, 1]) round_cut(1) circle(d = hole_d); }   // the tubes' holes: 16 out from each bottle, through the deck
 }
 
 // -------------------------------------------------------------- faceplate
@@ -276,7 +278,7 @@ module knob_cap_at() translate([knob_x, knob_y, ctl_z]) rotate([90, 0, 0]) knob_
 fuzz = [4, 1.5, 3];   // smooth margin at the bottom (the chamfer's height), depth into the wall, margin round the opening; the band runs up to the lid seam, so it clears the plate equally above and below
 module fuzz_mod() difference() {
   translate([0, 0, -base_t + fuzz[0]]) linear_extrude(H + base_t - fuzz[0]) difference() { offset(1) rr(Bx, By, R); offset(-fuzz[1]) rr(Bx, By, R); }
-  on_front() translate([0, 0, -2]) linear_extrude(fuzz[1] + 3) plate2d(0.3 + fuzz[2]);
+  on_front() translate([0, 0, -2]) linear_extrude(12) plate2d(0.3 + fuzz[2]);   // deep enough to clear it where the plate reaches into the corners' curve
 }
 
 // ------------------------------------------------------------------ spout
