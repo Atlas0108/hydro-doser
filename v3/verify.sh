@@ -106,10 +106,11 @@ chk "the outlet tubes run back over the bulkhead and the motors to the grommet" 
 
 echo "== the boards and the ports =="
 chk "the boards clear the printed parts, the pumps and the ports" CLEAR 'intersection(){ union(){ printed(); pumps(); port_hw(); } electronics(); }'
-chk "the DevKit stands in its rails on the plate\x27s back, clear of the plate, the encoder and the screen" CLEAR 'intersection(){ board(0); union(){ plate(); enc_at(); oled_at(); } }'
-chk "it slides down into its rails from the plate\x27s top edge" CLEAR 'intersection(){ plate(); union(){ for (dz = [0:5:60]) translate([0, 0, dz]) board(0); } }'
-chk "the rails hold it: shifted 2 mm either way, or pushed or pulled 2 mm, it hits" SOLID 'for (d = [[2,0],[-2,0],[0,2],[0,-2]]) intersection(){ plate(); translate([d[0], d[1], 0]) board(0); }'
-chk "its slot floor holds it: 0.5 mm lower it hits" SOLID 'intersection(){ plate(); translate([0, 0, -0.5]) board(0); }'
+chk "the DevKit stands on its standoffs, clear of the plate, the encoder and the screen" CLEAR 'intersection(){ board(0); union(){ plate(); enc_at(); oled_at(); } }'
+chk "each standoff sits under one of the DevKit\x27s holes, and an M2.5 through the hole bites its pilot" SOLID 'union(){ for (h = esp_holes) intersection(){ plate(); translate([h[0], pt + 1.5, h[1]]) rotate([-90, 0, 0]) cylinder(d = 2.5, h = esp_so[1] - 2); } }'
+chk "the pilots are open: an M2.5 core goes in" CLEAR 'intersection(){ plate(); union(){ for (h = esp_holes) translate([h[0], pt + 1.2, h[1]]) rotate([-90, 0, 0]) cylinder(d = 1.8, h = esp_so[1]); } }'
+chk "the DevKit rests on its standoffs: 0.3 nearer the plate it hits them" SOLID 'intersection(){ plate(); translate([0, -0.3, 0]) board(0); }'
+chk "the band is notched under it: it clears the body" CLEAR 'intersection(){ body(); board(0); }'
 chk "its pins clear the cups" CLEAR 'intersection(){ board(0); body(); }'
 chk "the driver and the buck stand in their slots on the side walls, clear of the body, the cups and the pumps" CLEAR 'intersection(){ union(){ board(1); board(2); } union(){ body(); pumps(); } }'
 chk "they slide down into their slots from above, lid off" CLEAR 'intersection(){ body(); union(){ for (dz = [0:5:80]) translate([0, 0, dz]) { board(1); board(2); } } }'
@@ -168,7 +169,6 @@ chk "it reaches 1 mm outside the body, so the outer wall is inside it everywhere
 chk "it stays clear of the faceplate\x27s opening and its band" CLEAR 'intersection(){ fuzz_mod(); on_front() translate([0, 0, -2]) linear_extrude(12) plate2d(0.3 + fuzz[2] - 0.05); }'
 chk "it leaves a smooth margin at the bottom and stops at the lid seam" CLEAR 'intersection(){ fuzz_mod(); union(){ translate([-1, -1, H + 0.01]) cube([Bx + 2, By + 2, 10]); translate([-1, -1, -base_t - 1]) cube([Bx + 2, By + 2, fuzz[0] + 1 - 0.01]); } }'
 chk "the band clears the faceplate by the same amount above and below" SOLID 'intersection(){ fuzz_mod(); union(){ translate([-1, -1, pz0 + ph + 0.3 + 3.3 - 0.5]) cube([Bx + 2, By + 2, 1]); translate([-1, -1, pz0 - 0.3 - 3.3 - 0.5]) cube([Bx + 2, By + 2, 1]); } }'
-chk "the cage is one loop through the plate: the left rail meets the screen\x27s rib and the right rail its post" SOLID 'let (xr = esp_x0 - esp_rail[0] + esp_rail[3] - esp_rail[4], xl = esp_x0 + esp[1] - esp_rail[3] + esp_rail[4]) union(){ intersection(){ plate(); translate([oled_x + oled[0]/2 + 0.2 + 1, 12.5, esp_z0 + esp[0] - 6]) cube([1, 1, 1]); } intersection(){ plate(); translate([xr + 1, 8, ctl_z]) cube([1, 1, 1]); } intersection(){ plate(); translate([xl + 1, 14, esp_z0 - 2]) cube([1, 1, 1]); } }'
 chk "it does not reach the cavity: the walls\x27 inner half is outside it" CLEAR 'intersection(){ fuzz_mod(); translate([0, 0, fuzz[0] - 1]) linear_extrude(H) cav2d(fuzz[1] - 0.05); }'
 
 echo "== the spout =="
@@ -182,7 +182,7 @@ for p in body lid lid_deck plate knob knob_cap foot spout; do
   allow=0; [[ $p == lid ]] && allow=2100   # the pocket's ceiling and the groove's top: 2 mm and 0.7 mm bridges round the rim
   [[ $p == lid_deck ]] && allow=30000; [[ $p == knob_cap ]] && allow=1100   # the second colours sit on their piece: their undersides are its top
   [[ $p == body ]] && allow=2000           # the vents' ceilings: fourteen 2 mm bridges; the wall-board ribs' undersides; the flange and port holes
-  [[ $p == plate ]] && allow=600           # the DevKit's rails: short bridges between their posts
+  [[ $p == plate ]] && allow=600           # the screen's ledge and the ribs' tops
   if python3 $T/piece.py $p stl/$p.stl $allow; then ((pass++)); else ((fail++)); fi
 done
 echo "== $pass passed, $fail failed =="

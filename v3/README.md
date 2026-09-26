@@ -28,7 +28,7 @@ the firmware under `firmware/v3/`; this copy is the working one.
 |---|---|---|---|
 | `body` | floor down | 202 × 178 × 82 | floor and walls in one: bulkhead, cups, wall-board ribs, vents, the front opening, the feet's pockets, the rim on top |
 | `lid` + `lid_deck` | underside down | 202 × 178 × 11 | flat underneath but for its pocket; the deck on top is the second file, printed black |
-| `plate` | face down | 96 × 59 × 22 | black; ribs, slots, ledge and the DevKit's rails on its back |
+| `plate` | face down | 176 × 59 × 13 | black; the screen's ribs, slots and ledge, the knob's ribs and the DevKit's four standoffs on its back |
 | `knob` + `knob_cap` | base down | Ø36 × 9.5 | the knurled ring brown-red, the cap (face and rounded edge) black; the D bore reaches 1.2 short of the face; the encoder's shaft is cut to 16 above its pcb |
 | `foot` | disc down, TPU | Ø18 × 6 | four |
 | `spout` | top down, legs up | 40 × 16 × 34 | clips the reservoir's rim |
@@ -37,7 +37,7 @@ The lid and the knob each come as two STLs in the same place: the olive (or oran
 
 `./export.sh` writes them into `stl/` as they print, no supports. The
 front band slopes at 45° underneath; the vents' ceilings, the lid's
-pocket ceiling and the DevKit's rails are short bridges.
+pocket ceiling and the screen's ledge are short bridges.
 
 Hardware: 4 × M3 heat-set inserts and 4 × M3 × 8 countersunk (the
 faceplate), 6 × M3 × 8 (pump flanges, from the motor side, threading into
@@ -86,14 +86,16 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   the floor of a Ø38 × 2 recess, and the Ø36 knob hides the nut in a
   pocket in its base, sits 0.5 off the recess floor, and stops on the
   shaft's end (the KY-040's 20 mm shaft cut to 16 above the pcb; the
-  knob is 9.5 thick and its D bore runs to 1.2 short of the face); behind those, 13 off the plate, the DevKit lies along the
-  plate with its module toward it and its pin rows pointing back, its
-  short edges (the ones without headers) dropped into a cage: two
-  vertical slotted rails, 4 thick, tied by a bar along the bottom, the
-  right rail on a full-height post just inside the band's opening, the
-  left rail tied at its top to the screen's left rib by a 9 × 12 arm
-  behind the screen's way in, so the load runs in one loop through the
-  plate. Fit all three, then screw the plate on.
+  knob is 9.5 thick and its D bore runs to 1.2 short of the face).
+  The knob and the screen sit 12 apart, centred on the front. Left of
+  the screen, as seen from the front, the 30-pin ESP32 DevKit V1 stands
+  upright on four Ø5.5 standoffs, 5 tall, module toward the plate and
+  pins pointing into the box, held by M2.5 self-tappers through its
+  corner holes into Ø2.2 pilots. The holes are taken as Ø3, 2.3 in from
+  each edge (46.9 × 23.7 apart): measure your board and change
+  `esp_hole` if it differs. The band behind the wall is notched its full
+  height there so the board clears it. Fit all three, then screw the
+  plate on.
   The window sits 14 from the plate's edge, the same as the knob's
   recess; the screen's outer rib lands where the band would be, so the
   band is notched there between the two screws.
@@ -138,7 +140,7 @@ lid on the shoulder, its pocket over the rim, snapping, located, flush,
 flat underneath; bottles dropping in and showing 30; tubes up through
 their three holes; pumps seated, lifting out, their flange screws on the
 42° line reaching from the back with a driver; tube runs to the holes
-and the grommet; the DevKit in its rails, the wall boards in their
+and the grommet; the DevKit on its standoffs, the wall boards in their
 slots, all sliding in, held and clear; ports between the motors; vents
 open; the plate seated on its band, flush, held every way, its screws
 at its radius centres, the seam groove open; the encoder, nut, knob and
