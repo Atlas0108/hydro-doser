@@ -21,8 +21,8 @@
 #   esphome run hydro-doser-v3.yaml --device /dev/cu.usbserial-110    # over USB
 #   esphome run hydro-doser-v3.yaml --device hydro-doser-v3.local     # over the air after that
 #
-# Wiring (README.md): OLED SDA GPIO21, SCL GPIO22; knob CLK GPIO18, DT
-# GPIO19, SW GPIO23; ULN2003 IN1..IN3 GPIO25/26/27; Gravity TDS board's
+# Wiring (README.md): OLED SDA GPIO21, SCL GPIO22; knob's 5-pin plug on five
+# neighbouring pins, CLK GPIO19, DT GPIO18, SW GPIO5, + GPIO17, GND GPIO16; ULN2003 IN1..IN3 GPIO25/26/27; Gravity TDS board's
 # 3-pin plug on GPIO35 (A), GPIO32 (+), GPIO33 (-), side by side on the header;
 # pH board Po through a 10k/20k divider to GPIO34, V+ on 5 V (VIN); float
 # switch GPIO14 to GND. The probes and the float come in through the GX12.
@@ -32,6 +32,8 @@ esphome:
   friendly_name: Hydrohomie
   on_boot:
     - lambda: 'id(status).publish_state("idle");'
+    - output.turn_off: knob_gnd  # the knob's ground ...
+    - output.turn_on: knob_vcc   # ... and its 3.3 V
     - output.turn_off: tds_gnd   # the TDS board's ground ...
     - output.turn_on: tds_vcc    # ... and its 3.3 V, from two GPIOs beside its signal pin
   includes:
@@ -100,6 +102,14 @@ output:
     pin: GPIO26
   # The Gravity TDS board powered from the two pins beside its signal, so
   # its 3-pin plug goes on the header in one piece: it draws a few mA.
+  # The knob powered from the two pins beside its signals, so its 5-pin plug
+  # goes on the header in one piece: it draws about 1 mA through its pull-ups.
+  - platform: gpio
+    id: knob_vcc
+    pin: GPIO17
+  - platform: gpio
+    id: knob_gnd
+    pin: GPIO16
   - platform: gpio
     id: tds_vcc
     pin: GPIO32
@@ -519,12 +529,12 @@ sensor:
   - platform: rotary_encoder
     id: knob
     pin_a:
-      number: GPIO19
+      number: GPIO18            # DT
       mode: { input: true, pullup: true }
     pin_b:
-      number: GPIO18
+      number: GPIO19            # CLK
       mode: { input: true, pullup: true }
-    resolution: 1               # one step per detent on the KY-040; A and B swapped so clockwise moves down the list
+    resolution: 1               # one step per detent on the KY-040; DT as A so clockwise moves down the list
     on_clockwise:
       then:
         - lambda: |-
@@ -570,8 +580,9 @@ binary_sensor:
   - platform: gpio
     id: knob_button
     pin:
-      number: GPIO23
+      number: GPIO5             # a strapping pin, but only its default (high) matters, and the button is up at boot
       mode: { input: true, pullup: true }
+      ignore_strapping_warning: true
       inverted: true
     filters:
       - delayed_on_off: 30ms

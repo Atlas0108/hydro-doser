@@ -46,13 +46,16 @@ box; the knob's five pins point down.
 | OLED VCC | 3V3 | the 0.96" SSD1306 boards run on 3.3 V |
 | OLED SCL | GPIO22 | I2C clock |
 | OLED SDA | GPIO21 | I2C data |
-| Knob GND | GND | |
-| Knob + | 3V3 | |
-| Knob SW | GPIO23 | the push button, pulled up in firmware |
-| Knob DT | GPIO19 | encoder B |
-| Knob CLK | GPIO18 | encoder A |
+| Knob CLK | GPIO19 (D19) | encoder |
+| Knob DT | GPIO18 (D18) | encoder |
+| Knob SW | GPIO5 (D5) | the push button, pulled up in firmware |
+| Knob + | GPIO17 (TX2) | driven high at boot: its 3.3 V |
+| Knob GND | GPIO16 (RX2) | driven low: its ground |
 
-If the knob turns the wrong way, swap CLK and DT, or swap `pin_a` and
+The knob's five pins, CLK, DT, SW, + and GND, land on D19, D18, D5, TX2
+and RX2, which sit side by side on the DevKit V1's header, so its plug
+goes on in one piece with CLK on D19. The two pins at the end power it;
+it draws about 1 mA. If it turns the wrong way, swap `pin_a` and
 `pin_b` in the yaml. The OLED's address is 0x3C; if the screen stays dark
 and the log says no device at 0x3C, it is the 0x3D kind: change `address`.
 
