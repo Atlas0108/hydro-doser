@@ -313,9 +313,17 @@ module oled_at() translate([oled_x, pt, oled_pcb_z]) {
   color("#111") translate([-oled[3]/2, -oled[5], oled_glass_dz - oled[4]/2]) cube([oled[3], oled[5], oled[4]]);           // the glass, into the plate
   color("#888") translate([-5, oled[2], oled[1]/2 - 3]) cube([10, 8, 2]);                                                // the header, pointing in
 }
-module bottle_at(i) at(cup_c[i], 0) color(i == 0 ? [0.7, 0.4, 0.15, 0.8] : [0.93, 0.93, 0.9, 0.8]) {
-  cylinder(d = bottle[0], h = bottle[1] - 22); translate([0, 0, bottle[1] - 22]) cylinder(d1 = bottle[0], d2 = bottle[0]*0.55, h = 8); translate([0, 0, bottle[1] - 16]) cylinder(d = bottle[0]*0.55, h = 16);
-}
+// The Rise Gardens 125 mL bottle (Sprout in the right cup, Thrive in the
+// left): a white HDPE cylinder round, its shoulder rounded into a 24 mm
+// neck, a black disc-top cap, a wraparound label. Three pieces so they can
+// be coloured apart: body, cap, label.
+module bottle_body() rotate_extrude($fn = 96) polygon([[0, 0], [21, 0], [23.4, 1], [24, 3], [24, 90], [23.6, 93.5], [22.4, 96.6], [20.5, 99.3], [18, 101.5], [15.2, 103.1], [12.5, 104], [12, 104.5], [12, 110], [0, 110]]);
+module bottle_cap()  rotate_extrude($fn = 96) polygon([[0, 108], [13.5, 108], [13.5, 119.5], [12.8, 121.2], [11.5, 122], [0, 122]]);
+module bottle_label() rotate_extrude($fn = 96) polygon([[24, 14], [24.3, 14], [24.3, 80], [24, 80]]);
+module bottle_at(i) at(cup_c[i], 0) { color([0.93, 0.93, 0.9, 0.8]) bottle_body(); color("#111") bottle_cap(); color(i == 0 ? "#4a9a4a" : "#3a86b0") bottle_label(); }
+module bottle_cap_at(i) at(cup_c[i], 0) bottle_cap();
+module bottle_label_at(i) at(cup_c[i], 0) bottle_label();
+module bottle_body_at(i) at(cup_c[i], 0) bottle_body();
 module bottles() for (i = [0, 1]) bottle_at(i);
 module m3csk(l) { cylinder(d = 3, h = l - (screw[1] - 3)/2); translate([0, 0, l - (screw[1] - 3)/2]) cylinder(d1 = 3, d2 = screw[1] - 0.2, h = (screw[1] - 3)/2); }   // M3 countersunk, its head's top at z = l
 module screws() color("#999") for (s = pscrews) translate([s[0], 0, s[1]]) rotate([90, 0, 0]) translate([0, 0, -8]) m3csk(8);   // the plate's M3 x 8: the only screws
@@ -349,4 +357,6 @@ else if (part == "board")    board(idx);
 else if (part == "encoder")  enc_at();
 else if (part == "oled")     oled_at();
 else if (part == "ports")    port_hw();
-else if (part == "bottle")   bottle_at(idx);
+else if (part == "bottle")   bottle_body_at(idx);
+else if (part == "cap_b")    bottle_cap_at(idx);
+else if (part == "label")    bottle_label_at(idx);

@@ -36,7 +36,9 @@ PARTS_LIST = [
   ('screws', 'screw', (0, -170, 0)),
   ('knob', 'knob', (0, -210, 0)), ('cap', 'plate', (0, -210, 0)),
   ('lid', 'shell', (0, 0, 150)), ('deck', 'plate', (0, 0, 150)),
-  ('bottle0', 'amber', (0, 0, 250)), ('bottle1', 'white_pp', (0, 0, 250)),
+  ('bottle0', 'hdpe', (0, 0, 250)), ('bottle1', 'hdpe', (0, 0, 250)),
+  ('capb0', 'cap', (0, 0, 250)), ('capb1', 'cap', (0, 0, 250)),
+  ('label0', 'label_a', (0, 0, 250)), ('label1', 'label_b', (0, 0, 250)),
 ]
 
 # ------------------------------------------------------------------ scene
@@ -89,7 +91,7 @@ def grained(m, scale=900, strength=0.06):   # a very fine bump so printed plasti
 
 MAT = {
   'shell': grained(principled('shell', (0.027, 0.072, 0.015), rough=0.74, sheen=0.2)),      # Anycubic matte olive PETG
-  'plate': grained(principled('plate', (0.012, 0.012, 0.012), rough=0.7, sheen=0.15)),      # matte black
+  'plate': grained(principled('plate', (0.003, 0.003, 0.003), rough=0.88), 700, 0.04),      # matte black PETG: the faceplate, the deck, the knob's cap
   'knob':  grained(principled('knob', (0.196, 0.027, 0.012), rough=0.62, sheen=0.2), 600),  # brown-red, #7a2e1e
   'pump': principled('pump', (0.88, 0.88, 0.86), rough=0.35, coat=0.3),
   'pcb_green': principled('pcb_green', (0.04, 0.22, 0.09), rough=0.35, coat=0.5),
@@ -104,12 +106,19 @@ MAT = {
 
 MAT.update({
   'amber_tube': principled('amber_tube', (0.85, 0.62, 0.35), rough=0.35, transmission=0.5, alpha=0.8, ior=1.41),
+  'green_tube': principled('green_tube', (0.7, 0.88, 0.7), rough=0.35, transmission=0.5, alpha=0.8, ior=1.41),   # Sprout
+  'blue_tube': principled('blue_tube', (0.68, 0.82, 0.92), rough=0.35, transmission=0.5, alpha=0.8, ior=1.41),    # Thrive
   'white_tube': principled('white_tube', (0.95, 0.95, 0.95), rough=0.35, transmission=0.55, alpha=0.75, ior=1.41),
   'water_tube': principled('water_tube', (0.62, 0.78, 0.9), rough=0.35, transmission=0.5, alpha=0.8, ior=1.41),
   'lead': principled('lead', (0.04, 0.04, 0.04), rough=0.8),
   'power': principled('power', (0.5, 0.04, 0.03), rough=0.7),
   'ribbon': principled('ribbon', (0.3, 0.3, 0.32), rough=0.75),
   'brass': principled('brass', (0.8, 0.6, 0.25), rough=0.4, metallic=1.0),
+  'hdpe': principled('hdpe', (0.92, 0.92, 0.90), rough=0.45, transmission=0.15, alpha=0.97, sheen=0.3),   # white HDPE, faintly translucent
+  'cap': principled('cap', (0.004, 0.004, 0.004), rough=0.75),   # the bottles' caps, matte black
+  'label_a': principled('label_a', (0.13, 0.42, 0.14), rough=0.7),   # Sprout, green
+  'label_b': principled('label_b', (0.05, 0.25, 0.42), rough=0.7),   # Thrive, blue
+  'label_ink': principled('label_ink', (0.92, 0.92, 0.9), rough=0.7),
 })
 
 def ease(x):
@@ -160,7 +169,35 @@ if os.path.exists(SCREEN):
     screen_ob.data.materials.append(sm)
     screen_base = Vector((124, 1.4, 37)) * S          # oled_x, 0.1 in front of the glass, ctl_z
 
+# The labels' names, wrapped round each label on a circle, centred on the
+# front. Built in Blender's own frame (the model's x negated), not under
+# the mirrored parent, so the word reads left to right without tricks.
+LABELS = [((69, 62), 'SPROUT'), ((133, 62), 'THRIVE')]
+label_obs = []
+for (cx, cy), word in LABELS:
+    r = 24.55 * S   # 0.25 proud of the label
+    fc = bpy.data.curves.new('lt', 'FONT'); fc.body = word; fc.size = 8.5 * S; fc.align_x = 'CENTER'; fc.extrude = 0.00012
+    fc.space_character = 1.15
+    tob = bpy.data.objects.new('lt', fc); bpy.context.collection.objects.link(tob)
+    bpy.context.view_layer.objects.active = tob; tob.select_set(True)
+    bpy.ops.object.convert(target='MESH')
+    # bend the flat word round the bottle by hand: x along the text becomes an angle
+    # round the axis, x = 0 at the front (-y), +x toward the viewer's right (+x)
+    for v in tob.data.vertices:
+        x, depth, z = v.co.x, v.co.z, v.co.y            # the text lay flat: x along, y up (-> world z), z its extrusion
+        a = x / r; rr = r + depth
+        v.co = (rr * math.sin(a), -rr * math.cos(a), z)
+    cob = tob   # no curve object any more; kept in the tuple for the pose loop
+    tob.data.materials.clear(); tob.data.materials.append(MAT['label_ink'])
+    tob.select_set(False)
+    label_obs.append((cob, tob, Vector((-cx, cy, 47)) * S))
+BOTTLE_OFF_W = Vector((-routes['offsets']['bottle'][0], routes['offsets']['bottle'][1], routes['offsets']['bottle'][2])) * S
+def pose_labels(k):
+    for cob, tob, base in label_obs:
+        cob.location = base + BOTTLE_OFF_W * k; tob.location = base + BOTTLE_OFF_W * k
+
 def pose_routes(k):
+    pose_labels(k)
     if screen_ob: screen_ob.location = screen_base + ROFF['oled'] * k
     for sp, pts in curves:
         for bp, (base, off) in zip(sp.bezier_points, pts): bp.co = base + off * k
@@ -221,6 +258,10 @@ def pose(t):
 if TEST:
     for i, t in enumerate([0.0, 0.5, 1.0]):
         pose(t); scene.render.filepath = os.path.join(OUT, f'test_{i}.webp'); bpy.ops.render.render(write_still=True)
+    # a close-up of the bottles, exploded, from the front
+    pose(1.0); look = Vector((-0.101, 0.062, 0.31)); pos = look + Vector((0.05, -0.36, 0.1))
+    camob.location = pos; camob.rotation_euler = (look - pos).to_track_quat('-Z', 'Y').to_euler()
+    scene.render.filepath = os.path.join(OUT, 'test_3.webp'); bpy.ops.render.render(write_still=True)
 else:
     for fr in range(1, FRAMES + 1):
         pose((fr - 1) / (FRAMES - 1))

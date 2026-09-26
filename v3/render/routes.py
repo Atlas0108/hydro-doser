@@ -38,10 +38,10 @@ def inlet(k, h, c, mid):
 def outlet(k, first, mid, g):   # g: where the tube sits in the grommet's bore
     return P('pump', tip(k, +1), first) + P('body', *mid, (g[0], 168, g[2]), (g[0], 174, g[2]), (g[0], 180, g[2])) + P('ports', (g[0], 190, g[2]), (g[0], 210, g[2] - 1), (g[0], 235, g[2] - 4))
 
-tubes.append({'name': 'A in',  'color': 'amber', 'pts': inlet(0, hole[0], cup[0], [(50, 90, 62), (30, 70, 60)])})
-tubes.append({'name': 'A out', 'color': 'amber', 'pts': outlet(0, (71, 109, 52), [(78, 125, 62), (90, 150, 64)], (98.2, 176, 59.6))})
-tubes.append({'name': 'B in',  'color': 'white', 'pts': inlet(2, hole[1], cup[1], [(183, 90, 66), (179, 72, 64)])})
-tubes.append({'name': 'B out', 'color': 'white', 'pts': outlet(2, (193, 108, 51), [(185, 125, 62), (140, 155, 64)], (103.8, 176, 59.6))})
+tubes.append({'name': 'A in',  'color': 'green', 'pts': inlet(0, hole[0], cup[0], [(50, 90, 62), (30, 70, 60)])})
+tubes.append({'name': 'A out', 'color': 'green', 'pts': outlet(0, (71, 109, 52), [(78, 125, 62), (90, 150, 64)], (98.2, 176, 59.6))})
+tubes.append({'name': 'B in',  'color': 'blue', 'pts': inlet(2, hole[1], cup[1], [(183, 90, 66), (179, 72, 64)])})
+tubes.append({'name': 'B out', 'color': 'blue', 'pts': outlet(2, (193, 108, 51), [(185, 125, 62), (140, 155, 64)], (103.8, 176, 59.6))})
 # water: pump 1's inlet comes in through the hole low in the back wall, runs
 # under the middle motor, up between the motors and over the bulkhead
 tubes.append({'name': 'water in', 'color': 'water', 'pts':

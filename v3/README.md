@@ -67,6 +67,10 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   tube comes in through a plain Ø8 hole low in the back wall, midway
   between the jack and the GX12, under the middle motor: it runs under
   the motor, up between the motors and over the bulkhead to the nozzles.
+- **Bottles.** The Rise Gardens 125 mL Sprout and Thrive bottles, measured
+  Ø48 × 122: a white HDPE cylinder round, rounded shoulder, 24 mm neck, a
+  black disc-top cap, a wraparound label (Sprout green, Thrive blue). In the
+  model as body, cap and label so the pages and the render colour them apart.
 - **Wall boards.** The ULN2003 stands in two slotted ribs on the right
   wall and the buck in two on the left, beside the cups, dropped in from
   above with the lid off; the boards rest on the slots' floors just off
