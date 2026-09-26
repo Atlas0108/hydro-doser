@@ -133,7 +133,7 @@ globals:
     initial_value: "0"          # highlight on page 0: 0 A, 1 B, 2 C, 3 ABC
   - id: sel1
     type: int
-    initial_value: "0"          # highlight on page 1: 0..3 the quantities, 4 Manual
+    initial_value: "0"          # highlight on page 1: -1 the back arrow in the breadcrumb, 0..3 the quantities, 4 Manual
   - id: dose_ml
     type: float
     initial_value: "0"
@@ -155,12 +155,15 @@ display:
       // yellow band is the breadcrumb, always: Home > Dose A > 25 ml.
       static const char *DOSES[4] = {"A", "B", "C", "ABC"};
       static const char *QTYS[5] = {"5 ml", "10 ml", "25 ml", "50 ml", "Manual"};
+      // On the quantities page the breadcrumb starts with a back arrow;
+      // scrolling up past the first item highlights it, and a click goes back.
       char crumb[40];
       if (id(page) == 0) snprintf(crumb, sizeof crumb, "Home");
-      else if (id(page) == 1) snprintf(crumb, sizeof crumb, "Home > Dose %s", DOSES[id(sel0)]);
+      else if (id(page) == 1) snprintf(crumb, sizeof crumb, "< Home > Dose %s", DOSES[id(sel0)]);
       else if (id(page) == 2) snprintf(crumb, sizeof crumb, "Home > Dose %s > %.0f ml", DOSES[id(sel0)], id(dose_ml));
       else snprintf(crumb, sizeof crumb, "Home > Dose %s > Manual", DOSES[id(sel0)]);
-      it.printf(2, 3, id(f_title), "%s", crumb);
+      if (id(page) == 1 && id(sel1) < 0) { it.filled_rectangle(0, 0, 128, 16); it.printf(2, 3, id(f_title), COLOR_OFF, "%s", crumb); }
+      else it.printf(2, 3, id(f_title), "%s", crumb);
       // the list below it: four rows of 11, scrolling if there are more
       auto list = [&](const char **items, int n, int sel) {
         int first = sel > 3 ? sel - 3 : 0;
@@ -207,7 +210,7 @@ sensor:
       then:
         - lambda: |-
             if (id(page) == 0 && id(sel0) > 0) id(sel0)--;
-            if (id(page) == 1 && id(sel1) > 0) id(sel1)--;
+            if (id(page) == 1 && id(sel1) > -1) id(sel1)--;
         - component.update: oled
 
 binary_sensor:
@@ -253,7 +256,12 @@ binary_sensor:
                 - component.update: oled
               else:
                 - if:
-                    condition: { lambda: "return id(page) == 1 && id(sel1) < 4;" }
+                    condition: { lambda: "return id(page) == 1 && id(sel1) < 0;" }
+                    then:
+                      - lambda: "id(page) = 0;"
+                      - component.update: oled
+                - if:
+                    condition: { lambda: "return id(page) == 1 && id(sel1) >= 0 && id(sel1) < 4;" }
                     then:
                       - script.execute:
                           id: dose
