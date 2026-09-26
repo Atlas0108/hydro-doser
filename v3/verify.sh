@@ -111,6 +111,14 @@ chk "each standoff sits under one of the DevKit\x27s holes, and an M2.5 through 
 chk "the pilots are open: an M2.5 core goes in" CLEAR 'intersection(){ plate(); union(){ for (h = esp_holes) translate([h[0], pt + 1.2, h[1]]) rotate([-90, 0, 0]) cylinder(d = 1.8, h = esp_so[1]); } }'
 chk "the DevKit rests on its standoffs: 0.3 nearer the plate it hits them" SOLID 'intersection(){ plate(); translate([0, -0.3, 0]) board(0); }'
 chk "the band is notched under it: it clears the body" CLEAR 'intersection(){ body(); board(0); }'
+chk "the pH adapter slides onto the encoder\x27s ribs, clear of the plate\x27s other parts, the encoder and its plugs, the screen and the body" CLEAR 'intersection(){ ph_adapter(); union(){ difference(){ plate(); for (x = [rib_x[0], rib_x[1] - 2]) translate([x - 0.001, pt - 1, rib_z[0] - 1]) cube([2.002, 20, 40]); } enc_at(); oled_at(); body(); board(3); } }'
+chk "and clear of the ribs themselves: a sliding fit" CLEAR 'intersection(){ ph_adapter(); plate(); }'
+chk "its legs hug the ribs: 0.3 inward either side it hits them" SOLID 'union(){ intersection(){ translate([0.3, 0, 0]) ph_adapter(); plate(); } intersection(){ translate([-0.3, 0, 0]) ph_adapter(); plate(); } }'
+chk "its lips rest on the ribs\x27 tops: 0.3 lower it hits" SOLID 'intersection(){ translate([0, 0, -0.3]) ph_adapter(); plate(); }'
+chk "it slides off backward: nothing holds it but the ribs" CLEAR 'intersection(){ plate(); union(){ for (dy = [0:2:20]) translate([0, dy, 0]) ph_adapter(); } }'
+chk "the pH board stands on its standoffs, clear of the adapter, the TDS board, the driver and the cups" CLEAR 'intersection(){ board(4); union(){ ph_adapter(); board(3); board(1); body(); plate(); enc_at(); oled_at(); } }'
+chk "it rests on them: 0.3 nearer the plate it hits" SOLID 'intersection(){ ph_adapter(); translate([0, -0.3, 0]) board(4); }'
+chk "an M3 through each of its holes bites a pilot" SOLID 'union(){ for (h = phb_holes) intersection(){ ph_adapter(); translate([h[0], pha_y + 1.5, h[1]]) rotate([-90, 0, 0]) cylinder(d = 3, h = pha[1] + pha[2] - 2); } }'
 chk "the TDS board stands on its standoffs behind the screen, clear of the plate, the encoder and its pins, and the screen and its Dupont plugs" CLEAR 'intersection(){ board(3); union(){ plate(); enc_at(); oled_at(); } }'
 chk "it rests on them: 0.3 nearer the plate it hits" SOLID 'intersection(){ plate(); translate([0, -0.3, 0]) board(3); }'
 chk "an M3 through each of its holes bites a pilot" SOLID 'union(){ for (h = tds_holes) intersection(){ plate(); translate([h[0], pt + 1.5, h[1]]) rotate([-90, 0, 0]) cylinder(d = 3, h = tds_so[1] - 2); } }'
@@ -181,7 +189,7 @@ chk "self-test: a rim 1 mm thicker hits" SOLID 'intersection(){ spout(); transla
 chk "the tubes and the float lead pass through" CLEAR 'intersection(){ spout(); union(){ for (i = [0:2]) translate([7 + 10*i, spout[3] + spout[4] + (spout[1] - spout[3] - spout[4])/2, -1]) cylinder(d = tube_od, h = spout[2] + 2); translate([spout[0] - 5, spout[3] + spout[4] + (spout[1] - spout[3] - spout[4])/2, -1]) cylinder(d = 3.5, h = spout[2] + 2); } }'
 
 echo "== every exported piece fits the bed and prints unsupported =="
-for p in body lid lid_deck plate knob knob_cap foot spout; do
+for p in body lid lid_deck plate knob knob_cap foot spout ph_adapter; do
   [[ -s stl/$p.stl ]] || { echo "  FAIL  $p  no stl/$p.stl (run ./export.sh)"; ((fail++)); continue; }
   allow=0; [[ $p == lid ]] && allow=2100   # the pocket's ceiling and the groove's top: 2 mm and 0.7 mm bridges round the rim
   [[ $p == lid_deck ]] && allow=30000; [[ $p == knob_cap ]] && allow=1100   # the second colours sit on their piece: their undersides are its top

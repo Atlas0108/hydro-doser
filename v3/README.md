@@ -30,6 +30,7 @@ the firmware under `firmware/v3/`; this copy is the working one.
 | `lid` + `lid_deck` | underside down | 202 × 178 × 11 | flat underneath but for its pocket; the deck on top is the second file, printed black |
 | `plate` | face down | 176 × 59 × 28 | black; the screen's pocket, the knob's ribs, and standoffs for the DevKit and the TDS board on its back |
 | `knob` + `knob_cap` | base down | Ø36 × 9.5 | the knurled ring brown-red, the cap (face and rounded edge) black; the D bore reaches 1.2 short of the face; the encoder's shaft is cut to 16 above its pcb |
+| `ph_adapter` | on its bottom edge | 42 × 18 × 33 | black; hangs on the encoder's ribs and carries the pH board. Tall on a small footprint: print it with a brim |
 | `foot` | disc down, TPU | Ø18 × 6 | four |
 | `spout` | top down, legs up | 40 × 16 × 34 | clips the reservoir's rim |
 
@@ -106,6 +107,15 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   Ø2.6 pilots. The holes are taken as Ø3.1, 3.5 in from each edge (35 ×
   25 apart): measure your board and change `tds_hole` if it differs.
   Fit the screen before the board: the board covers its way in.
+  The pH board (PH-4502C type, 42 × 32, its BNC removed) hangs on the
+  encoder's two ribs on a printed adapter, `ph_adapter`: two legs hug
+  the ribs' outer faces for 8 mm, a lip on each rests on a rib's top,
+  and a bridge spans behind the encoder, 2 clear of its back. It slides
+  on from behind after the encoder is in and lifts straight off. The
+  board sits on four Ø5.5 standoffs, 5 tall, on the bridge, beside the
+  TDS board with 2 between them; M3 self-tappers into Ø2.6 pilots. The
+  holes are taken as Ø3.1, 3.5 in from each edge (35 × 25 apart):
+  measure yours and change `phb_hole` if it differs.
   Fit all four, then screw the plate on.
   The window sits 14 from the plate's edge, the same as the knob's
   recess; the screen's outer rib lands where the band would be, so the
