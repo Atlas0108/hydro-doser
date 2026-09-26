@@ -23,7 +23,9 @@
 #
 # Wiring (README.md): OLED SDA GPIO21, SCL GPIO22; knob CLK GPIO18, DT
 # GPIO19, SW GPIO23; ULN2003 IN1..IN3 GPIO25/26/27; Gravity TDS board's
-# 3-pin plug on GPIO35 (A), GPIO32 (+), GPIO33 (-), side by side on the header.
+# 3-pin plug on GPIO35 (A), GPIO32 (+), GPIO33 (-), side by side on the header;
+# pH board Po through a 10k/20k divider to GPIO34, V+ on 5 V (VIN); float
+# switch GPIO14 to GND. The probes and the float come in through the GX12.
 
 esphome:
   name: hydro-doser-v3
@@ -228,6 +230,30 @@ number:
     restore_value: true
     optimistic: true
     entity_category: config
+  # pH calibration: the board's voltage in pH 7 buffer, and how much it
+  # falls per pH step (set from a pH 4 buffer with the buttons below).
+  - platform: template
+    id: ph7_v
+    name: "pH 7 voltage"
+    unit_of_measurement: "V"
+    min_value: 1
+    max_value: 4
+    step: 0.001
+    initial_value: 2.5
+    restore_value: true
+    optimistic: true
+    entity_category: config
+  - platform: template
+    id: ph_slope
+    name: "pH slope"
+    unit_of_measurement: "V/pH"
+    min_value: 0.05
+    max_value: 0.5
+    step: 0.001
+    initial_value: 0.18
+    restore_value: true
+    optimistic: true
+    entity_category: config
   - platform: template
     id: tds_k
     name: "TDS calibration"
@@ -408,6 +434,36 @@ display:
 
 # --------------------------------------------------------------- the knob
 sensor:
+  # The pH board's Po, through a 10k over 20k divider (its output reaches
+  # about 5 V at the acid end; the ESP32's input takes 3.3). x1.5 undoes the
+  # divider: this is the board's own output voltage.
+  - platform: adc
+    id: ph_volts
+    name: "pH voltage"
+    pin: GPIO34
+    attenuation: 12db
+    samples: 16
+    update_interval: 2s
+    accuracy_decimals: 3
+    entity_category: diagnostic
+    filters:
+      - multiply: 1.5
+      - median:
+          window_size: 15
+          send_every: 5
+  # pH from the voltage, two-point calibrated: V at pH 7, and volts per pH
+  # (the board's output falls as pH rises).
+  - platform: template
+    id: ph
+    name: "pH"
+    icon: mdi:ph
+    state_class: measurement
+    accuracy_decimals: 2
+    update_interval: 10s
+    lambda: |-
+      float v = id(ph_volts).state;
+      if (isnan(v) || v < 0.2f) return NAN;           // nothing on the input
+      return 7.0f + (id(ph7_v).state - v) / id(ph_slope).state;
   # The Gravity TDS board's output, 0 to 2.3 V.
   - platform: adc
     id: tds_volts
@@ -491,6 +547,18 @@ sensor:
         - component.update: oled
 
 binary_sensor:
+  # The reservoir's float switch, through the GX12: mounted so its contact is
+  # CLOSED while the water is up at the float. Closed pulls GPIO14 low. Open
+  # reads Low water: so an unplugged or broken float blocks dosing too.
+  - platform: gpio
+    id: water_low
+    name: "Reservoir low"
+    device_class: problem
+    pin:
+      number: GPIO14
+      mode: { input: true, pullup: true }
+    filters:
+      - delayed_on_off: 2s
   - platform: template
     id: running
     name: "Running"
@@ -582,6 +650,25 @@ button:
     name: "Cancel"
     icon: mdi:stop
     on_press: { script.execute: stop_all }
+  # pH calibration: probe in pH 7 buffer, press the first; rinse, into pH 4
+  # buffer, press the second. The slope comes from the two readings.
+  - platform: template
+    name: "Calibrate pH 7"
+    icon: mdi:ph
+    entity_category: config
+    on_press:
+      - lambda: |-
+          float v = id(ph_volts).state;
+          if (!isnan(v) && v > 0.2f) { auto c = id(ph7_v).make_call(); c.set_value(v); c.perform(); }
+  - platform: template
+    name: "Calibrate pH 4"
+    icon: mdi:ph
+    entity_category: config
+    on_press:
+      - lambda: |-
+          float v = id(ph_volts).state;
+          float s = (v - id(ph7_v).state) / 3.0f;
+          if (!isnan(v) && s > 0.05f && s < 0.5f) { auto c = id(ph_slope).make_call(); c.set_value(s); c.perform(); }
   # After a fresh fill dosed to spec: take the current TDS as Nominal.
   - platform: template
     name: "Mark TDS nominal"

@@ -82,6 +82,44 @@ On the 30-pin DevKit V1 these three sit together on the header, VN
 side: ... D34, **D35, D32, D33**, D25 ... Plug the lead so its A wire lands
 on D35.
 
+The pH board (the common PH-4502C type, 42 × 32, the one sold with a BNC
+probe) needs 5 V, and its Po output reaches about 5 V at the acid end:
+too much for an ESP32 input. So Po goes through a divider, 10 kΩ from Po
+to GPIO34 and 20 kΩ from GPIO34 to ground, which scales 5 V to 3.3 V;
+the firmware multiplies back by 1.5.
+
+| pH board | To | Notes |
+|---|---|---|
+| Po | 10 kΩ, then GPIO34 | 20 kΩ from GPIO34 to GND |
+| V+ | 5 V (VIN, or the buck's OUT+) | |
+| G | GND | either G |
+| Do, To | — | unused |
+
+The float switch goes between GPIO14 and GND; the firmware pulls GPIO14
+up. **Mount it so its contact is closed while the water is up at the
+float** (flip the float on its stem to change which way it works). Then
+an open contact, from low water or a broken or unplugged lead, reads
+**Reservoir low**, so dosing can be blocked on it safely.
+
+The probes and the float come in through the GX12-6 in the back wall.
+Cut the TDS probe's plug and the pH probe's BNC off the boards and wire
+both boards' probe inputs to the GX12 socket instead:
+
+| GX12 pin | Goes to |
+|---|---|
+| 1, 2 | TDS board's probe input (either way round) |
+| 3 | pH board's BNC centre (probe signal) |
+| 4 | pH board's BNC shell (reference) |
+| 5, 6 | float switch: GPIO14 and GND |
+
+The pH probe's signal is very high impedance: keep its run from the
+GX12 to the board short and away from the pump wires.
+
+pH is two-point calibrated. Put the probe in pH 7 buffer and press
+**Calibrate pH 7**; rinse it, put it in pH 4 buffer and press
+**Calibrate pH 4**. The two settings, pH 7 voltage and pH slope, can
+also be set by hand.
+
 Home Assistant gets TDS in ppm, the raw TDS voltage (diagnostic), and
 two settings: Water temperature, which the reading is compensated to
 25 °C with (there is no temperature probe yet, so set it), and TDS
