@@ -15,8 +15,10 @@ Nothing is baked in: no network, no password, no key. Plug it in, and
 the title band says "set up wifi" until it is on a network. Two ways,
 both local:
 
-1. Open the Home Assistant app on a phone near it. It finds "Hydrohomie"
-   over Bluetooth and asks for the Wi-Fi network and password.
+1. Open the Home Assistant app on a phone near it, with Bluetooth
+   allowed. It finds "hydro-doser-v3" over Bluetooth (Improv) and asks
+   for the Wi-Fi network and password. Any Improv client works the same
+   way; the unit here was set up from a Mac with a 40-line Python script.
 2. Or join the open Wi-Fi network "Hydrohomie" the doser raises; a page
    pops up to enter the network and password.
 
