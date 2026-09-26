@@ -229,10 +229,12 @@ def area(name, loc, target, size, energy, color=(1, 1, 1)):
     ob.rotation_euler = (Vector(target) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler()
     return ob
 C = Vector((-0.101, 0.089, 0.15))   # the lights and the camera live in Blender's frame: the model's x negated
-area('key',  (-1.4, -1.4, 1.6), C, 1.6, 110, (1.0, 0.96, 0.9))
-area('fill', (1.8, -1.0, 1.0), C, 2.5, 40, (0.92, 0.96, 1.0))
-area('rim',  (-0.4, 1.6, 1.4), C, 1.2, 120, (1.0, 1.0, 1.0))
-area('top',  (-0.2, 0.0, 2.6), C, 2.0, 35)
+# the key from the front right and high, so the face and the top carry the
+# light; a soft fill from the front left; the rim behind only an edge accent
+area('key',  (0.9, -1.7, 1.6), C, 1.6, 120, (1.0, 0.96, 0.9))
+area('fill', (-1.8, -1.2, 0.9), C, 2.5, 45, (0.92, 0.96, 1.0))
+area('rim',  (-0.4, 1.6, 1.4), C, 1.2, 60, (1.0, 1.0, 1.0))
+area('top',  (-0.2, -0.3, 2.6), C, 2.0, 30)
 area('pool', (-0.6, 1.2, 1.8), Vector((-0.1, 0.9, 0.0)), 1.4, 55, (0.95, 0.97, 1.0))
 
 # Camera: the exploded-view page's 3/4 view from the front left, above.
