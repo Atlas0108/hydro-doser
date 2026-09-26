@@ -32,7 +32,7 @@ PARTS_LIST = [
   ('board1', 'pcb_green', (0, 0, 0)), ('board2', 'black', (0, 0, 0)),
   ('ports', 'metal', (0, 80, 0)),
   ('plate', 'plate', (0, -120, 0)),
-  ('oled', 'pcb_dark', (0, -100, 0)), ('encoder', 'pcb_green', (0, -70, 0)), ('board0', 'pcb_dark', (0, -50, 0)),
+  ('oled', 'pcb_dark', (0, -100, 0)), ('encoder', 'pcb_green', (0, -70, 0)), ('board0', 'pcb_dark', (0, -50, 0)), ('board3', 'pcb_blue', (0, -50, 0)),
   ('screws', 'screw', (0, -170, 0)),
   ('knob', 'knob', (0, -210, 0)), ('cap', 'plate', (0, -210, 0)),
   ('lid', 'shell', (0, 0, 150)), ('deck', 'plate', (0, 0, 150)),
@@ -96,6 +96,7 @@ MAT = {
   'pump': principled('pump', (0.88, 0.88, 0.86), rough=0.35, coat=0.3),
   'pcb_green': principled('pcb_green', (0.04, 0.22, 0.09), rough=0.35, coat=0.5),
   'pcb_dark': principled('pcb_dark', (0.03, 0.04, 0.06), rough=0.35, coat=0.4),
+  'pcb_blue': principled('pcb_blue', (0.02, 0.08, 0.35), rough=0.35, coat=0.4),   # DFRobot's blue
   'black': principled('black', (0.03, 0.03, 0.03), rough=0.45),
   'metal': principled('metal', (0.8, 0.8, 0.8), rough=0.3, metallic=1.0),
   'screw': principled('screw', (0.008, 0.008, 0.008), rough=0.6, metallic=0.2),   # black-oxide M3s, matte
