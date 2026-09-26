@@ -71,7 +71,6 @@ function fhole(s)    = rolled(s*flange_pitch/2, 0);                             
 cup_d = bottle[0] + 4;  cup_wall = 2;  hole_d = 8;   // the pocket: 2 mm round the bottle
 cup_c = [[69, 62], [133, 62]];             // Nutrient A (right, fed by pump 0), Nutrient B (left, fed by pump 2)
 hole_dx = [-(bottle[0]/2 + 16 + hole_d/2), bottle[0]/2 + 16 + hole_d/2];   // the hole's centre from the cup's: right cup's to the right, left cup's to the left
-hole3   = [(cup_c[0][0] + hole_dx[0] + cup_c[1][0] + hole_dx[1])/2, By - 12.5];   // the third hole: at the lid's rear edge, clear of the rim pocket, midway between the left and right holes
 
 // boards. The DevKit stands on the faceplate's back behind the knob, its
 // long side up, in two slotted rails; the driver and the buck stand in
@@ -88,7 +87,7 @@ foot    = [18, 3, 7.8, 9.4, 1.4];
 feet    = [[R, R], [Bx - R, R], [Bx - R, By - R], [R, By - R]];   // at the corners' radius centres
 
 // ports: the back wall. The jack and the GX12 low, between the motors; the grommet above the middle one
-ports  = [[(pump_x[0] + pump_x[1])/2, pump_z, jack_d], [pump_x[1], 58, grommet_d], [(pump_x[1] + pump_x[2])/2, pump_z, gx12_d]];   // x, z, dia
+ports  = [[(pump_x[0] + pump_x[1])/2, pump_z, jack_d], [pump_x[1], 58, grommet_d], [(pump_x[1] + pump_x[2])/2, pump_z, gx12_d], [pump_x[1], 8, hole_d]];   // x, z, dia: the jack, the grommet, the GX12, and the water tube's plain hole, low between the jack and the GX12 under the middle motor
 
 // the faceplate: black, 3 thick, flush in an opening in the front wall, screwed
 // into a band behind the wall. The screen and the knob mount on its back.
@@ -129,7 +128,6 @@ assert(esp_y + esp[2] + esp[3] + 2 <= cup_c[0][1] - cup_d/2 - cup_wall, "the Dev
 assert(cup_c[0][0] - cup_d/2 - cup_wall >= wb[0][0] + wb_rib[0] + 12 + 1, "the driver runs into the right cup");
 assert(cup_c[1][0] + cup_d/2 + cup_wall <= wb[1][0] - wb_rib[0] - 12 - 1, "the buck runs into the left cup");
 assert(wb[0][1] + wb[0][2] + wb_rib[1] + 2 <= bulk_y - pump_flange[0]/2*cos(pump_roll) - 2 && wb[1][1] + wb[1][2] + wb_rib[1] + 2 <= bulk_y, "a wall board runs into the pumps");
-assert(hole3[0] + hole_d/2 + 2 <= deck[0][0] + deck[1][0] || hole3[1] - hole_d/2 >= deck[0][1] + deck[1][1] + 2, "the third hole runs into the deck");
 assert(cup_c[0][0] + hole_dx[0] - hole_d/2 >= wall + 3 && cup_c[1][0] + hole_dx[1] + hole_d/2 <= Bx - wall - 3, "a tube hole runs into the wall");
 assert(cup_c[0][0] + hole_dx[0] + hole_d/2 + 1.5 <= deck[0][0] && cup_c[1][0] + hole_dx[1] - hole_d/2 - 1.5 >= deck[0][0] + deck[1][0], "a tube hole runs into the deck");
 assert(ports[0][0] - ports[0][2]/2 - 2 >= pump_x[0] + pump_motor[0]/2 && ports[0][0] + ports[0][2]/2 + 2 <= pump_x[1] - pump_motor[0]/2, "the jack runs into a motor");
@@ -223,7 +221,7 @@ module lid() translate([0, 0, H]) difference() {
   }
   lid_pocket();                                                                                                                       // over the body's rim
   for (c = cup_c) at(c, -1) { cylinder(d = cup_d + 0.4, h = lid_t + deck[2] + 2); translate([0, 0, lid_t + deck[2] + 1]) mirror([0, 0, 1]) round_cut(1) circle(d = cup_d + 0.4); }   // the bottles' holes, their mouths rounded
-  for (h = [cup_c[0] + [hole_dx[0], 0], cup_c[1] + [hole_dx[1], 0], hole3]) at(h, -1) { cylinder(d = hole_d, h = lid_t + 2); translate([0, 0, lid_t + 1]) mirror([0, 0, 1]) round_cut(1) circle(d = hole_d); }   // the tubes' holes: 16 out from each bottle, and over the water pump
+  for (h = [cup_c[0] + [hole_dx[0], 0], cup_c[1] + [hole_dx[1], 0]]) at(h, -1) { cylinder(d = hole_d, h = lid_t + 2); translate([0, 0, lid_t + 1]) mirror([0, 0, 1]) round_cut(1) circle(d = hole_d); }   // the tubes' holes: 16 out from each bottle
 }
 
 // -------------------------------------------------------------- faceplate

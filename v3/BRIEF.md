@@ -113,8 +113,9 @@ the head.
 8. Every 90° is filleted and every edge rounded. The body's vertical
    faces carry a fuzzy-skin texture band; the faceplate does not.
 9. The bottles' tubes pass through plain holes in the lid, 16 mm out from
-   each bottle, on its outer side: no channels on the cups. A third hole
-   of the same kind at the lid's rear edge, midway between the other two.
+   each bottle, on its outer side: no channels on the cups. The water
+   tube's hole is in the back wall, low, midway between the jack and the
+   GX12.
 10. The wiring stays as built: ULN2003 IN1/2/3 from GPIO25/26/27; right
    pump Nutrient B, middle Nutrient A, left Water; +V chained to the pump
    + terminals; jumper on; 12 V to the board when the jack arrives.

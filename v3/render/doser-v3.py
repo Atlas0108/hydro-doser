@@ -95,7 +95,7 @@ MAT = {
   'pcb_dark': principled('pcb_dark', (0.03, 0.04, 0.06), rough=0.35, coat=0.4),
   'black': principled('black', (0.03, 0.03, 0.03), rough=0.45),
   'metal': principled('metal', (0.8, 0.8, 0.8), rough=0.3, metallic=1.0),
-  'screw': principled('screw', (0.02, 0.02, 0.02), rough=0.42, metallic=0.7),
+  'screw': principled('screw', (0.008, 0.008, 0.008), rough=0.6, metallic=0.2),   # black-oxide M3s, matte
   'rubber': principled('rubber', (0.06, 0.06, 0.06), rough=0.8),
   'amber': principled('amber', (0.55, 0.28, 0.08), rough=0.25, transmission=0.55, alpha=0.9, ior=1.5),
   'white_pp': principled('white_pp', (0.93, 0.93, 0.90), rough=0.3, transmission=0.2, alpha=0.95),

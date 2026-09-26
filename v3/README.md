@@ -62,9 +62,11 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   B.
 - **Cups.** Two Ø52 tubes (2 mm round the Ø48 bottles) side by side in the middle of the front, open
   at both ends. A bottle stands on the base plate and shows 37 above the
-  deck. Three Ø8 holes through the lid, their mouths rounded: one 16 out
-  from each bottle on its outer side for the nutrient tube, and a third
-  at the rear, midway between the other two.
+  deck. Two Ø8 holes through the lid, their mouths rounded, one 16 out
+  from each bottle on its outer side for the nutrient tube. The water
+  tube comes in through a plain Ø8 hole low in the back wall, midway
+  between the jack and the GX12, under the middle motor: it runs under
+  the motor, up between the motors and over the bulkhead to the nozzles.
 - **Wall boards.** The ULN2003 stands in two slotted ribs on the right
   wall and the buck in two on the left, beside the cups, dropped in from
   above with the lid off; the boards rest on the slots' floors just off
