@@ -31,7 +31,7 @@ pump_head = [38, 23];  pump_flange = [55, 41, 3];  pump_motor = [27, 44];
 flange_pitch = 48.5;  flange_hole = 3.2;
 nozzle_off = 10;  nozzle_pitch = 16;  nozzle_y = 8;   // off the head's circumference; 8 in from the head's face
 tube_od = 5;
-esp  = [28.3, 51.5, 1.6, 8.5];             // the 30-pin DevKit V1: w (x), l (z), pcb, pins back; the pin rows 1.3 in from the long edges
+esp  = [28.3, 51.5, 1.6, 8.5];             // the 30-pin DevKit V1: w (z), l (x), pcb, pins back; the pin rows 1.3 in from the long edges
 esp_hole = [3, 2.3];                       // its four corner holes: dia, centre in from both edges (46.9 x 23.7 apart: measure yours)
 esp_so   = [5.5, 5, 2.2];                    // standoffs: dia, height off the plate's back (clears the module and the USB), pilot for an M2.5 self-tapper
 uln  = [32, 35, 15];  buck = [20, 45, 12]; // both turned to lie along y, between the motors
@@ -105,17 +105,19 @@ px0    = deck_in;  pw = Bx - 2*deck_in;              // the plate: as wide as th
 pch    = 1;                                          // the round on its face edge, and on the opening's: the seam a soft groove
 band   = [pr + 4, 6];                                // behind the wall around the opening: width inside the plate's outline (2 mm past the insert), depth
 pscrews = [[px0 + pr, pz0 + pr], [px0 + pw - pr, pz0 + pr], [px0 + pw - pr, pz0 + ph - pr], [px0 + pr, pz0 + ph - pr]];
-knob_x = px_works + m_knob + knob[2]/2;
-oled_x = px_works + pw_works - m_scr - (oled[6] + 0.6)/2;
+oled_rib = [3, 10, 1.2, 2.0];                        // thick (x), deep (y), slot depth, slot width: deep enough to carry the DevKit's cage
+esp_c   = [pscrews[1][0] - insert[0]/2 - 4.2 - esp[1]/2, ctl_z];   // the DevKit's centre, lying along x left of the screen (as seen from the front): its left end 4.2 short of the left screws' inserts
+esp_holes = [for (sx = [-1, 1], sz = [-1, 1]) [esp_c[0] + sx*(esp[1]/2 - esp_hole[1]), esp_c[1] + sz*(esp[0]/2 - esp_hole[1])]];
+oled_x = esp_c[0] - esp[1]/2 - 1 - oled_rib[0] - 0.2 - oled[0]/2;   // the screen's outer rib 1 short of the DevKit
+knob_x = oled_x - (oled[6] + 0.6)/2 - gap - knob[2]/2;             // the knob, gap from the screen's window
 knob_y = knob[3] - 0.5;                              // the knob's base, 0.5 off the recess floor
 enc_pcb_y = pt + enc[3];                             // the encoder's pcb, its body against the plate's back
 bore_d = knob_y - (enc_pcb_y - enc[5]) + 0.3;        // to the shaft's end, 0.3 clear
 assert(knob[1] - bore_d >= 1.2 - 0.01, "the knob's face is thinner than 1.2 over the bore");
 oled_pcb_z = ctl_z - oled_active_dz;
-oled_rib = [3, 10, 1.2, 2.0];                        // thick (x), deep (y), slot depth, slot width: deep enough to carry the DevKit's cage
-esp_c   = [162, ctl_z];                    // the DevKit's centre, left of the screen as seen from the front: its long side upright
+
 esp_y   = pt + esp_so[1];                  // its pcb's plate-side face
-esp_holes = [for (sx = [-1, 1], sz = [-1, 1]) [esp_c[0] + sx*(esp[0]/2 - esp_hole[1]), esp_c[1] + sz*(esp[1]/2 - esp_hole[1])]];
+
 
 // spout, on the reservoir's rim
 spout = [40, 16, rim[1] + 4, 3.8, rim[0] + 0.4];   // w, d, h, outer leg, slot
@@ -140,8 +142,8 @@ assert(ports[1][1] - ports[1][2]/2 >= pump_z + pump_motor[0]/2 + 6, "the grommet
 assert(vents[0][0] >= bulk_y + wall + 2 && vents[0][0] + vents[0][1] <= By - wall - 2 && vents[1][0] >= 4 && vents[1][0] + vents[1][1]*(vents[1][2] - 1) + vents[2] <= H - cap[1] - 6, "the vents run off the motor section");
 assert(bottle[1] - H_lid - deck[2] >= 30, "the bottle must show 30 mm above the deck");
 assert(pz0 >= 4 && pz0 + ph + 0.8 <= H - 0.5, "the faceplate's band runs into the lid seam");
-assert(esp_c[0] - esp[0]/2 - 3 >= oled_x + oled[0]/2 + 0.2 + oled_rib[0] && esp_c[0] + esp[0]/2 - esp_hole[1] + esp_so[0]/2 + 1 <= pscrews[1][0] - insert[0]/2 - 1, "the DevKit runs into the screen's rib or the left screws' inserts");
-assert(esp_c[1] - esp[1]/2 >= pz0 + 2 && esp_c[1] + esp[1]/2 <= pz0 + ph - 2, "the DevKit runs off the plate");
+assert(esp_c[0] - esp[1]/2 - 1 >= oled_x + oled[0]/2 + 0.2 + oled_rib[0] - 0.01 && esp_c[0] + esp[1]/2 + 1 + 3 <= pscrews[1][0] - insert[0]/2, "the DevKit runs into the screen's rib or the left screws' inserts");
+assert(esp_c[1] - esp[0]/2 >= pz0 + 2 && esp_c[1] + esp[0]/2 <= pz0 + ph - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the DevKit or the knob runs off the plate");
 assert(esp_y + esp[2] + esp[3] + 2 <= cup_c[1][1] - cup_d/2 - cup_wall, "the DevKit's pins run into the cups");
 assert(oled_x + oled[0]/2 + 0.2 + oled_rib[0] <= px0 + pw - 2 && knob_x - knob[2]/2 >= px0 + band[0] + 2, "the plate's works run off the plate or under the band by the knob");
 assert(oled_pcb_z - oled[1]/2 - 2.1 - 1 >= pscrews[0][1] + insert[0]/2 + 1 && oled_pcb_z - oled[1]/2 - 2.1 + oled[1] + 4.6 + 1 <= pscrews[3][1] - insert[0]/2 - 1, "the band's notch for the screen runs into a screw");
@@ -200,7 +202,7 @@ module body() color("#5a7a48") difference() {
     translate([0, 0, -1]) linear_extrude(wall + 1) plate2d(0.3);                                                                     // the opening the plate sits in, through the wall only: the band behind bears the plate
     round_cut(pch) plate2d(0.3);                                                                                                     // its edge rounded
     translate([0, 0, -1]) linear_extrude(wall + band[1] + 2) plate2d(-band[0] + 0.05);                                               // through the band: the plate's works pass
-    translate([esp_c[0] - esp[0]/2 - 1, pz0 - 1.5, wall - 0.01]) cube([esp[0] + 2, ph + 3, band[1] + 1]);   // the band notched under the DevKit, its full height so the notch has no ceiling: the standoffs rise from the plate's back through it
+    hull() { translate([esp_c[0] - esp[1]/2 - 1, esp_c[1] - esp[0]/2 - 1, wall - 0.01]) cube([esp[1] + 2, esp[0] + 2, 0.01]); translate([esp_c[0] - esp[1]/2 - 1, esp_c[1] - esp[0]/2 - 1, wall + band[1] + 1]) cube([esp[1] + 2, esp[0] + 2 + band[1] + 1, 0.01]); }   // the band notched under the DevKit, its ceiling rising 45 into the box so it prints; the inserts' bosses untouched
     for (s = pscrews) translate([s[0], s[1], wall - 0.01]) cylinder(d = insert[0], h = insert[1] + 0.01);                            // inserts in the band
   }
   wedge_x(px0 - 2, pw + 4, [[wall, pz0 - 0.8], [wall + 12, pz0 - 0.8 + 12], [wall + 12, 0.01], [wall, 0.01]]);                   // the band's underside slopes 45 down to the wall, stopping at the floor
@@ -290,10 +292,10 @@ module pump(k) color("#d8d8d8") translate([pump_x[k], head_y, pump_z]) rotate([0
 module pumps() for (k = [0:2]) pump(k);
 module board(i) color(i == 0 ? "#101418" : i == 1 ? "#1e6b35" : "#111") {
   if (i == 0) translate([esp_c[0], esp_y, esp_c[1]]) difference() { union() {
-    translate([-esp[0]/2, 0, -esp[1]/2]) cube([esp[0], esp[2], esp[1]]);                                                              // the pcb, upright
-    color("#bbb") translate([-9, -3.1, esp[1]/2 - 25.5]) cube([18, 3.1, 25.5]);                                                        // the module, toward the plate
-    color("#999") translate([-4, -3, -esp[1]/2 - 0.5]) cube([8, 3, 6]);                                                              // the USB, at the bottom
-    for (sx = [-1, 1]) translate([sx*(esp[0]/2 - 1.3) - 1.25, esp[2], -esp[1]/2 + 4.5]) cube([2.5, esp[3], esp[1] - 9]);              // the pin rows, back into the box
+    translate([-esp[1]/2, 0, -esp[0]/2]) cube([esp[1], esp[2], esp[0]]);                                                              // the pcb, lying along x
+    color("#bbb") translate([esp[1]/2 - 25.5, -3.1, -9]) cube([25.5, 3.1, 18]);                                                        // the module, toward the plate, at the left end
+    color("#999") translate([-esp[1]/2 - 0.5, -3, -4]) cube([6, 3, 8]);                                                             // the USB, at the right end by the screen
+    for (sz = [-1, 1]) translate([-esp[1]/2 + 4.5, esp[2], sz*(esp[0]/2 - 1.3) - 1.25]) cube([esp[1] - 9, esp[3], 2.5]);              // the pin rows, back into the box
   }
   for (h = esp_holes) translate([h[0] - esp_c[0], -4, h[1] - esp_c[1]]) rotate([-90, 0, 0]) cylinder(d = esp_hole[0], h = 10); }
   if (i == 1) let (b = wb[0]) translate([b[0] + wb_rib[4], b[1] - wb_rib[3], 1.2]) { cube([1.6, b[2] + 2*wb_rib[3], b[3]]); translate([1.6, wb_rib[3] + 3, 3]) cube([12, b[2] - 6, b[3] - 6]); }   // in its slots on the right wall, components inward

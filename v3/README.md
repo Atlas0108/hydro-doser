@@ -87,15 +87,16 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   pocket in its base, sits 0.5 off the recess floor, and stops on the
   shaft's end (the KY-040's 20 mm shaft cut to 16 above the pcb; the
   knob is 9.5 thick and its D bore runs to 1.2 short of the face).
-  The knob and the screen sit 12 apart, centred on the front. Left of
-  the screen, as seen from the front, the 30-pin ESP32 DevKit V1 stands
-  upright on four Ø5.5 standoffs, 5 tall, module toward the plate and
+  Left of the screen, as seen from the front, the 30-pin ESP32 DevKit
+  V1 lies along the plate, its left end 4 short of the left screws'
+  inserts; the screen sits 1 clear of it and the knob 12 from the
+  screen. It stands on four Ø5.5 standoffs, 5 tall, module toward the plate and
   pins pointing into the box, held by M2.5 self-tappers through its
   corner holes into Ø2.2 pilots. The holes are taken as Ø3, 2.3 in from
   each edge (46.9 × 23.7 apart): measure your board and change
-  `esp_hole` if it differs. The band behind the wall is notched its full
-  height there so the board clears it. Fit all three, then screw the
-  plate on.
+  `esp_hole` if it differs. The band behind the wall is notched there
+  so the board clears it, the notch's ceiling sloped 45° so it prints.
+  Fit all three, then screw the plate on.
   The window sits 14 from the plate's edge, the same as the knob's
   recess; the screen's outer rib lands where the band would be, so the
   band is notched there between the two screws.
