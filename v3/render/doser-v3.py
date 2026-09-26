@@ -167,7 +167,7 @@ if os.path.exists(SCREEN):
     out = nt.nodes.new('ShaderNodeOutputMaterial')
     nt.links.new(tex.outputs['Color'], em.inputs['Color']); nt.links.new(em.outputs['Emission'], out.inputs['Surface'])
     screen_ob.data.materials.append(sm)
-    screen_base = Vector((124, 1.4, 37)) * S          # oled_x, 0.1 in front of the glass, ctl_z
+    screen_base = Vector((105.65, 1.4, 37)) * S       # oled_x (the scad's), 0.1 in front of the glass, ctl_z
 
 # The labels' names, wrapped round each label on a circle, centred on the
 # front. Built in Blender's own frame (the model's x negated), not under
