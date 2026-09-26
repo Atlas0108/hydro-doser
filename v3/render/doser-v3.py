@@ -101,8 +101,47 @@ MAT = {
   'white_pp': principled('white_pp', (0.93, 0.93, 0.90), rough=0.3, transmission=0.2, alpha=0.95),
 }
 
+MAT.update({
+  'amber_tube': principled('amber_tube', (0.85, 0.62, 0.35), rough=0.35, transmission=0.5, alpha=0.8, ior=1.41),
+  'white_tube': principled('white_tube', (0.95, 0.95, 0.95), rough=0.35, transmission=0.55, alpha=0.75, ior=1.41),
+  'water_tube': principled('water_tube', (0.62, 0.78, 0.9), rough=0.35, transmission=0.5, alpha=0.8, ior=1.41),
+  'lead': principled('lead', (0.04, 0.04, 0.04), rough=0.8),
+  'power': principled('power', (0.5, 0.04, 0.03), rough=0.7),
+  'ribbon': principled('ribbon', (0.3, 0.3, 0.32), rough=0.75),
+  'brass': principled('brass', (0.8, 0.6, 0.25), rough=0.4, metallic=1.0),
+})
+
 def ease(x):
     x = max(0.0, min(1.0, x)); return x * x * (3 - 2 * x)
+
+# Tubes, wires and the inserts: routes.json beside the parts. Each route point
+# rides with a part, so the tube stays attached as the parts spread.
+import json
+routes = json.load(open(os.path.join(PARTS, 'routes.json')))
+ROFF = {k: Vector(v) * S for k, v in routes['offsets'].items()}
+curves = []
+for kind, r_default in (('tubes', routes['tube_r']), ('wires', None)):
+    for rt in routes[kind]:
+        cu = bpy.data.curves.new(rt['name'], 'CURVE'); cu.dimensions = '3D'
+        cu.bevel_depth = (rt.get('r') or r_default) * S; cu.bevel_resolution = 6; cu.resolution_u = 12
+        cu.use_fill_caps = True
+        sp = cu.splines.new('BEZIER'); sp.bezier_points.add(len(rt['pts']) - 1)
+        for bp in sp.bezier_points: bp.handle_left_type = bp.handle_right_type = 'AUTO'
+        ob = bpy.data.objects.new(rt['name'], cu); bpy.context.collection.objects.link(ob)
+        ob.data.materials.append(MAT[rt['color'] + '_tube' if kind == 'tubes' else rt['color']])
+        curves.append((sp, [(Vector(p[:3]) * S, ROFF[p[3]]) for p in rt['pts']]))
+insert_obs = []
+for ins in routes['inserts']:
+    bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=ins['d'] / 2 * S, depth=ins['len'] * S, location=(0, 0, 0), rotation=(math.radians(90), 0, 0))
+    ob = bpy.context.object; ob.name = 'insert'
+    for p in ob.data.polygons: p.use_smooth = True
+    ob.data.materials.append(MAT['brass'])
+    insert_obs.append((ob, Vector((ins['x'], ins['y0'] + ins['len'] / 2, ins['z'])) * S, ROFF['inserts']))
+
+def pose_routes(k):
+    for sp, pts in curves:
+        for bp, (base, off) in zip(sp.bezier_points, pts): bp.co = base + off * k
+    for ob, base, off in insert_obs: ob.location = base + off * k
 
 objects = []
 for f, mat, off in PARTS_LIST:
@@ -151,6 +190,7 @@ def cam_at(t):
 def pose(t):
     k = ease(t)
     for ob, off in objects: ob.location = off * k
+    pose_routes(k)
     floor.location.z = -0.006 - 0.060 * k
     cam_at(t)
 
