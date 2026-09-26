@@ -248,7 +248,7 @@ module plate() color("#1c1c1c") difference() {
 
 // ------------------------------------------------------------------- knob
 module knurled(d, h, n = 60, twist = 30) intersection_for (s = [-1, 1]) linear_extrude(h, twist = s*twist, slices = 24) offset(s < 0 ? 0.05 : 0.1) difference() { circle(d = d); for (a = [0:360/n:359]) rotate(a) translate([d/2, 0]) rotate(45) square(1.2, center = true); }   // the two sets differ by 0.05 so the mesh stays manifold
-module knob_local() color("#c4561a") difference() {   // burnt orange          // z up its axis, base at 0
+module knob_local() color("#a8451a") difference() {   // burnt orange          // z up its axis, base at 0
   union() { knurled(knob[0], knob[1] - knob[4]); translate([0, 0, knob[1] - knob[4] - 2 - 0.01]) rounded_top(knob[4] + 2, knob[4]) circle(d = knob[0] - 1.2); }   // knurled, its front edge rounded
   translate([0, 0, -1]) cylinder(d = knob[5], h = knob[6] + 1);                                                         // the nut's pocket
   translate([0, 0, -1]) linear_extrude(bore_d + 1) difference() { circle(d = enc[6] + 0.1); translate([-5, enc[7] - enc[6]/2 + 0.05]) square([10, 5]); }   // the D bore, stopping on the shaft's end
