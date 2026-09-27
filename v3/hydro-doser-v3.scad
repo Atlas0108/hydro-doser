@@ -35,7 +35,7 @@ esp  = [28.3, 51.5, 1.6, 8.5];             // the 30-pin DevKit V1: w (z), l (x)
 esp_hole = [3, 2.3];                       // its four corner holes: dia, centre in from both edges (46.9 x 23.7 apart: measure yours)
 phb  = [32, 42, 1.6, 8];                   // the pH board (PH-4502C type, its BNC removed): short side, long side, pcb, parts on its back
 phb_hole = [3.1, 3.5];                     // its corner holes: dia, centre in from both edges (35 x 25 apart: measure yours)
-pha  = [2.2, 3, 2, 5.5, 2.6];              // its adapter: leg thickness, bridge thickness, standoff height, standoff dia, M3 pilot
+pha  = [2.2, 3, 0, 5.5, 2.6];              // its adapter: leg thickness, bridge thickness, standoff height (0: the board sits on the bridge), standoff dia, M3 pilot through the bridge
 enc_h = 14;                                 // the knob's encoder stands 14 off the plate's back once mounted (measured)
 tds  = [32, 42, 1.6, 6];                   // the DFRobot Gravity TDS (or pH V2) signal board: short side, long side, pcb, parts on its back
 tds_hole = [3.1, 3.5];                     // its four corner holes: dia, centre in from both edges (25 x 35 apart: measure yours)
@@ -352,9 +352,9 @@ module ph_adapter() color("#1c1c1c") difference() {
     translate([rib_x[1], rib_y1 - 8, z0]) cube([pha[0], pha_y - rib_y1 + 8 + 0.01, zt - z0]);                             // the leg, on the rib's outer face for 8
     translate([xr - 0.01, rib_y1 - 2.7, rib_z[1] + 0.2]) cube([2.02, pha_y - rib_y1 + 2.7 + 0.01, 1.5]);                  // the lip over the rib's top: it hangs from it
     translate([xr - 2.25, rib_y1 - 2.7, pcb_top + 0.5]) cube([2.2, pha_y - rib_y1 + 2.7 + 0.01, zt - pcb_top - 0.5]);   // 0.05 off the rib: a sliding fit   // the tab on the rib's inner face, above the encoder's board
-    for (h = phb_holes) translate([h[0], pha_y + pha[1] - 0.01, h[1]]) rotate([-90, 0, 0]) cylinder(d = pha[3], h = pha[2] + 0.01);   // the pH board's standoffs
+    if (pha[2] > 0) for (h = phb_holes) translate([h[0], pha_y + pha[1] - 0.01, h[1]]) rotate([-90, 0, 0]) cylinder(d = pha[3], h = pha[2] + 0.01);   // the pH board's standoffs, if any
   }
-  for (h = phb_holes) translate([h[0], pha_y + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = pha[4], h = pha[1] + pha[2]);   // their pilots
+  for (h = phb_holes) translate([h[0], pha_y - 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = pha[4], h = pha[1] + pha[2] + 2);   // the board's screw holes, through the bridge
 }
 module electronics() for (i = [0:4]) board(i);
 module port_hw() for (i = [0:2]) let (p = ports[i]) translate([p[0], By, p[1]]) color(i == 1 ? "#222" : "#888") {
@@ -416,7 +416,7 @@ else if (part == "feet")     feet_shown();
 else if (part == "screws")   screws();
 else if (part == "pump")     pump(idx);
 else if (part == "board")    board(idx);
-else if (part == "ph_adapter") translate([0, 0, -rib_z[0]]) ph_adapter();                // on its side: its bottom edge down
+else if (part == "ph_adapter") translate([0, 0, pha_y + pha[1]]) rotate([-90, 0, 0]) ph_adapter();   // the bridge's flat back on the bed, the legs up
 else if (part == "ph_adapter_at") ph_adapter();
 else if (part == "encoder")  enc_at();
 else if (part == "oled")     oled_at();

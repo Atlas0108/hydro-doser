@@ -30,7 +30,7 @@ the firmware under `firmware/v3/`; this copy is the working one.
 | `lid` + `lid_deck` | underside down | 202 × 178 × 11 | flat underneath but for its pocket; the deck on top is the second file, printed black |
 | `plate` | face down | 176 × 59 × 28 | black; the screen's pocket, the knob's ribs, and standoffs for the DevKit and the TDS board on its back |
 | `knob` + `knob_cap` | base down | Ø36 × 9.5 | the knurled ring brown-red, the cap (face and rounded edge) black; the D bore reaches 1.2 short of the face; the encoder's shaft is cut to 16 above its pcb |
-| `ph_adapter` | on its bottom edge | 42 × 18 × 33 | black; hangs on the encoder's ribs and carries the pH board. Tall on a small footprint: print it with a brim |
+| `ph_adapter` | the bridge's flat back down | 51 × 33 × 18 | black; clamps the encoder's rib and carries the pH board |
 | `foot` | disc down, TPU | Ø18 × 6 | four |
 | `spout` | top down, legs up | 40 × 16 × 34 | clips the reservoir's rim |
 
@@ -115,8 +115,10 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   a leg on the rib's outer face, a lip over its top, and a tab on its
   inner face above the encoder's board clamp it both ways; a bridge 1.5
   behind the encoder reaches across the harness side and carries the
-  board on four 2 mm standoffs, toward the harness side so its parts
-  clear the right cup. M3 self-tappers into Ø2.6 pilots. The holes are
+  board flat on its back, toward the harness side so its parts clear
+  the right cup, and rests on a second full-height leg at its far end,
+  windowed for the harness. M3 self-tappers into Ø2.6 holes through the
+  bridge. The holes are
   taken as Ø3.1, 3.5 in from each edge (35 × 25 apart): measure yours
   and change `phb_hole` if it differs.
   Fit all four, then screw the plate on.

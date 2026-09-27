@@ -196,7 +196,7 @@ for p in body lid lid_deck plate knob knob_cap foot spout ph_adapter; do
   allow=0; [[ $p == lid ]] && allow=2100   # the pocket's ceiling and the groove's top: 2 mm and 0.7 mm bridges round the rim
   [[ $p == lid_deck ]] && allow=30000; [[ $p == knob_cap ]] && allow=1100   # the second colours sit on their piece: their undersides are its top
   [[ $p == body ]] && allow=2000           # the vents' ceilings: fourteen 2 mm bridges; the wall-board ribs' undersides; the flange and port holes
-  [[ $p == plate ]] && allow=600           # the knob's ribs' tops
+  [[ $p == plate ]] && allow=600           # the knob's rib's top
   if python3 $T/piece.py $p stl/$p.stl $allow; then ((pass++)); else ((fail++)); fi
 done
 echo "== $pass passed, $fail failed =="
