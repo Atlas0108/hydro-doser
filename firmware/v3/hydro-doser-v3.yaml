@@ -345,6 +345,9 @@ globals:
   - id: asleep                  # the screen is off (a 3 s hold on the home screen); a click wakes it
     type: bool
     initial_value: 'false'
+  - id: ha_woke                 # a Home Assistant run woke the screen: it goes back off when the run ends, unless the knob was used
+    type: bool
+    initial_value: 'false'
   - id: swallow                 # the click that woke the screen does nothing else
     type: bool
     initial_value: 'false'
@@ -553,6 +556,7 @@ sensor:
       then:
         - lambda: |-
             if (id(asleep)) return;                                  // the screen is off: the knob does nothing
+            id(ha_woke) = false;
             id(last_input) = millis();
             int p = id(page);
             if (p == 0 && id(sel0) < 4) id(sel0)++;
@@ -566,6 +570,7 @@ sensor:
       then:
         - lambda: |-
             if (id(asleep)) return;
+            id(ha_woke) = false;
             id(last_input) = millis();
             int p = id(page);
             if (p == 0 && id(sel0) > 0) id(sel0)--;
@@ -610,6 +615,7 @@ binary_sensor:
       then:
         - lambda: |-
             id(last_input) = millis();
+            id(ha_woke) = false;                                     // the knob is in use: the screen stays on
             if (id(asleep)) { id(asleep) = false; id(swallow) = true; id(oled).turn_on(); }   // a press wakes the screen, nothing else
             else id(swallow) = false;
         - if:
@@ -739,7 +745,7 @@ script:
     then:
       - script.stop: dose
       - lambda: |-
-          if (id(asleep)) { id(asleep) = false; id(oled).turn_on(); }
+          if (id(asleep)) { id(asleep) = false; id(ha_woke) = true; id(oled).turn_on(); }
           pump_on(0, false); pump_on(1, false); pump_on(2, false);
           id(from_ha) = true;
           id(sel0) = which;
@@ -756,7 +762,7 @@ script:
       ml: float
     then:
       - lambda: |-
-          if (id(asleep)) { id(asleep) = false; id(oled).turn_on(); }   // a dose from Home Assistant wakes the screen
+          if (id(asleep)) { id(asleep) = false; id(ha_woke) = true; id(oled).turn_on(); }   // a dose from Home Assistant wakes the screen, until it ends
           pump_on(0, false); pump_on(1, false); pump_on(2, false);
           id(sel0) = which;
           id(dose_ml) = ml;
@@ -781,6 +787,7 @@ script:
       - lambda: |-
           id(page) = 0;
           id(status).publish_state("idle");
+          if (id(ha_woke)) { id(ha_woke) = false; id(asleep) = true; id(oled).turn_off(); }   // it was asleep before HA woke it
       - component.update: oled
 
   # Cancel or stop, from the knob or from Home Assistant: back to the
@@ -796,4 +803,5 @@ script:
           if (id(sw_a).state) id(sw_a).publish_state(false);
           if (id(sw_b).state) id(sw_b).publish_state(false);
           if (id(sw_c).state) id(sw_c).publish_state(false);
+          if (id(ha_woke)) { id(ha_woke) = false; id(page) = 0; id(asleep) = true; id(oled).turn_off(); }
       - component.update: oled

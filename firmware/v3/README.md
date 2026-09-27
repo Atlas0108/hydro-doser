@@ -189,5 +189,6 @@ ABC's Manual all three run together. On the home screen, a 3 s hold
 turns the screen off; a click turns it back on and does nothing else,
 and the knob does nothing while it is off. The doser keeps working with
 the screen off, and a dose started from Home Assistant turns it back on
-to show the countdown. A hold anywhere else does nothing. A timed ABC runs A,
+to show the countdown, then off again when the run ends or is cancelled
+(unless the knob was touched meanwhile). A hold anywhere else does nothing. A timed ABC runs A,
 then B, then C, each for the chosen quantity.
