@@ -2,7 +2,7 @@
 
 ESPHome on an ESP32 DevKitC. A 0.96" OLED and a KY-040 knob on the
 faceplate drive a menu, so it works without a phone: turn to choose, click
-to open, click to run, hold to go back. Three 12 V peristaltic pumps
+to open, click to run, turn up past the top to go back. Three 12 V peristaltic pumps
 through a ULN2003. Home Assistant sees it as a device with three pump
 switches, a Cancel button, a Status text, a flow-rate number per pump, and
 `dose` and `cancel` actions. Whatever Home Assistant starts shows on the
@@ -180,10 +180,14 @@ the settings and reboots into set-up.
 
 Turn: move the highlight. Click: open the dose, then run the quantity,
 and while it runs, click again to cancel; a run started from Home
-Assistant shows the same pages and a click stops it too. On the
-quantities, scroll up
-past the first item to highlight the title band as Go back and
-click it, or hold (0.8 s), to go back. On
-Manual, the pump runs from the moment the button goes down until it is
-released; on ABC's Manual all three run together. A timed ABC runs A,
+Assistant shows the same pages and a click stops it too. To go
+back from any menu, turn up past the first item to highlight the title
+band as Go back and click it; on PIN entry, turn back past 0 on the
+first digit. Holding the button never goes back. On Manual, the pump
+runs from the moment the button goes down until it is released; on
+ABC's Manual all three run together. On the home screen, a 3 s hold
+turns the screen off; a click turns it back on and does nothing else,
+and the knob does nothing while it is off. The doser keeps working with
+the screen off, and a dose started from Home Assistant turns it back on
+to show the countdown. A hold anywhere else does nothing. A timed ABC runs A,
 then B, then C, each for the chosen quantity.

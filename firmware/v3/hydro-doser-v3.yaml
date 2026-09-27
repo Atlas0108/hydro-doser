@@ -1,6 +1,8 @@
 # Hydro Doser v3 -- an ESP32 with a 0.96" OLED and a KY-040 knob on the
 # faceplate, three 12 V peristaltic pumps through a ULN2003. Works without a
-# phone: turn to choose, click to open, click to run, hold to go back.
+# phone: turn to choose, click to open, click to run; turn up past the top
+# for Go back. Hold only runs a pump on Manual; on the home screen a 3 s hold
+# turns the screen off, and a click turns it back on.
 #
 #   Hydrohomie  ->   Dose A        ->   Dose A, 25 ml
 #   > Dose A         > 5 ml             12 s left
@@ -340,6 +342,18 @@ globals:
   - id: pin_mode
     type: int
     initial_value: "0"          # 0 set a new PIN, 1 unlock
+  - id: asleep                  # the screen is off (a 3 s hold on the home screen); a click wakes it
+    type: bool
+    initial_value: 'false'
+  - id: swallow                 # the click that woke the screen does nothing else
+    type: bool
+    initial_value: 'false'
+  - id: pin_back                # PIN entry: Go back highlighted
+    type: bool
+    initial_value: 'false'
+  - id: sel8                    # reset confirmation: 0 the reset button, -1 Go back
+    type: int
+    initial_value: '0'
   - id: last_input
     type: uint32_t
     initial_value: "0"
@@ -365,7 +379,7 @@ display:
       // the yellow band: the active menu's title; a highlighted "< Go back"
       // when the back arrow is selected
       char title[32];
-      int sel_band = (p == 1 && id(sel1) < 0) || (p == 4 && id(sel4) < 0) || (p == 5 && id(sel5) < 0);
+      int sel_band = (p == 1 && id(sel1) < 0) || (p == 4 && id(sel4) < 0) || (p == 5 && id(sel5) < 0) || (p == 6 && id(pin_back)) || (p == 8 && id(sel8) < 0);
       if (p == 0) snprintf(title, sizeof title, "Hydrohomie");
       else if (p == 1) snprintf(title, sizeof title, "Dose %s", DOSES[id(sel0)]);
       else if (p == 2) snprintf(title, sizeof title, "Dose %s, %.0f ml", DOSES[id(sel0)], id(dose_ml));
@@ -426,17 +440,17 @@ display:
         // four digits; the one being set is highlighted; turn to change it, click to move on
         for (int i = 0; i < 4; i++) {
           int x = 26 + i*20;
-          if (i == id(pin_pos)) { it.filled_rectangle(x - 8, 22, 16, 22); it.printf(x, 33, id(f_big), COLOR_OFF, TextAlign::CENTER, "%d", id(digits)[i]); }
+          if (i == id(pin_pos) && !id(pin_back)) { it.filled_rectangle(x - 8, 22, 16, 22); it.printf(x, 33, id(f_big), COLOR_OFF, TextAlign::CENTER, "%d", id(digits)[i]); }
           else if (i < id(pin_pos)) it.printf(x, 33, id(f_big), TextAlign::CENTER, "*");
           else it.printf(x, 33, id(f_big), TextAlign::CENTER, "_");
         }
-        it.printf(64, 55, id(f_row), TextAlign::CENTER, id(pin_mode) == 0 ? "0000 clears the PIN, hold to cancel" : "hold to cancel");
+        if (id(pin_mode) == 0) it.printf(64, 55, id(f_row), TextAlign::CENTER, "0000 clears the PIN");
       } else if (p == 7) {
         it.printf(64, 30, id(f_big), TextAlign::CENTER, "Set a PIN first");
       } else if (p == 8) {
         it.printf(64, 24, id(f_row), TextAlign::CENTER, "Forget the network, the PIN");
         it.printf(64, 36, id(f_row), TextAlign::CENTER, "and the settings?");
-        button("click to reset, hold to keep");
+        if (id(sel8) == 0) button("click to reset"); else it.printf(64, 55, id(f_row), TextAlign::CENTER, "click to reset");
       } else {
         it.printf(64, 30, id(f_big), TextAlign::CENTER, "Locked");
         button("click to unlock");
@@ -538,24 +552,29 @@ sensor:
     on_clockwise:
       then:
         - lambda: |-
+            if (id(asleep)) return;                                  // the screen is off: the knob does nothing
             id(last_input) = millis();
             int p = id(page);
             if (p == 0 && id(sel0) < 4) id(sel0)++;
             if (p == 1 && id(sel1) < 4) id(sel1)++;
             if (p == 4 && id(sel4) < 2) id(sel4)++;
             if (p == 5 && id(sel5) < 2) id(sel5)++;
-            if (p == 6) id(digits)[id(pin_pos)] = (id(digits)[id(pin_pos)] + 1) % 10;
+            if (p == 6) { if (id(pin_back)) id(pin_back) = false; else id(digits)[id(pin_pos)] = (id(digits)[id(pin_pos)] + 1) % 10; }
+            if (p == 8 && id(sel8) < 0) id(sel8) = 0;
         - component.update: oled
     on_anticlockwise:
       then:
         - lambda: |-
+            if (id(asleep)) return;
             id(last_input) = millis();
             int p = id(page);
             if (p == 0 && id(sel0) > 0) id(sel0)--;
             if (p == 1 && id(sel1) > -1) id(sel1)--;
             if (p == 4 && id(sel4) > -1) id(sel4)--;
             if (p == 5 && id(sel5) > -1) id(sel5)--;
-            if (p == 6) id(digits)[id(pin_pos)] = (id(digits)[id(pin_pos)] + 9) % 10;
+            if (p == 6) { if (id(pin_pos) == 0 && id(digits)[0] == 0) id(pin_back) = true;   // back past 0 on the first digit: Go back
+                          else id(digits)[id(pin_pos)] = (id(digits)[id(pin_pos)] + 9) % 10; }
+            if (p == 8 && id(sel8) == 0) id(sel8) = -1;
         - component.update: oled
 
 binary_sensor:
@@ -589,9 +608,12 @@ binary_sensor:
     # Manual: the pump runs from press to release
     on_press:
       then:
-        - lambda: "id(last_input) = millis();"
+        - lambda: |-
+            id(last_input) = millis();
+            if (id(asleep)) { id(asleep) = false; id(swallow) = true; id(oled).turn_on(); }   // a press wakes the screen, nothing else
+            else id(swallow) = false;
         - if:
-            condition: { lambda: "return id(page) == 1 && id(sel1) == 4;" }
+            condition: { lambda: "return id(page) == 1 && id(sel1) == 4 && !id(swallow);" }
             then:
               - lambda: |-
                   id(from_ha) = false;
@@ -616,7 +638,10 @@ binary_sensor:
           - OFF for at least 80ms
         then:
           - lambda: |-
+              if (id(swallow)) { id(swallow) = false; return; }      // that click woke the screen
               int p = id(page);
+              if (p == 6 && id(pin_back)) { id(pin_back) = false; id(page) = id(pin_mode) == 1 ? 9 : 4; id(oled).update(); return; }
+              if (p == 8 && id(sel8) < 0) { id(page) = 4; id(oled).update(); return; }
               if (p == 0) {                                          // home: open the item
                 if (id(sel0) == 4) { id(page) = 4; id(sel4) = 0; }
                 else { id(page) = 1; id(sel1) = 0; }
@@ -627,9 +652,9 @@ binary_sensor:
                 id(stop_all)->execute();
               } else if (p == 4) {                                   // settings
                 if (id(sel4) < 0) { id(page) = 0; }
-                else if (id(sel4) == 0) { id(pin_mode) = 0; id(pin_pos) = 0; for (int i = 0; i < 4; i++) id(digits)[i] = 0; id(page) = 6; }
+                else if (id(sel4) == 0) { id(pin_mode) = 0; id(pin_pos) = 0; id(pin_back) = false; for (int i = 0; i < 4; i++) id(digits)[i] = 0; id(page) = 6; }
                 else if (id(sel4) == 1) { if (id(pin)) { id(page) = 5; id(sel5) = id(autolock_min) == 0 ? 0 : id(autolock_min) == 1 ? 1 : 2; } else { id(page) = 7; id(msg_until) = millis() + 2000; } }
-                else { id(page) = 8; }
+                else { id(page) = 8; id(sel8) = 0; }
               } else if (p == 5) {                                   // autolock
                 if (id(sel5) >= 0) id(autolock_min) = id(sel5) == 0 ? 0 : id(sel5) == 1 ? 1 : 5;
                 id(page) = 4;
@@ -644,19 +669,16 @@ binary_sensor:
               } else if (p == 8) {                                   // reset confirmed
                 id(factory).press();
               } else if (p == 9) {                                   // locked: ask for the PIN
-                id(pin_mode) = 1; id(pin_pos) = 0; for (int i = 0; i < 4; i++) id(digits)[i] = 0; id(page) = 6;
+                id(pin_mode) = 1; id(pin_pos) = 0; id(pin_back) = false; for (int i = 0; i < 4; i++) id(digits)[i] = 0; id(page) = 6;
               }
           - component.update: oled
-      # a hold: back (a dose in progress is cancelled by a click)
+      # a 3 s hold on the home screen turns the screen off; a hold does
+      # nothing else anywhere (on Manual it runs the pump, see on_press)
       - timing:
-          - ON for at least 800ms
+          - ON for at least 3s
         then:
           - lambda: |-
-              int p = id(page);
-              if (p == 1 && id(sel1) != 4) id(page) = 0;
-              else if (p == 4) id(page) = 0;
-              else if (p == 5 || p == 6 || p == 7 || p == 8) id(page) = id(pin_mode) == 1 && p == 6 ? 9 : 4;
-          - component.update: oled
+              if (id(page) == 0 && !id(asleep)) { id(asleep) = true; id(oled).turn_off(); }
 
 button:
   - platform: template
@@ -717,6 +739,7 @@ script:
     then:
       - script.stop: dose
       - lambda: |-
+          if (id(asleep)) { id(asleep) = false; id(oled).turn_on(); }
           pump_on(0, false); pump_on(1, false); pump_on(2, false);
           id(from_ha) = true;
           id(sel0) = which;
@@ -733,6 +756,7 @@ script:
       ml: float
     then:
       - lambda: |-
+          if (id(asleep)) { id(asleep) = false; id(oled).turn_on(); }   // a dose from Home Assistant wakes the screen
           pump_on(0, false); pump_on(1, false); pump_on(2, false);
           id(sel0) = which;
           id(dose_ml) = ml;
