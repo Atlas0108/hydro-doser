@@ -35,7 +35,8 @@ esp  = [28.3, 51.5, 1.6, 8.5];             // the 30-pin DevKit V1: w (z), l (x)
 esp_hole = [3, 2.3];                       // its four corner holes: dia, centre in from both edges (46.9 x 23.7 apart: measure yours)
 phb  = [32, 42, 1.6, 8];                   // the pH board (PH-4502C type, its BNC removed): short side, long side, pcb, parts on its back
 phb_hole = [3.1, 3.5];                     // its corner holes: dia, centre in from both edges (35 x 25 apart: measure yours)
-pha  = [2.2, 3, 5, 5.5, 2.6];              // its adapter: leg thickness, bridge thickness, standoff height, standoff dia, M3 pilot
+pha  = [2.2, 3, 2, 5.5, 2.6];              // its adapter: leg thickness, bridge thickness, standoff height, standoff dia, M3 pilot
+enc_h = 14;                                 // the knob's encoder stands 14 off the plate's back once mounted (measured)
 tds  = [32, 42, 1.6, 6];                   // the DFRobot Gravity TDS (or pH V2) signal board: short side, long side, pcb, parts on its back
 tds_hole = [3.1, 3.5];                     // its four corner holes: dia, centre in from both edges (25 x 35 apart: measure yours)
 tds_so   = [6, 25, 2.6];                  // standoffs: dia, height (lifts it over the screen's header and its Dupont plugs), pilot for an M3 self-tapper
@@ -120,10 +121,10 @@ knob_x = (oled_x + px0)/2;                                          // the knob,
 tds_c   = [oled_x, ctl_z];                 // the TDS board lying along x straight behind the screen, over its header
 // The pH board's adapter hangs on the encoder's two ribs: legs hug their
 // outer faces, lips hook over their tops, a bridge spans behind the encoder.
-rib_x  = [knob_x - enc[0]/2 - 0.3 - 2, knob_x + enc[0]/2 + 0.3 + 2];   // the ribs' outer faces
+rib_x  = [knob_x - enc[0]/2 - 0.3 - 2, knob_x + enc[0]/2 + 0.3 + 2];   // the ribs' outer faces; only the one at rib_x[1] is built: the encoder's pins and plugs leave past the other side
 rib_y1 = pt + 9;  rib_z = [ctl_z - 17, ctl_z + 13];                  // their back edge, their bottom and top
-pha_y  = rib_y1 + 2;                                                    // the bridge's front face: 2 behind the ribs' tips, clear of the encoder's back
-phb_c  = [knob_x, ctl_z];
+pha_y  = pt + enc_h + 1.5;                                             // the bridge's front face: 1.5 behind the encoder's 14
+phb_c  = [47, ctl_z];                                                  // the pH board toward the harness side: clear of the right cup
 phb_y  = pha_y + pha[1] + pha[2];                                       // the pH board's plate-side face
 phb_holes = [for (sx = [-1, 1], sz = [-1, 1]) [phb_c[0] + sx*(phb[1]/2 - phb_hole[1]), phb_c[1] + sz*(phb[0]/2 - phb_hole[1])]];
 tds_holes = [for (sx = [-1, 1], sz = [-1, 1]) [tds_c[0] + sx*(tds[1]/2 - tds_hole[1]), tds_c[1] + sz*(tds[0]/2 - tds_hole[1])]];
@@ -256,7 +257,7 @@ module lid() translate([0, 0, H]) difference() {
 module plate() color("#1c1c1c") difference() {
   union() {
     on_front() translate([0, 0, pt]) mirror([0, 0, 1]) rounded_top(pt, pch) plate2d(0);                                             // the plate, its face edge rounded
-    for (s = [-1, 1]) translate([knob_x + s*(enc[0]/2 + 0.3) - (s < 0 ? 2 : 0), pt - 0.01, ctl_z - 17]) cube([2, 9, 30]);         // ribs either side of the encoder's pcb, inside the band's opening
+    for (s = [1]) translate([knob_x + s*(enc[0]/2 + 0.3) - (s < 0 ? 2 : 0), pt - 0.01, ctl_z - 17]) cube([2, 9, 30]);   // one rib: the other side is left open for the encoder's pins and plugs         // ribs either side of the encoder's pcb, inside the band's opening
     translate([oled_x, pt - 0.01, oled_pcb_z]) rotate([-90, 0, 0]) linear_extrude(oled_pk[3] + 0.01) difference() { offset(oled_pk[2]) square([oled[0] + 2*oled_pk[0], oled[1] + 2*oled_pk[1]], center = true); square([oled[0] + 2*oled_pk[0], oled[1] + 2*oled_pk[1]], center = true); }   // the screen's pocket: a low frame it drops into from behind
 
     for (h = esp_holes) translate([h[0], pt - 0.01, h[1]]) rotate([-90, 0, 0]) cylinder(d = esp_so[0], h = esp_so[1] + 0.01);   // the DevKit's four standoffs
@@ -336,16 +337,20 @@ module board(i) color(i == 0 ? "#101418" : i == 1 ? "#1e6b35" : i == 3 ? "#1d4fa
   if (i == 1) let (b = wb[0]) translate([b[0] + wb_rib[4], b[1] - wb_rib[3], 1.2]) { cube([1.6, b[2] + 2*wb_rib[3], b[3]]); translate([1.6, wb_rib[3] + 3, 3]) cube([12, b[2] - 6, b[3] - 6]); }   // in its slots on the right wall, components inward
   if (i == 2) let (b = wb[1]) translate([b[0] - wb_rib[4] - 1.6, b[1] - wb_rib[3], 1.2]) { cube([1.6, b[2] + 2*wb_rib[3], b[3]]); translate([-10, wb_rib[3] + 3, 3]) cube([10, b[2] - 6, b[3] - 6]); }   // in its slots on the left wall
 }
+// The pH board's adapter: clamps the one rib (a leg on its outer face, a
+// lip over its top, a tab on its inner face above the encoder's board) and
+// carries a bridge 1.5 behind the encoder, reaching over the harness side.
 module ph_adapter() color("#1c1c1c") difference() {
-  let (x0 = min(rib_x[0] - pha[0], phb_holes[0][0] - pha[3]/2 - 0.5), x1 = max(rib_x[1] + pha[0], phb_holes[3][0] + pha[3]/2 + 0.5),
-       z0 = rib_z[0], z1 = max(rib_z[1] + 1.7, phb_holes[1][1] + pha[3]/2 + 0.5)) union() {
-    translate([x0, pha_y, z0]) cube([x1 - x0, pha[1], z1 - z0]);                                                       // the bridge
-    for (x = [rib_x[0] - pha[0], rib_x[1]]) translate([x, rib_y1 - 8, z0]) cube([pha[0], 8 + 2 + 0.01, rib_z[1] + 1.7 - z0]);   // the legs, hugging the ribs' outer faces for 8
-    for (s = [-1, 1]) let (xr = s < 0 ? rib_x[0] : rib_x[1] - 2) translate([xr - 0.01, rib_y1 - 2.7, rib_z[1] + 0.2]) cube([2.02, 2.7 + 2 + 0.01, 1.5]);   // lips over the ribs' tops: it hangs from them
-    translate([x0, rib_y1 - 0.01, rib_z[1] + 0.2]) cube([x1 - x0, 2.02, 1.5]);                                          // the lips' shelf, joining the legs to the bridge above the encoder
+  let (xr = rib_x[1] - 2, x0 = phb_holes[0][0] - pha[3]/2 - 0.5, x1 = rib_x[1] + pha[0],
+       z0 = rib_z[0], zt = rib_z[1] + 1.7, z1 = max(zt, phb_holes[1][1] + pha[3]/2 + 0.5),
+       pcb_top = ctl_z + enc[8]) union() {
+    translate([x0, pha_y, z0]) cube([x1 - x0, pha[1], z1 - z0]);                                                         // the bridge
+    translate([rib_x[1], rib_y1 - 8, z0]) cube([pha[0], pha_y - rib_y1 + 8 + 0.01, zt - z0]);                             // the leg, on the rib's outer face for 8
+    translate([xr - 0.01, rib_y1 - 2.7, rib_z[1] + 0.2]) cube([2.02, pha_y - rib_y1 + 2.7 + 0.01, 1.5]);                  // the lip over the rib's top: it hangs from it
+    translate([xr - 2.25, rib_y1 - 2.7, pcb_top + 0.5]) cube([2.2, pha_y - rib_y1 + 2.7 + 0.01, zt - pcb_top - 0.5]);   // 0.05 off the rib: a sliding fit   // the tab on the rib's inner face, above the encoder's board
     for (h = phb_holes) translate([h[0], pha_y + pha[1] - 0.01, h[1]]) rotate([-90, 0, 0]) cylinder(d = pha[3], h = pha[2] + 0.01);   // the pH board's standoffs
   }
-  for (h = phb_holes) translate([h[0], pha_y + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = pha[4], h = pha[1] + pha[2]);    // their pilots
+  for (h = phb_holes) translate([h[0], pha_y + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = pha[4], h = pha[1] + pha[2]);   // their pilots
 }
 module electronics() for (i = [0:4]) board(i);
 module port_hw() for (i = [0:2]) let (p = ports[i]) translate([p[0], By, p[1]]) color(i == 1 ? "#222" : "#888") {
@@ -357,7 +362,8 @@ module enc_at() color("#3a7a3a") translate([knob_x, enc_pcb_y, ctl_z]) {
   translate([-enc[0]/2, 0, enc[8] - enc[1]]) cube([enc[0], enc[2], enc[1]]);                                         // the pcb
   rotate([90, 0, 0]) { translate([-6, -6, 0]) cube([12, 12, enc[3]]); cylinder(d = 7, h = enc[4]); color("#bbb") linear_extrude(enc[5]) difference() { circle(d = enc[6]); translate([-5, enc[7] - enc[6]/2]) square([10, 5]); } }   // body, bushing, D shaft
   color("#999") translate([0, knob[3] - enc_pcb_y, 0]) rotate([90, 0, 0]) cylinder(d = enc_nut[0], h = enc_nut[1], $fn = 6);   // the nut, on the recess floor
-  color("#222") translate([-6.35, enc[2]/2 - 1.27, enc[8] - enc[1] - 22]) cube([12.7, 2.54, 22]);                                 // its five pins and the Dupont housings on them, pointing down
+  color("#222") translate([-enc[0]/2 - 22, enc[2]/2 - 1.27, enc[8] - enc[1]/2 - 6.35]) cube([22, 2.54, 12.7]);                 // its five pins and the Dupont plugs on them, out of its short edge toward the plate's right edge
+  color("#2a2a2a") translate([-enc[0]/2, enc[2], enc[8] - enc[1]]) cube([enc[0], pt + enc_h - enc_pcb_y - enc[2], enc[1]]);   // everything on its back, to its measured 14 off the plate
 }
 module oled_at() translate([oled_x, pt, oled_pcb_z]) {
   color("#1f3a5f") translate([-oled[0]/2, 0, -oled[1]/2]) cube([oled[0], oled[2], oled[1]]);                            // the pcb, against the plate's back

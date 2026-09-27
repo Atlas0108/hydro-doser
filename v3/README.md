@@ -107,15 +107,18 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   Ø2.6 pilots. The holes are taken as Ø3.1, 3.5 in from each edge (35 ×
   25 apart): measure your board and change `tds_hole` if it differs.
   Fit the screen before the board: the board covers its way in.
-  The pH board (PH-4502C type, 42 × 32, its BNC removed) hangs on the
-  encoder's two ribs on a printed adapter, `ph_adapter`: two legs hug
-  the ribs' outer faces for 8 mm, a lip on each rests on a rib's top,
-  and a bridge spans behind the encoder, 2 clear of its back. It slides
-  on from behind after the encoder is in and lifts straight off. The
-  board sits on four Ø5.5 standoffs, 5 tall, on the bridge, beside the
-  TDS board with 2 between them; M3 self-tappers into Ø2.6 pilots. The
-  holes are taken as Ø3.1, 3.5 in from each edge (35 × 25 apart):
-  measure yours and change `phb_hole` if it differs.
+  The knob's encoder is fitted with its pins out of its short edge,
+  toward the plate's right edge, so only one rib stands beside it (the
+  one toward the screen); its harness leaves past the open side. It
+  stands 14 off the plate's back. The pH board (PH-4502C type, 42 × 32,
+  its BNC removed) hangs on that rib on a printed adapter, `ph_adapter`:
+  a leg on the rib's outer face, a lip over its top, and a tab on its
+  inner face above the encoder's board clamp it both ways; a bridge 1.5
+  behind the encoder reaches across the harness side and carries the
+  board on four 2 mm standoffs, toward the harness side so its parts
+  clear the right cup. M3 self-tappers into Ø2.6 pilots. The holes are
+  taken as Ø3.1, 3.5 in from each edge (35 × 25 apart): measure yours
+  and change `phb_hole` if it differs.
   Fit all four, then screw the plate on.
   The window sits 14 from the plate's edge, the same as the knob's
   recess; the screen's outer rib lands where the band would be, so the
