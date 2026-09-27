@@ -344,7 +344,8 @@ module ph_adapter() color("#1c1c1c") difference() {
   let (xr = rib_x[1] - 2, x0 = phb_holes[0][0] - pha[3]/2 - 0.5, x1 = rib_x[1] + pha[0],
        z0 = rib_z[0], zt = rib_z[1] + 1.7, z1 = max(zt, phb_holes[1][1] + pha[3]/2 + 0.5),
        pcb_top = ctl_z + enc[8]) union() {
-    translate([x0, pha_y, z0]) cube([x1 - x0, pha[1], z1 - z0]);                                                         // the bridge
+    translate([x0, pha_y, z0 - 2.2]) cube([x1 - x0, pha[1], z1 - z0 + 2.2]);                                             // the bridge
+    translate([x0, pt + band[1] + 0.5, z0 - 2.2]) cube([x1 - x0, pha_y - pt - band[1] - 0.5 + 0.01, 2]);             // a wall along its bed edge, toward the plate: stiffens the bridge, widens its footprint, and sits 0.2 under the rib's foot
     translate([rib_x[1], rib_y1 - 8, z0]) cube([pha[0], pha_y - rib_y1 + 8 + 0.01, zt - z0]);                             // the leg, on the rib's outer face for 8
     translate([xr - 0.01, rib_y1 - 2.7, rib_z[1] + 0.2]) cube([2.02, pha_y - rib_y1 + 2.7 + 0.01, 1.5]);                  // the lip over the rib's top: it hangs from it
     translate([xr - 2.25, rib_y1 - 2.7, pcb_top + 0.5]) cube([2.2, pha_y - rib_y1 + 2.7 + 0.01, zt - pcb_top - 0.5]);   // 0.05 off the rib: a sliding fit   // the tab on the rib's inner face, above the encoder's board
@@ -412,7 +413,7 @@ else if (part == "feet")     feet_shown();
 else if (part == "screws")   screws();
 else if (part == "pump")     pump(idx);
 else if (part == "board")    board(idx);
-else if (part == "ph_adapter") translate([0, 0, -rib_z[0]]) ph_adapter();                // on its side: its bottom edge down
+else if (part == "ph_adapter") translate([0, 0, -rib_z[0] + 2.2]) ph_adapter();          // on its side: its bottom wall down
 else if (part == "ph_adapter_at") ph_adapter();
 else if (part == "encoder")  enc_at();
 else if (part == "oled")     oled_at();
