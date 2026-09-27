@@ -118,6 +118,7 @@ chk "its leg and tab hug the rib: 0.3 either way it hits" SOLID 'union(){ inters
 chk "its lip rests on the rib\x27s top: 0.3 lower it hits" SOLID 'intersection(){ translate([0, 0, -0.3]) ph_adapter(); plate(); }'
 chk "it slides off backward: nothing holds it but the ribs" CLEAR 'intersection(){ plate(); union(){ for (dy = [0:2:20]) translate([0, dy, 0]) ph_adapter(); } }'
 chk "the pH board stands on its standoffs, clear of the adapter, the TDS board, the driver and the cups" CLEAR 'intersection(){ board(4); union(){ ph_adapter(); board(3); board(1); body(); plate(); enc_at(); oled_at(); } }'
+chk "its far leg bears on the plate\x27s back: 0.3 nearer it hits" SOLID 'intersection(){ translate([0, -0.3, 0]) ph_adapter(); plate(); }'
 chk "it rests on them: 0.3 nearer the plate it hits" SOLID 'intersection(){ ph_adapter(); translate([0, -0.3, 0]) board(4); }'
 chk "an M3 through each of its holes bites a pilot" SOLID 'union(){ for (h = phb_holes) intersection(){ ph_adapter(); translate([h[0], pha_y + 1.5, h[1]]) rotate([-90, 0, 0]) cylinder(d = 3, h = pha[1] + pha[2] - 2); } }'
 chk "the TDS board stands on its standoffs behind the screen, clear of the plate, the encoder and its pins, and the screen and its Dupont plugs" CLEAR 'intersection(){ board(3); union(){ plate(); enc_at(); oled_at(); } }'
