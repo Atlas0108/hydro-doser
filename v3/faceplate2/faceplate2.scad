@@ -43,7 +43,7 @@ knob_x = px0 + pw/2 - 45;                        // the knob: 45 right of centre
 esp_c  = [103, ctl_z];                           // the ESP32 between them, lying along x
 oled_s = -1;                                     // the screen's way up: -1 header DOWN, so the panel's yellow rows (along the header's edge) come out on top as the firmware draws its title there
 oled_pcb_z = ctl_z - 1.45*oled_s;                // the picture on the controls' line: the board sits off-centre from it, by the way up
-knob_y = knob[3] - 0.5;
+knob_y = -0.5;                                   // the knob's base 0.5 in front of the flat face (no recess: it prints on the bed)
 enc_pcb_y = pt + enc[3];
 esp_y  = pt + esp_so[1];                         // its pcb's plate-side face (the module toward the plate)
 ph_c   = [knob_x, ctl_z];  ph_y = pt + enc_h + 1.5;   // the pH board over the encoder, 1.5 behind its 14
@@ -89,7 +89,7 @@ module plate2() color("#1c1c1c") difference() {
     for (s = [-1, 1]) translate([fin[0] + (s < 0 ? 0 : fin[1]), pt - 0.01, opening[1] + 0.5]) mirror([s < 0 ? 1 : 0, 0, 0]) linear_extrude(opening[3] - opening[1] - 1) difference() { square(4); translate([4, 4]) circle(r = 4); }
   }
   for (s = pscrews) translate([s[0], 0, s[1]]) rotate([-90, 0, 0]) csk(screw[0], screw[1], pt);                                   // its screws, countersunk in the face
-  translate([knob_x, -1, ctl_z]) rotate([-90, 0, 0]) { cylinder(d = 7.5, h = pt + 2); cylinder(d = knob[2], h = knob[3] + 1); }   // the bushing hole, the knob's recess
+  translate([knob_x, -1, ctl_z]) rotate([-90, 0, 0]) cylinder(d = 7.5, h = pt + 2);                                             // the bushing hole
   translate([oled_x, -1, ctl_z]) rotate([-90, 0, 0]) linear_extrude(pt + 2) rrc(oled[6] + 0.6, oled[7] + 0.6, 2);                 // the window, the picture's size
   translate([oled_x - oled[3]/2 - oled_pk[0], pt - oled[5] - 0.2, oled_pcb_z - 0.75*oled_s - oled[4]/2 - oled_pk[1]]) cube([oled[3] + 2*oled_pk[0], oled[5] + 1, oled[4] + 2*oled_pk[1]]);   // the glass's recess
   for (h = esp_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = esp_so[2], h = esp_so[1] + 1);             // pilots
@@ -102,8 +102,8 @@ module knob2() translate([knob_x, knob_y, ctl_z]) rotate([90, 0, 0]) knob_ring()
 module knob2_cap() translate([knob_x, knob_y, ctl_z]) rotate([90, 0, 0]) knob_cap();
 module enc2() color("#3a7a3a") translate([knob_x, enc_pcb_y, ctl_z]) {
   translate([-enc[0]/2, 0, enc[8] - enc[1]]) cube([enc[0], enc[2], enc[1]]);                                             // the pcb
-  rotate([90, 0, 0]) { translate([-6, -6, 0]) cube([12, 12, enc[3]]); cylinder(d = 7, h = enc[4]); cylinder(d = enc[6], h = enc[5]); }   // body, bushing, shaft
-  translate([0, knob[3] - enc_pcb_y, 0]) rotate([90, 0, 0]) cylinder(d = 10, h = 2.5, $fn = 6);                        // the nut, on the recess floor
+  rotate([90, 0, 0]) { translate([-6, -6, 0]) cube([12, 12, enc[3]]); cylinder(d = 7, h = enc[4]); linear_extrude(enc[5]) difference() { circle(d = enc[6]); translate([-5, enc[7] - enc[6]/2]) square([10, 5]); } }   // body, bushing, the D shaft
+  translate([0, -enc_pcb_y, 0]) rotate([90, 0, 0]) cylinder(d = 10, h = 2.5, $fn = 6);                                 // the nut, on the face, inside the knob's base
   translate([enc[0]/2, enc[2]/2 - 1.27, enc[8] - enc[1]/2 - 6.35]) cube([22, 2.54, 12.7]);                             // its pins and plugs, out of its short edge toward the ESP32
   translate([-enc[0]/2, enc[2], enc[8] - enc[1]]) cube([enc[0], pt + enc_h - enc_pcb_y - enc[2], enc[1]]);             // everything on its back, to 14 off the plate
 }

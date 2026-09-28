@@ -59,7 +59,9 @@ chk() {  # $1 label  $2 CLEAR|SOLID  $3 body
 echo "== faceplate 2 =="
 chk "the plate has geometry" SOLID 'plate2();'
 chk "it fits the body as printed: clear of the walls, the band and the inserts" CLEAR 'intersection(){ plate2(); body(); }'
-chk "the knob sits in its recess, clear of the plate" CLEAR 'intersection(){ plate2(); union(){ knob2(); knob2_cap(); } }'
+chk "the knob sits 0.5 in front of the flat face, clear of the plate" CLEAR 'intersection(){ plate2(); union(){ knob2(); knob2_cap(); } }'
+chk "the nut on the face sits in the knob's base pocket, clear of the knob" CLEAR 'intersection(){ union(){ knob2(); knob2_cap(); } enc2(); }'
+chk "the shaft reaches into the knob's bore" SOLID 'intersection(){ translate([knob_x, knob_y - 5, ctl_z]) rotate([90, 0, 0]) cylinder(d = 3, h = 1); enc2(); }'
 chk "the encoder sits on the plate's back, clear" CLEAR 'intersection(){ plate2(); enc2(); }'
 chk "the screen sits in its pocket, clear" CLEAR 'intersection(){ plate2(); oled2(); }'
 chk "the pocket holds it: 0.5 mm any way across the plate it hits" SOLID 'for (d = [[0.5,0],[-0.5,0],[0,0.5],[0,-0.5]]) intersection(){ plate2(); translate([d[0], 0, d[1]]) oled2(); }'
