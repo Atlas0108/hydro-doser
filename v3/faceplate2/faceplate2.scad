@@ -41,7 +41,8 @@ brd_so   = [5.5, 2.6];                           // their standoffs' dia, M3 pil
 oled_x = px0 + pw/2 + 45;                        // the screen: 45 left of centre, seen from the front
 knob_x = px0 + pw/2 - 45;                        // the knob: 45 right of centre
 esp_c  = [103, ctl_z];                           // the ESP32 between them, lying along x
-oled_pcb_z = ctl_z - 1.45;                       // the picture on the controls' line
+oled_s = -1;                                     // the screen's way up: -1 header DOWN, so the panel's yellow rows (along the header's edge) come out on top as the firmware draws its title there
+oled_pcb_z = ctl_z - 1.45*oled_s;                // the picture on the controls' line: the board sits off-centre from it, by the way up
 knob_y = knob[3] - 0.5;
 enc_pcb_y = pt + enc[3];
 esp_y  = pt + esp_so[1];                         // its pcb's plate-side face (the module toward the plate)
@@ -92,7 +93,7 @@ module plate2() color("#1c1c1c") difference() {
   for (s = pscrews) translate([s[0], 0, s[1]]) rotate([-90, 0, 0]) csk(screw[0], screw[1], pt);                                   // its screws, countersunk in the face
   translate([knob_x, -1, ctl_z]) rotate([-90, 0, 0]) { cylinder(d = 7.5, h = pt + 2); cylinder(d = knob[2], h = knob[3] + 1); }   // the bushing hole, the knob's recess
   translate([oled_x, -1, ctl_z]) rotate([-90, 0, 0]) linear_extrude(pt + 2) rrc(oled[6] + 0.6, oled[7] + 0.6, 2);                 // the window, the picture's size
-  translate([oled_x - oled[3]/2 - oled_pk[0], pt - oled[5] - 0.2, oled_pcb_z - 0.75 - oled[4]/2 - oled_pk[1]]) cube([oled[3] + 2*oled_pk[0], oled[5] + 1, oled[4] + 2*oled_pk[1]]);   // the glass's recess
+  translate([oled_x - oled[3]/2 - oled_pk[0], pt - oled[5] - 0.2, oled_pcb_z - 0.75*oled_s - oled[4]/2 - oled_pk[1]]) cube([oled[3] + 2*oled_pk[0], oled[5] + 1, oled[4] + 2*oled_pk[1]]);   // the glass's recess
   for (h = esp_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = esp_so[2], h = esp_so[1] + 1);             // pilots
   for (h = ph_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = brd_so[1], h = ph_y);
   for (h = tds_holes) translate([fin[0] - 1, h[0], h[1]]) rotate([0, 90, 0]) cylinder(d = brd_so[1], h = fin[1] + 2);
@@ -108,7 +109,7 @@ module enc2() color("#3a7a3a") translate([knob_x, enc_pcb_y, ctl_z]) {
   translate([enc[0]/2, enc[2]/2 - 1.27, enc[8] - enc[1]/2 - 6.35]) cube([22, 2.54, 12.7]);                             // its pins and plugs, out of its short edge toward the ESP32
   translate([-enc[0]/2, enc[2], enc[8] - enc[1]]) cube([enc[0], pt + enc_h - enc_pcb_y - enc[2], enc[1]]);             // everything on its back, to 14 off the plate
 }
-module oled2() translate([oled_x, pt, oled_pcb_z]) {
+module oled2() translate([oled_x, pt, oled_pcb_z]) mirror([0, 0, oled_s < 0 ? 1 : 0]) {   // drawn header up, turned to its way up
   translate([-oled[0]/2, 0, -oled[1]/2]) cube([oled[0], oled[2], oled[1]]);
   translate([-oled[3]/2, -oled[5], -0.75 - oled[4]/2]) cube([oled[3], oled[5], oled[4]]);
   translate([-5, oled[2], oled[1]/2 - 3]) cube([10, 8, 2]);                                                             // its header
