@@ -110,18 +110,19 @@ the GX12 socket instead:
 
 | GX12 pin | Wire | Goes to |
 |---|---|---|
-| 1 | green | TDS board's probe input (either way round with pin 2) |
-| 2 | yellow | TDS board's probe input |
+| 1 | green | float switch: GPIO14 (D14) |
+| 2 | yellow | TDS board's probe input (either way round with pin 4) |
 | 3 | white | spare |
-| 4 | blue | float switch: GPIO14 (D14) |
+| 4 | blue | TDS board's probe input |
 | 5 | no wire | unused |
 | 6 | black | float switch: GND |
 
 Pin numbers are as seen on the connector's front (mating face), key at
 the top: pin 1 at the bottom right, 2 to 5 running anticlockwise round
 the ring, 6 in the centre. The map follows the wiring as built
-(2026-09-27): pin 5 has no wire, so the float sits on 4 and 6. The float
-switch has no polarity; black takes ground by convention.
+(2026-09-27): pin 5 has no wire. The TDS probe is on yellow and blue (2 and 4),
+the float on green and black (1 and 6). The float switch has no
+polarity; black takes ground by convention.
 
 The pH probe keeps its stock cable, uncut. It comes in through its own
 hole in the back wall, beside the GX12, and its BNC plugs straight into
