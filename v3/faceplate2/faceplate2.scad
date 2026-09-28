@@ -31,7 +31,7 @@ enc      = [31, 19, 1.6, 6.5, 11.5, 16, 6, 4.5, 9.5];   // KY-040: pcb w, h, t; 
 enc_h    = 14;                                   // it stands 14 off the plate's back once mounted (measured)
 oled     = [27.3, 27.8, 1.6, 26.7, 19.3, 1.5, 21.7, 10.9];   // pcb w, h, t; glass w, h, t; active w, h
 oled_pk  = [0.3, 0.2, 2, 3];                     // its pocket: clearance x, z, wall, depth
-oled_sj  = [14, 5, 1.5];                         // a groove for the solder points on the board's plate side, along its top edge: width, reach down from the edge, depth into the plate
+oled_sj  = [14, 5, 1.5];                         // a groove for the header's solder points, in the strip above the glass along the board's top edge: width, reach down from the edge, depth into the plate
 esp      = [28.3, 51.5, 1.6, 8.5];               // DevKit V1 30-pin: w (z), l (x), pcb, pins back
 esp_hole = [3, 2.3];  esp_so = [5.5, 4, 2.2];     // its holes (dia, in from the edges: measure yours), standoffs (dia, height, M2.5 pilot)
 brd      = [32, 42, 1.6];                        // the TDS and pH boards: short side, long side, pcb
@@ -42,7 +42,7 @@ brd_so   = [5.5, 2.6];                           // their standoffs' dia, M3 pil
 oled_x = px0 + pw/2 + 45;                        // the screen: 45 left of centre, seen from the front
 knob_x = px0 + pw/2 - 45;                        // the knob: 45 right of centre
 esp_c  = [103, ctl_z];                           // the ESP32 between them, lying along x
-oled_s = -1;                                     // the screen's way up: -1 header DOWN, so the panel's yellow rows (along the header's edge) come out on top as the firmware draws its title there
+oled_s = 1;                                      // the screen's way up: 1 header UP. The header's solder points sit above the glass, and the panel's yellow rows are the ones beside the header, so both are on top
 oled_pcb_z = ctl_z - 1.45*oled_s;                // the picture on the controls' line: the board sits off-centre from it, by the way up
 knob_y = -0.5;                                   // the knob's base 0.5 in front of the flat face (no recess: it prints on the bed)
 enc_pcb_y = pt + enc[3];
