@@ -18,7 +18,7 @@ no adapters, no parts on the body. Nothing is drawn until this is agreed.
 | Part | Size | How it mounts |
 |---|---|---|
 | OLED 0.96" (SSD1306) | pcb 27.3 × 27.8, glass 26.7 × 19.3 | drops into a pocket from behind, 0.3 clear each side, 0.2 top and bottom; window the size of the picture |
-| KY-040 encoder | pcb 31 × 19, 14 tall off the plate | bushing through the plate with its nut in the knob's recess; its pins out of its short edge toward the ESP32; one rib on the far side stops it turning |
+| KY-040 encoder | pcb 31 × 19, 14 tall off the plate | bushing through the plate with its nut in the knob's recess, which holds it; no rib beside it, so its harness plugs in freely |
 | Knob | Ø36 × 9.5, brown-red ring, black cap | as now |
 | ESP32 DevKit V1, 30-pin | 51.5 × 28.3 | four standoffs, M2.5 self-tappers, module toward the plate |
 | DFRobot Gravity TDS board | 42 × 32 | four standoffs, M3 self-tappers |

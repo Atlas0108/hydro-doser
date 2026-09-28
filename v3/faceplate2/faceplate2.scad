@@ -23,7 +23,7 @@ screw  = [3.4, 6.7];                  // M3 countersunk: clearance, head dia
 ctl_z  = 37;                          // the controls' line: the plate's middle
 opening = [px0 + 12, pz0 + 12, px0 + pw - 12, pz0 + ph - 12];   // the band's opening behind the wall: x0, z0, x1, z1
 band_d = 6;                           // the band's depth behind the plate's back
-fil    = 1.5;                         // every standoff's and rib's fillet into the plate
+fil    = 1.5;                         // every standoff's fillet into the plate
 
 // ---------------------------------------------------------- the parts
 knob     = [36, 9.5, 38, 2, 1.5, 11, 4];          // as v3: dia, height, recess dia, recess depth, chamfer, nut pocket dia, depth
@@ -54,7 +54,6 @@ function holes4(c, a, b) = [for (sa = [-1, 1], sb = [-1, 1]) [c[0] + sa*a, c[1] 
 esp_holes = holes4(esp_c, esp[1]/2 - esp_hole[1], esp[0]/2 - esp_hole[1]);            // (x, z)
 ph_holes  = holes4(ph_c, brd[1]/2 - brd_hole[1], brd[0]/2 - brd_hole[1]);            // (x, z)
 tds_holes = holes4([tds_c[1], tds_c[2]], brd[1]/2 - brd_hole[1], brd[0]/2 - brd_hole[1]);   // (y, z) on the fin
-rib = [knob_x - enc[0]/2 - 0.3 - 2, 2];          // the encoder's one rib, on the side away from its pins: x, thickness
 
 assert(esp_c[0] - esp[1]/2 >= knob_x + enc[0]/2 + 1 && esp_c[0] + esp[1]/2 + 1 <= oled_x - oled[0]/2 - oled_pk[0] - oled_pk[2], "the ESP32 runs into the encoder or the screen's pocket");
 assert(fin[0] >= oled_x + oled[0]/2 + oled_pk[0] + oled_pk[2] + 2 && fin[0] + fin[1] + brd[2] + 8 <= opening[2] + 20, "the fin runs into the screen's pocket");
@@ -81,8 +80,7 @@ module plate2() color("#1c1c1c") difference() {
       offset(oled_pk[2]) square([oled[0] + 2*oled_pk[0], oled[1] + 2*oled_pk[1]], center = true);
       square([oled[0] + 2*oled_pk[0], oled[1] + 2*oled_pk[1]], center = true);
     }
-    // the encoder's one rib, on the side away from its pins
-    translate([rib[0], pt - 0.01, ctl_z - 17]) cube([rib[1], 9, 30]);
+    // no rib by the encoder: its harness plugs in on that side; its bushing's nut holds it
     // standoffs: the ESP32's, the pH board's (over the encoder)
     for (h = esp_holes) post(h[0], h[1], esp_so[0], esp_so[1]);
     for (h = ph_holes) post(h[0], h[1], brd_so[0], ph_y - pt);
