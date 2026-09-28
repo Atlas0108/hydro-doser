@@ -75,7 +75,7 @@ reads (it draws a few mA). GPIO35 is on ADC1, which reads with Wi-Fi
 on.
 
 GPIO32, the board's first supply pin, was damaged on 2026-09-28. The +
-and - wires moved to D13 and the GND pin beside it, and GPIO32 and GPIO33
+and - wires moved to D13 and the GND pin beside 3V3, and GPIO32 and GPIO33
 are left unused. Before powering the board from a new pin, check its +
 and - aren't shorted together (unplugged, the meter should read well
 over 1 kΩ between them), or the new pin goes the same way.
@@ -84,12 +84,13 @@ over 1 kΩ between them), or the new pin goes the same way.
 |---|---|---|
 | A (signal) | GPIO35 | analog in, 0 to 2.3 V |
 | + | GPIO13 | driven high at boot: 3.3 V |
-| - | GND | the GND pin beside D13 |
+| - | GND | the GND pin beside 3V3, bottom of the other side |
 
-On the 30-pin DevKit V1, D13 and GND sit together at the bottom of the
-VN-side header (... D14, D12, **D13, GND**, VIN), so the + and - wires
-go on as a pair; the A wire goes on its own to D35, higher up the same
-side.
+On the 30-pin DevKit V1, D13 is near the bottom of the VN-side header
+(... D14, D12, **D13**, GND, VIN) and the A wire goes to D35 higher up
+the same side. The - wire goes to the GND pin at the bottom of the
+other side, beside 3V3: the GND beside D13 left the board unlit when
+tried on 2026-09-28.
 
 The pH board (the common PH-4502C type, 42 × 32, the one sold with a BNC
 probe) needs 5 V, and its Po output reaches about 5 V at the acid end:

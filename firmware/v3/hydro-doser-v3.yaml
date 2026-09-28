@@ -25,7 +25,7 @@
 #
 # Wiring (README.md): OLED SDA GPIO21, SCL GPIO22; knob's 5-pin plug on five
 # neighbouring pins, CLK GPIO19, DT GPIO18, SW GPIO5, + GPIO17, GND GPIO16; ULN2003 IN1..IN3 GPIO25/26/27; Gravity TDS board's
-# A on GPIO35, + on GPIO13, - on the GND pin beside it (GPIO32 was damaged 2026-09-28:
+# A on GPIO35, + on GPIO13, - on the GND pin beside 3V3 (GPIO32 was damaged 2026-09-28:
 # GPIO32 and GPIO33 are left unused);
 # pH board Po through a 10k/20k divider to GPIO34, V+ on 5 V (VIN); float
 # switch GPIO14 to GND. The probes and the float come in through the GX12.
@@ -37,7 +37,7 @@ esphome:
     - lambda: 'id(status).publish_state("idle");'
     - output.turn_off: knob_gnd  # the knob's ground ...
     - output.turn_on: knob_vcc   # ... and its 3.3 V
-    - output.turn_on: tds_vcc    # the TDS board's 3.3 V, from GPIO13 (its ground on the GND pin beside it)
+    - output.turn_on: tds_vcc    # the TDS board's 3.3 V, from GPIO13 (its ground on the GND pin beside 3V3)
   includes:
     - pumps.h       # pump_on / pumps_on, by the menu's numbering
 
