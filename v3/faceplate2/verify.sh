@@ -59,6 +59,9 @@ chk() {  # $1 label  $2 CLEAR|SOLID  $3 body
 echo "== faceplate 2 =="
 chk "the plate has geometry" SOLID 'plate2();'
 chk "it fits the body as printed: clear of the walls, the band and the inserts" CLEAR 'intersection(){ plate2(); body(); }'
+chk "the bezel's three alignment holes are open 2 into the face" CLEAR 'intersection(){ plate2(); for (i = [0:2]) let (a = bezel_pin[4] + 120*i) translate([knob_x + bezel_pin[1]*cos(a), -0.1, ctl_z + bezel_pin[1]*sin(a)]) rotate([-90, 0, 0]) cylinder(d = 1.8, h = 1.9); }'
+chk "and blind: the plate's back is whole behind them" SOLID 'union(){ for (i = [0:2]) let (a = bezel_pin[4] + 120*i) intersection(){ plate2(); translate([knob_x + bezel_pin[1]*cos(a), 2.2, ctl_z + bezel_pin[1]*sin(a)]) rotate([-90, 0, 0]) cylinder(d = 1.8, h = 0.7); } }'
+chk "the holes sit outside the knob, under a bezel's ring" CLEAR 'intersection(){ union(){ knob2(); knob2_cap(); } for (i = [0:2]) let (a = bezel_pin[4] + 120*i) translate([knob_x + bezel_pin[1]*cos(a), -12, ctl_z + bezel_pin[1]*sin(a)]) rotate([-90, 0, 0]) cylinder(d = 2, h = 13); }'
 chk "the knob sits 0.5 in front of the flat face, clear of the plate" CLEAR 'intersection(){ plate2(); union(){ knob2(); knob2_cap(); } }'
 chk "the nut on the face sits in the knob's base pocket, clear of the knob" CLEAR 'intersection(){ union(){ knob2(); knob2_cap(); } enc2(); }'
 chk "the shaft reaches into the knob's bore" SOLID 'intersection(){ translate([knob_x, knob_y - 5, ctl_z]) rotate([90, 0, 0]) cylinder(d = 3, h = 1); enc2(); }'

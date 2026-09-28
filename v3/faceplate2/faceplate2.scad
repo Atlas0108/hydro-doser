@@ -31,6 +31,7 @@ enc      = [31, 19, 1.6, 6.5, 11.5, 16, 6, 4.5, 9.5];   // KY-040: pcb w, h, t; 
 enc_h    = 14;                                   // it stands 14 off the plate's back once mounted (measured)
 oled     = [27.3, 27.8, 1.6, 26.7, 19.3, 1.5, 21.7, 10.9];   // pcb w, h, t; glass w, h, t; active w, h
 oled_pk  = [0.3, 0.2, 2, 3];                     // its pocket: clearance x, z, wall, depth
+bezel_pin = [3, 21.5, 2, 2, 90];                 // alignment holes for a printed bezel round the knob: count, radius, dia, depth (blind, from the face), angle of the first (90 = top)
 oled_sj  = [14, 5, 1.5];                         // a groove for the header's solder points, in the strip above the glass along the board's top edge: width, reach down from the edge, depth into the plate
 esp      = [28.3, 51.5, 1.6, 8.5];               // DevKit V1 30-pin: w (z), l (x), pcb, pins back
 esp_hole = [3, 2.3];  esp_so = [5.5, 4, 2.2];     // its holes (dia, in from the edges: measure yours), standoffs (dia, height, M2.5 pilot)
@@ -91,6 +92,7 @@ module plate2() color("#1c1c1c") difference() {
   }
   for (s = pscrews) translate([s[0], 0, s[1]]) rotate([-90, 0, 0]) csk(screw[0], screw[1], pt);                                   // its screws, countersunk in the face
   translate([knob_x, -1, ctl_z]) rotate([-90, 0, 0]) cylinder(d = 7.5, h = pt + 2);                                             // the bushing hole
+  for (i = [0:bezel_pin[0] - 1]) let (a = bezel_pin[4] + 360*i/bezel_pin[0]) translate([knob_x + bezel_pin[1]*cos(a), -1, ctl_z + bezel_pin[1]*sin(a)]) rotate([-90, 0, 0]) cylinder(d = bezel_pin[2], h = bezel_pin[3] + 1, $fn = 24);   // the bezel's alignment holes, blind from the face
   translate([oled_x, -1, ctl_z]) rotate([-90, 0, 0]) linear_extrude(pt + 2) rrc(oled[6] + 0.6, oled[7] + 0.6, 2);                 // the window, the picture's size
   translate([oled_x - oled[3]/2 - oled_pk[0], pt - oled[5] - 0.2, oled_pcb_z - 0.75*oled_s - oled[4]/2 - oled_pk[1]]) cube([oled[3] + 2*oled_pk[0], oled[5] + 1, oled[4] + 2*oled_pk[1]]);   // the glass's recess
   translate([oled_x - oled_sj[0]/2, pt - oled_sj[2], oled_pcb_z + oled[1]/2 - oled_sj[1]]) cube([oled_sj[0], oled_sj[2] + 1, oled_sj[1] + oled_pk[1] + 0.01]);   // the groove for the screen board's solder points, along its top edge
