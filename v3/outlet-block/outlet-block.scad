@@ -1,3 +1,6 @@
+// SUPERSEDED: the back wall now takes the three barbs directly, in
+// their own Ø6.4 holes above the middle motor. Kept for reference only.
+//
 // Hydro Doser v3, outlet block: replaces the grommet in the back wall's
 // 16 mm outlet hole with three push-on hose barbs, so the output hoses
 // connect at the back.

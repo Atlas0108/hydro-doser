@@ -22,7 +22,7 @@ no adapters, no parts on the body. Nothing is drawn until this is agreed.
 | Knob | Ø36 × 9.5, brown-red ring, black cap | sits 0.5 in front of the flat face: no recess, the face prints flat on the bed |
 | ESP32 DevKit V1, 30-pin | 51.5 × 28.3 | four standoffs, M2.5 self-tappers, module toward the plate |
 | DFRobot Gravity TDS board | 42 × 32 | four standoffs, M3 self-tappers |
-| pH board (PH-4502C type) | 42 × 32 | four standoffs, M3 self-tappers |
+| pH board (PH-4502C type) | — | not on the plate: the probe keeps its own cable, out the back wall |
 
 Hole spacings for the three boards are still assumed (DevKit 46.9 × 23.7,
 the two 42 × 32 boards 35 × 25). Measure them before this is drawn.
@@ -34,8 +34,8 @@ hidden behind the plate, so the face shows the screen on the left and the
 knob on the right, each the same distance from the plate's centre, with
 the ESP32 between them behind.
 
-The pH board stands on taller standoffs directly over the knob's
-encoder. The TDS board cannot stand over the screen: the left bottle cup
+The pH board is no longer carried: the probe keeps its stock cable, which
+leaves through the back wall. The TDS board cannot stand over the screen: the left bottle cup
 sits right behind it, and the screen's plug alone reaches 27 of the 31
 available. It mounts instead on a fin standing off the plate's back at
 the screen's end, outside the cup, printed with the plate. The ESP32's

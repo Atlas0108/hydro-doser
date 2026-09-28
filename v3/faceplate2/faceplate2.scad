@@ -5,7 +5,8 @@
 // Frame as the v3 model: x right -> left seen from the front (0 at the
 // body's right edge), y front -> back (0 at the plate's face), z up.
 // Seen from the front, left to right: the screen, the ESP32 (hidden
-// behind), the knob. The pH board stands over the knob's encoder; the TDS
+// behind), the knob. The pH board is not carried here: the probe's own
+// cable runs out the body's back wall to it. The TDS
 // board stands on a fin at the screen's end, clear of the left cup (a
 // board over the screen would reach into it).
 //
@@ -35,7 +36,7 @@ bezel_pin = [3, 21.5, 2, 2, 90];                 // alignment holes for a printe
 oled_sj  = [14, 5, 1.5];                         // a groove for the header's solder points, in the strip above the glass along the board's top edge: width, reach down from the edge, depth into the plate
 esp      = [28.3, 51.5, 1.6, 8.5];               // DevKit V1 30-pin: w (z), l (x), pcb, pins back
 esp_hole = [3, 2.3];  esp_so = [5.5, 4, 2.2];     // its holes (dia, in from the edges: measure yours), standoffs (dia, height, M2.5 pilot)
-brd      = [32, 42, 1.6];                        // the TDS and pH boards: short side, long side, pcb
+brd      = [32, 42, 1.6];                        // the TDS board: short side, long side, pcb
 brd_hole = [3.1, 3.5];                           // their holes (dia, in from the edges: measure yours)
 brd_so   = [5.5, 2.6];                           // their standoffs' dia, M3 pilot
 
@@ -48,13 +49,11 @@ oled_pcb_z = ctl_z - 1.45*oled_s;                // the picture on the controls'
 knob_y = -0.5;                                   // the knob's base 0.5 in front of the flat face (no recess: it prints on the bed)
 enc_pcb_y = pt + enc[3];
 esp_y  = pt + esp_so[1];                         // its pcb's plate-side face (the module toward the plate)
-ph_c   = [knob_x, ctl_z];  ph_y = pt + enc_h + 1.5;   // the pH board over the encoder, 1.5 behind its 14
 fin    = [168, 3, 52];                           // the TDS board's fin: its plate-side face x, thickness, reach behind the plate
 tds_c  = [fin[0] + fin[1], 31, ctl_z];           // the TDS board against the fin's outer face: x of its face, centre y, centre z
 
 function holes4(c, a, b) = [for (sa = [-1, 1], sb = [-1, 1]) [c[0] + sa*a, c[1] + sb*b]];
 esp_holes = holes4(esp_c, esp[1]/2 - esp_hole[1], esp[0]/2 - esp_hole[1]);            // (x, z)
-ph_holes  = holes4(ph_c, brd[1]/2 - brd_hole[1], brd[0]/2 - brd_hole[1]);            // (x, z)
 tds_holes = holes4([tds_c[1], tds_c[2]], brd[1]/2 - brd_hole[1], brd[0]/2 - brd_hole[1]);   // (y, z) on the fin
 
 assert(esp_c[0] - esp[1]/2 >= knob_x + enc[0]/2 + 1 && esp_c[0] + esp[1]/2 + 1 <= oled_x - oled[0]/2 - oled_pk[0] - oled_pk[2], "the ESP32 runs into the encoder or the screen's pocket");
@@ -83,9 +82,8 @@ module plate2() color("#1c1c1c") difference() {
       square([oled[0] + 2*oled_pk[0], oled[1] + 2*oled_pk[1]], center = true);
     }
     // no rib by the encoder: its harness plugs in on that side; its bushing's nut holds it
-    // standoffs: the ESP32's, the pH board's (over the encoder)
+    // standoffs: the ESP32's
     for (h = esp_holes) post(h[0], h[1], esp_so[0], esp_so[1]);
-    for (h = ph_holes) post(h[0], h[1], brd_so[0], ph_y - pt);
     // the TDS board's fin, and its foot filleted into the plate
     translate([fin[0], pt - 0.01, opening[1] + 0.5]) cube([fin[1], fin[2] + 0.01, opening[3] - opening[1] - 1]);
     for (s = [-1, 1]) translate([fin[0] + (s < 0 ? 0 : fin[1]), pt - 0.01, opening[1] + 0.5]) mirror([s < 0 ? 1 : 0, 0, 0]) linear_extrude(opening[3] - opening[1] - 1) difference() { square(4); translate([4, 4]) circle(r = 4); }
@@ -97,7 +95,6 @@ module plate2() color("#1c1c1c") difference() {
   translate([oled_x - oled[3]/2 - oled_pk[0], pt - oled[5] - 0.2, oled_pcb_z - 0.75*oled_s - oled[4]/2 - oled_pk[1]]) cube([oled[3] + 2*oled_pk[0], oled[5] + 1, oled[4] + 2*oled_pk[1]]);   // the glass's recess
   translate([oled_x - oled_sj[0]/2, pt - oled_sj[2], oled_pcb_z + oled[1]/2 - oled_sj[1]]) cube([oled_sj[0], oled_sj[2] + 1, oled_sj[1] + oled_pk[1] + 0.01]);   // the groove for the screen board's solder points, along its top edge
   for (h = esp_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = esp_so[2], h = esp_so[1] + 1);             // pilots
-  for (h = ph_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = brd_so[1], h = ph_y);
   for (h = tds_holes) translate([fin[0] - 1, h[0], h[1]]) rotate([0, 90, 0]) cylinder(d = brd_so[1], h = fin[1] + 2);
 }
 
@@ -126,14 +123,6 @@ module esp2() color("#101418") translate([esp_c[0], esp_y, esp_c[1]]) difference
   }
   for (h = esp_holes) translate([h[0] - esp_c[0], -4, h[1] - esp_c[1]]) rotate([-90, 0, 0]) cylinder(d = esp_hole[0], h = 10);
 }
-module ph2() color("#1e7a3c") translate([ph_c[0], ph_y, ph_c[1]]) difference() {
-  union() {
-    translate([-brd[1]/2, 0, -brd[0]/2]) cube([brd[1], brd[2], brd[0]]);
-    translate([-brd[1]/2 + 6, brd[2], -brd[0]/2 + 6]) cube([brd[1] - 12, 8, brd[0] - 12]);                             // its chips and trimmers
-    translate([-brd[1]/2 - 22, brd[2] - 1.3, -7.6]) cube([22, 2.6, 15.2]);                                              // its header and plugs, out of its short edge
-  }
-  for (h = ph_holes) translate([h[0] - ph_c[0], -4, h[1] - ph_c[1]]) rotate([-90, 0, 0]) cylinder(d = brd_hole[0], h = 10);
-}
 module tds2() color("#1d4fa0") translate([tds_c[0], tds_c[1], tds_c[2]]) difference() {
   union() {
     translate([0, -brd[1]/2, -brd[0]/2]) cube([brd[2], brd[1], brd[0]]);                                                 // the pcb, against the fin
@@ -141,7 +130,7 @@ module tds2() color("#1d4fa0") translate([tds_c[0], tds_c[1], tds_c[2]]) differe
   }
   for (h = tds_holes) translate([-4, h[0] - tds_c[1], h[1] - tds_c[2]]) rotate([0, 90, 0]) cylinder(d = brd_hole[0], h = 10);
 }
-module parts2() { knob2(); knob2_cap(); enc2(); oled2(); esp2(); ph2(); tds2(); }
+module parts2() { knob2(); knob2_cap(); enc2(); oled2(); esp2(); tds2(); }
 
 // ---------------------------------------------------------- output
 if (part == "all") { plate2(); parts2(); }

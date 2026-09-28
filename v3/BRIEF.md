@@ -55,8 +55,9 @@ the head.
 | | hole |
 |---|---|
 | 5.5 × 2.1 DC jack | Ø11.5 |
-| GX12-6 (float switch + probes) | Ø12.2 |
-| grommet for the sleeved bundle (3 tubes + float lead) | Ø16 |
+| GX12-6 (float switch + TDS probe) | Ø12.2 |
+| pH probe's stock cable, BNC through, grommet round it | Ø16 |
+| three outlet barbs, uxcell M6 bulkhead (B0F5X3DXQ5) | 3 × Ø6.4 |
 
 ### Fasteners and the rest
 
@@ -92,9 +93,10 @@ the head.
    tank features. Anything that goes to a tank goes out the back.
 2. Three pumps in a row, evenly spaced, heads toward one side, reached
    by taking the lid off. No side panel.
-3. Ports in the back: the 12 V jack, the outlets' grommet and the GX12-6
+3. Ports in the back: the 12 V jack, the pH cable's hole and the GX12-6
    on one line, low, the jack and the GX12 between the pumps and the
-   grommet under the middle one. The driver and the buck mount on the inner side walls
+   pH hole under the middle one; the three outlet barbs in a row above
+   the middle motor, the water hole above them. The driver and the buck mount on the inner side walls
    in the bottles' section. Vent slots, as on a router, in both side
    walls beside the motors.
 4. A faceplate carries the controls, the screen left of the knob and

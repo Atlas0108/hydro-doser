@@ -94,7 +94,9 @@ feet    = [[R, R], [Bx - R, R], [Bx - R, By - R], [R, By - R]];   // at the corn
 
 // ports: the back wall. The jack and the GX12 low, between the motors; the grommet above the middle one
 port_z = 11;                                         // the jack, the outlets' grommet and the GX12 on one line, low: the grommet's hole clears the floor by 3
-ports  = [[(pump_x[0] + pump_x[1])/2, port_z, jack_d], [pump_x[1], port_z, grommet_d], [(pump_x[1] + pump_x[2])/2, port_z, gx12_d], [pump_x[1], 58, hole_d]];   // x, z, dia: the jack, the outlets' grommet under the middle motor, the GX12, and the water tube's plain hole up above the middle motor
+ports  = [[(pump_x[0] + pump_x[1])/2, port_z, jack_d], [pump_x[1], port_z, grommet_d], [(pump_x[1] + pump_x[2])/2, port_z, gx12_d], [pump_x[1], 58, hole_d]];   // x, z, dia: the jack, the pH probe's cable (its BNC plug passes through, a grommet round the cable) under the middle motor, the GX12, and the water tube's plain hole above the middle motor
+out_barbs = [[pump_x[1] - 8, 48], [pump_x[1] + 5, 48], [pump_x[1] + 18, 48]];   // the three outlets, 13 apart, set right of centre so a driver still reaches the middle pump's upper screw (x 83, z 44): uxcell M6 bulkhead hose barbs (B0F5X3DXQ5) through the back wall, their nuts inside, over the middle motor's top
+out_barb_d = 6.4;
 
 // the faceplate: black, 3 thick, flush in an opening in the front wall, screwed
 // into a band behind the wall. The screen and the knob mount on its back.
@@ -159,6 +161,7 @@ assert(ports[0][0] - ports[0][2]/2 - 2 >= pump_x[0] + pump_motor[0]/2 && ports[0
 assert(ports[2][0] - ports[2][2]/2 - 2 >= pump_x[1] + pump_motor[0]/2 && ports[2][0] + ports[2][2]/2 + 2 <= pump_x[2] - pump_motor[0]/2, "the GX12 runs into a motor");
 assert(ports[1][1] - ports[1][2]/2 >= 2, "the grommet's hole runs into the floor");
 assert(ports[3][1] - ports[3][2]/2 >= bulk_h + 1 && ports[3][1] + ports[3][2]/2 <= H - 4, "the water hole runs into the bulkhead's height or the rim");
+assert(out_barbs[0][1] - 5.75 >= pump_z + pump_motor[0]/2 + 0.5 && out_barbs[0][1] + 5.75 <= ports[3][1] - ports[3][2]/2, "an outlet barb's nut runs into the middle motor or the water hole");
 assert(vents[0][0] >= bulk_y + wall + 2 && vents[0][0] + vents[0][1] <= By - wall - 2 && vents[1][0] >= 4 && vents[1][0] + vents[1][1]*(vents[1][2] - 1) + vents[2] <= H - cap[1] - 6, "the vents run off the motor section");
 assert(bottle[1] - H_lid - deck[2] >= 30, "the bottle must show 30 mm above the deck");
 assert(pz0 >= 4 && pz0 + ph + 0.8 <= H - 0.5, "the faceplate's band runs into the lid seam");
@@ -220,6 +223,7 @@ module body() color("#5a7a48") difference() {
   }
   for (c = cup_c) at(c, 0) cylinder(d = cup_d, h = H + 2);                                                                           // the pockets, down to the floor
   for (p = ports) translate([p[0], By + 1, p[1]]) rotate([90, 0, 0]) cylinder(d = p[2], h = wall + 2);                              // the ports
+  for (b = out_barbs) translate([b[0], By + 1, b[1]]) rotate([90, 0, 0]) cylinder(d = out_barb_d, h = wall + 2);                   // the outlets' barbs
   on_front() {
     translate([0, 0, -1]) linear_extrude(wall + 1) plate2d(0.3);                                                                     // the opening the plate sits in, through the wall only: the band behind bears the plate
     round_cut(pch) plate2d(0.3);                                                                                                     // its edge rounded
@@ -357,11 +361,18 @@ module ph_adapter() color("#1c1c1c") difference() {
   for (h = phb_holes) translate([h[0], pha_y - 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = pha[4], h = pha[1] + pha[2] + 2);   // the board's screw holes, through the bridge
 }
 module electronics() for (i = [0:4]) board(i);
-module port_hw() for (i = [0:2]) let (p = ports[i]) translate([p[0], By, p[1]]) color(i == 1 ? "#222" : "#888") {
+module out_barb_hw() color("#ddd") for (b = out_barbs) translate([b[0], By, b[1]]) rotate([-90, 0, 0]) {
+  translate([0, 0, -wall]) cylinder(d = 4.9, h = wall);                   // the M6 body through the wall (at its thread root)
+  cylinder(d = 11.5, h = 3, $fn = 6);                                     // its collar outside
+  translate([0, 0, 3]) cylinder(d = 3.2, h = 14);                         // the 3 mm barb out, for the hose
+  translate([0, 0, -wall - 5]) cylinder(d = 11.5, h = 5, $fn = 6);        // its nut inside
+  translate([0, 0, -wall - 5 - 15.5]) cylinder(d = 4.2, h = 15.5);        // the 4 mm barb in, for the doser's tube
+}
+module port_hw() { out_barb_hw(); for (i = [0:2]) let (p = ports[i]) translate([p[0], By, p[1]]) color(i == 1 ? "#222" : "#888") {
   translate([0, 1, 0]) rotate([-90, 0, 0]) cylinder(d = p[2] + 4, h = 2);
   let (inside = i == 1 ? 3 : 14) translate([0, -wall - inside, 0]) rotate([-90, 0, 0]) cylinder(d = p[2] - 0.3, h = wall + inside);   // its body inside the wall: a grommet's lip is short
   if (i == 1) color("#1a1a1a") translate([0, 3, 0]) rotate([-90, 0, 0]) cylinder(d = 12, h = 45);
-}
+}}
 module enc_at() color("#3a7a3a") translate([knob_x, enc_pcb_y, ctl_z]) {
   translate([-enc[0]/2, 0, enc[8] - enc[1]]) cube([enc[0], enc[2], enc[1]]);                                         // the pcb
   rotate([90, 0, 0]) { translate([-6, -6, 0]) cube([12, 12, enc[3]]); cylinder(d = 7, h = enc[4]); color("#bbb") linear_extrude(enc[5]) difference() { circle(d = enc[6]); translate([-5, enc[7] - enc[6]/2]) square([10, 5]); } }   // body, bushing, D shaft

@@ -104,19 +104,21 @@ float** (flip the float on its stem to change which way it works). Then
 an open contact, from low water or a broken or unplugged lead, reads
 **Reservoir low**, so dosing can be blocked on it safely.
 
-The probes and the float come in through the GX12-6 in the back wall.
-Cut the TDS probe's plug and the pH probe's BNC off the boards and wire
-both boards' probe inputs to the GX12 socket instead:
+The TDS probe and the float come in through the GX12-6 in the back
+wall. Cut the TDS probe's plug off and wire the board's probe input to
+the GX12 socket instead:
 
 | GX12 pin | Goes to |
 |---|---|
 | 1, 2 | TDS board's probe input (either way round) |
-| 3 | pH board's BNC centre (probe signal) |
-| 4 | pH board's BNC shell (reference) |
+| 3, 4 | unused |
 | 5, 6 | float switch: GPIO14 and GND |
 
-The pH probe's signal is very high impedance: keep its run from the
-GX12 to the board short and away from the pump wires.
+The pH probe keeps its stock cable, uncut. It comes in through its own
+hole in the back wall, beside the GX12, and its BNC plugs straight into
+the pH board. The pH board is no longer on the faceplate; keep it and
+the cable away from the pump wires, since the probe's signal is very
+high impedance.
 
 The probes share the reservoir, and the TDS board's excitation current
 upsets the pH probe. So the doser reads them in turn, every 30 s: TDS

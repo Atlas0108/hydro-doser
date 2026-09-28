@@ -30,7 +30,7 @@ the firmware under `firmware/v3/`; this copy is the working one.
 | `lid` + `lid_deck` | underside down | 202 × 178 × 11 | flat underneath but for its pocket; the deck on top is the second file, printed black |
 | `plate` | face down | 176 × 59 × 28 | black; the screen's pocket, the knob's ribs, and standoffs for the DevKit and the TDS board on its back |
 | `knob` + `knob_cap` | base down | Ø36 × 9.5 | the knurled ring brown-red, the cap (face and rounded edge) black; the D bore reaches 1.2 short of the face; the encoder's shaft is cut to 16 above its pcb |
-| `ph_adapter` | the bridge's flat back down | 51 × 33 × 18 | black; clamps the encoder's rib and carries the pH board |
+| `ph_adapter` | the bridge's flat back down | 51 × 33 × 18 | no longer used; it clamped the encoder's rib and carried the pH board |
 | `foot` | disc down, TPU | Ø18 × 6 | four |
 | `spout` | top down, legs up | 40 × 16 × 34 | clips the reservoir's rim |
 
@@ -110,8 +110,10 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   The knob's encoder is fitted with its pins out of its short edge,
   toward the plate's right edge, so only one rib stands beside it (the
   one toward the screen); its harness leaves past the open side. It
-  stands 14 off the plate's back. The pH board (PH-4502C type, 42 × 32,
-  its BNC removed) hangs on that rib on a printed adapter, `ph_adapter`:
+  stands 14 off the plate's back. (No longer used: the pH probe now
+  keeps its own cable through the back wall, and the pH board is off the
+  faceplate. Skip printing `ph_adapter`.) The pH board (PH-4502C type, 42 × 32)
+  hung on that rib on a printed adapter, `ph_adapter`:
   a leg on the rib's outer face, a lip over its top, and a tab on its
   inner face above the encoder's board clamp it both ways; a bridge 1.5
   behind the encoder reaches across the harness side and carries the
@@ -125,13 +127,17 @@ the flanges' Ø3.2 holes). Bought parts as in `BRIEF.md`.
   The window sits 14 from the plate's edge, the same as the knob's
   recess; the screen's outer rib lands where the band would be, so the
   band is notched there between the two screws.
-- **Back.** The jack, the outlets' grommet and the GX12-6 on one line
+- **Back.** The jack, the pH cable's hole and the GX12-6 on one line
   low in the back wall, 11 up from the floor's top: the jack and the
-  GX12 between the motors, the grommet under the middle motor, its hole
-  3 clear of the floor. The nutrient outlets run back over the
-  bulkhead, down between the motors beside the jack and the GX12, and
-  along the floor under the middle motor to the grommet. The water
-  tube's hole is above the middle motor.
+  GX12 between the motors, the pH hole (Ø16) under the middle motor.
+  The pH probe keeps its stock cable: its BNC plug (about 14.5 across)
+  passes through, and a grommet goes back round the cable. Above the
+  middle motor, 48 up, three Ø6.4 holes 13 apart take the outlets'
+  uxcell M6 bulkhead barbs (B0F5X3DXQ5): 3 mm barb outside for the
+  hoses, nut and 4 mm barb inside for the doser's tubes. They sit right
+  of centre so a driver still reaches the middle pump's upper screw.
+  The nutrient tubes run back over the bulkhead and down to them. The
+  water tube's hole is above them, 58 up.
 - **Lid.** Flush with the walls, 7 thick with a 4 mm round on its edge.
   A 1.5 mm rim rises 4 from the walls' inner half with a ridge round its
   inside; the lid's underside has a pocket ring over it with a groove the
