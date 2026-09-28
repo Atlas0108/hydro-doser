@@ -64,6 +64,8 @@ chk "the nut on the face sits in the knob's base pocket, clear of the knob" CLEA
 chk "the shaft reaches into the knob's bore" SOLID 'intersection(){ translate([knob_x, knob_y - 5, ctl_z]) rotate([90, 0, 0]) cylinder(d = 3, h = 1); enc2(); }'
 chk "the encoder sits on the plate's back, clear" CLEAR 'intersection(){ plate2(); enc2(); }'
 chk "the screen sits in its pocket, clear" CLEAR 'intersection(){ plate2(); oled2(); }'
+chk "the groove along the screen board's top edge takes its solder points: 1.2 proud of the board, clear" CLEAR 'intersection(){ plate2(); translate([oled_x - 6, pt - 1.2, oled_pcb_z + oled[1]/2 - 4]) cube([12, 1.21, 3.5]); }'
+chk "and leaves 1.5 of plate in front of it" SOLID 'intersection(){ plate2(); translate([oled_x - 6, 0.2, oled_pcb_z + oled[1]/2 - 4]) cube([12, 1.2, 3.5]); }'
 chk "the pocket holds it: 0.5 mm any way across the plate it hits" SOLID 'for (d = [[0.5,0],[-0.5,0],[0,0.5],[0,-0.5]]) intersection(){ plate2(); translate([d[0], 0, d[1]]) oled2(); }'
 chk "the ESP32 stands on its standoffs, clear" CLEAR 'intersection(){ plate2(); esp2(); }'
 chk "it rests on them: 0.3 nearer the plate it hits" SOLID 'intersection(){ plate2(); translate([0, -0.3, 0]) esp2(); }'

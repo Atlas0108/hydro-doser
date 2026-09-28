@@ -31,6 +31,7 @@ enc      = [31, 19, 1.6, 6.5, 11.5, 16, 6, 4.5, 9.5];   // KY-040: pcb w, h, t; 
 enc_h    = 14;                                   // it stands 14 off the plate's back once mounted (measured)
 oled     = [27.3, 27.8, 1.6, 26.7, 19.3, 1.5, 21.7, 10.9];   // pcb w, h, t; glass w, h, t; active w, h
 oled_pk  = [0.3, 0.2, 2, 3];                     // its pocket: clearance x, z, wall, depth
+oled_sj  = [14, 5, 1.5];                         // a groove for the solder points on the board's plate side, along its top edge: width, reach down from the edge, depth into the plate
 esp      = [28.3, 51.5, 1.6, 8.5];               // DevKit V1 30-pin: w (z), l (x), pcb, pins back
 esp_hole = [3, 2.3];  esp_so = [5.5, 4, 2.2];     // its holes (dia, in from the edges: measure yours), standoffs (dia, height, M2.5 pilot)
 brd      = [32, 42, 1.6];                        // the TDS and pH boards: short side, long side, pcb
@@ -92,6 +93,7 @@ module plate2() color("#1c1c1c") difference() {
   translate([knob_x, -1, ctl_z]) rotate([-90, 0, 0]) cylinder(d = 7.5, h = pt + 2);                                             // the bushing hole
   translate([oled_x, -1, ctl_z]) rotate([-90, 0, 0]) linear_extrude(pt + 2) rrc(oled[6] + 0.6, oled[7] + 0.6, 2);                 // the window, the picture's size
   translate([oled_x - oled[3]/2 - oled_pk[0], pt - oled[5] - 0.2, oled_pcb_z - 0.75*oled_s - oled[4]/2 - oled_pk[1]]) cube([oled[3] + 2*oled_pk[0], oled[5] + 1, oled[4] + 2*oled_pk[1]]);   // the glass's recess
+  translate([oled_x - oled_sj[0]/2, pt - oled_sj[2], oled_pcb_z + oled[1]/2 - oled_sj[1]]) cube([oled_sj[0], oled_sj[2] + 1, oled_sj[1] + oled_pk[1] + 0.01]);   // the groove for the screen board's solder points, along its top edge
   for (h = esp_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = esp_so[2], h = esp_so[1] + 1);             // pilots
   for (h = ph_holes) translate([h[0], pt + 1, h[1]]) rotate([-90, 0, 0]) cylinder(d = brd_so[1], h = ph_y);
   for (h = tds_holes) translate([fin[0] - 1, h[0], h[1]]) rotate([0, 90, 0]) cylinder(d = brd_so[1], h = fin[1] + 2);
