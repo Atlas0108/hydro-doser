@@ -118,9 +118,16 @@ both boards' probe inputs to the GX12 socket instead:
 The pH probe's signal is very high impedance: keep its run from the
 GX12 to the board short and away from the pump wires.
 
+The probes share the reservoir, and the TDS board's excitation current
+upsets the pH probe. So the doser reads them in turn, every 30 s: TDS
+first, then it switches the TDS board off (it is powered from two GPIOs
+for exactly this), waits 3 s, reads pH, and switches the TDS board back
+on to settle before its next reading. Both readings update every 30 s.
+
 pH is two-point calibrated. Put the probe in pH 7 buffer and press
 **Calibrate pH 7**; rinse it, put it in pH 4 buffer and press
-**Calibrate pH 4**. The two settings, pH 7 voltage and pH slope, can
+**Calibrate pH 4**; each button takes a fresh reading, with the TDS
+board off, before it saves. The two settings, pH 7 voltage and pH slope, can
 also be set by hand.
 
 Home Assistant gets TDS in ppm, the raw TDS voltage (diagnostic), and

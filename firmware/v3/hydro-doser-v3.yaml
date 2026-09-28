@@ -470,13 +470,13 @@ sensor:
     pin: GPIO34
     attenuation: 12db
     samples: 16
-    update_interval: 2s
+    update_interval: never       # read by the measure script, with the TDS board off
     accuracy_decimals: 3
     entity_category: diagnostic
     filters:
       - multiply: 1.5
       - median:
-          window_size: 15
+          window_size: 5
           send_every: 5
   # pH from the voltage, two-point calibrated: V at pH 7, and volts per pH
   # (the board's output falls as pH rises).
@@ -486,7 +486,7 @@ sensor:
     icon: mdi:ph
     state_class: measurement
     accuracy_decimals: 2
-    update_interval: 10s
+    update_interval: never
     lambda: |-
       float v = id(ph_volts).state;
       // the ADC's floor (0.142 V, x1.5 = 0.21) is nothing on the input; a real
@@ -500,12 +500,12 @@ sensor:
     pin: GPIO35
     attenuation: 12db
     samples: 16
-    update_interval: 2s
+    update_interval: never       # read by the measure script
     accuracy_decimals: 3
     entity_category: diagnostic
     filters:
       - median:
-          window_size: 15
+          window_size: 5
           send_every: 5
   # DFRobot's formula: the voltage compensated to 25 °C, then its cubic
   # fit, halved for ppm, times the calibration factor.
@@ -516,7 +516,7 @@ sensor:
     icon: mdi:water-opacity
     state_class: measurement
     accuracy_decimals: 0
-    update_interval: 10s
+    update_interval: never
     lambda: |-
       float v = id(tds_volts).state;
       if (isnan(v)) return NAN;
@@ -698,6 +698,9 @@ button:
     icon: mdi:ph
     entity_category: config
     on_press:
+      - script.wait: measure
+      - script.execute: measure                  # a fresh reading, the TDS board off
+      - script.wait: measure
       - lambda: |-
           float v = id(ph_volts).state;
           if (!isnan(v) && v > 0.3f) { auto c = id(ph7_v).make_call(); c.set_value(v); c.perform(); }
@@ -706,6 +709,9 @@ button:
     icon: mdi:ph
     entity_category: config
     on_press:
+      - script.wait: measure
+      - script.execute: measure
+      - script.wait: measure
       - lambda: |-
           float v = id(ph_volts).state;
           float s = (v - id(ph7_v).state) / 3.0f;
@@ -728,6 +734,14 @@ button:
     internal: true               # Settings > Reset: forgets the network, the PIN and the settings, then reboots
 
 interval:
+  # The probes share the reservoir: the TDS board's excitation current upsets
+  # the pH probe. So every 30 s: read TDS, switch the TDS board off, let its
+  # current die away, read pH, switch it back on to settle before the next.
+  - interval: 30s
+    then:
+      - if:
+          condition: { lambda: "return !id(measure).is_running();" }
+          then: { script.execute: measure }
   - interval: 1s
     then:
       - lambda: |-
@@ -737,6 +751,22 @@ interval:
           if (id(pin) && id(autolock_min) > 0 && idle_page && now - id(last_input) > (uint32_t) id(autolock_min) * 60000UL) { id(page) = 9; id(oled).update(); }
 
 script:
+  - id: measure
+    mode: single
+    then:
+      - repeat:
+          count: 5
+          then: [ { component.update: tds_volts }, { delay: 300ms } ]
+      - component.update: tds
+      - component.update: nutrient_level
+      - output.turn_off: tds_vcc                 # the TDS board off: its probe stops driving current into the water
+      - delay: 3s
+      - repeat:
+          count: 5
+          then: [ { component.update: ph_volts }, { delay: 300ms } ]
+      - component.update: ph
+      - output.turn_on: tds_vcc                  # back on, 25 s to settle before its next reading
+
   # Home Assistant turned a pump's switch on: run it until the switch goes
   # off, or Cancel, or a click on the knob.
   - id: manual_on
