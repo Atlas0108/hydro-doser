@@ -69,21 +69,27 @@ design). The menu's A, B, C are Nutrient A, Nutrient B, Water:
 | ULN2003 IN3 | GPIO27 | B, Nutrient B, the left pump |
 | ULN2003 - | GND | |
 
-The Gravity TDS (or pH V2) signal board, on its 3-pin plug. Its three
-wires go on three neighbouring header pins, so the plug stays in one
-piece: the two pins beside the signal pin are driven as the board's
-supply and ground (it draws a few mA). The pins are all 3.3 V, and
-GPIO35 is on ADC1, which reads with Wi-Fi on.
+The Gravity TDS (or pH V2) signal board, on its 3-pin plug. Its supply
+comes from GPIO13, so the firmware can switch the board off while pH
+reads (it draws a few mA). GPIO35 is on ADC1, which reads with Wi-Fi
+on.
+
+GPIO32, the board's first supply pin, was damaged on 2026-09-28. The +
+and - wires moved to D13 and the GND pin beside it, and GPIO32 and GPIO33
+are left unused. Before powering the board from a new pin, check its +
+and - aren't shorted together (unplugged, the meter should read well
+over 1 kΩ between them), or the new pin goes the same way.
 
 | TDS board | To ESP32 | Notes |
 |---|---|---|
 | A (signal) | GPIO35 | analog in, 0 to 2.3 V |
-| + | GPIO32 | driven high at boot: 3.3 V |
-| - | GPIO33 | driven low: ground |
+| + | GPIO13 | driven high at boot: 3.3 V |
+| - | GND | the GND pin beside D13 |
 
-On the 30-pin DevKit V1 these three sit together on the header, VN
-side: ... D34, **D35, D32, D33**, D25 ... Plug the lead so its A wire lands
-on D35.
+On the 30-pin DevKit V1, D13 and GND sit together at the bottom of the
+VN-side header (... D14, D12, **D13, GND**, VIN), so the + and - wires
+go on as a pair; the A wire goes on its own to D35, higher up the same
+side.
 
 The pH board (the common PH-4502C type, 42 × 32, the one sold with a BNC
 probe) needs 5 V, and its Po output reaches about 5 V at the acid end:

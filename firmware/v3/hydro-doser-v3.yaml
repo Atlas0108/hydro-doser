@@ -25,7 +25,8 @@
 #
 # Wiring (README.md): OLED SDA GPIO21, SCL GPIO22; knob's 5-pin plug on five
 # neighbouring pins, CLK GPIO19, DT GPIO18, SW GPIO5, + GPIO17, GND GPIO16; ULN2003 IN1..IN3 GPIO25/26/27; Gravity TDS board's
-# 3-pin plug on GPIO35 (A), GPIO32 (+), GPIO33 (-), side by side on the header;
+# A on GPIO35, + on GPIO13, - on the GND pin beside it (GPIO32 was damaged 2026-09-28:
+# GPIO32 and GPIO33 are left unused);
 # pH board Po through a 10k/20k divider to GPIO34, V+ on 5 V (VIN); float
 # switch GPIO14 to GND. The probes and the float come in through the GX12.
 
@@ -36,8 +37,7 @@ esphome:
     - lambda: 'id(status).publish_state("idle");'
     - output.turn_off: knob_gnd  # the knob's ground ...
     - output.turn_on: knob_vcc   # ... and its 3.3 V
-    - output.turn_off: tds_gnd   # the TDS board's ground ...
-    - output.turn_on: tds_vcc    # ... and its 3.3 V, from two GPIOs beside its signal pin
+    - output.turn_on: tds_vcc    # the TDS board's 3.3 V, from GPIO13 (its ground on the GND pin beside it)
   includes:
     - pumps.h       # pump_on / pumps_on, by the menu's numbering
 
@@ -102,8 +102,8 @@ output:
   - platform: gpio
     id: out_c
     pin: GPIO26
-  # The Gravity TDS board powered from the two pins beside its signal, so
-  # its 3-pin plug goes on the header in one piece: it draws a few mA.
+  # The Gravity TDS board powered from GPIO13, so the firmware can switch it
+  # off while pH reads: it draws a few mA.
   # The knob powered from the two pins beside its signals, so its 5-pin plug
   # goes on the header in one piece: it draws about 1 mA through its pull-ups.
   - platform: gpio
@@ -114,10 +114,7 @@ output:
     pin: GPIO16
   - platform: gpio
     id: tds_vcc
-    pin: GPIO32
-  - platform: gpio
-    id: tds_gnd
-    pin: GPIO33
+    pin: GPIO13                  # was GPIO32, damaged 2026-09-28; GPIO32 and GPIO33 now unused
 
 switch:
   - platform: template
